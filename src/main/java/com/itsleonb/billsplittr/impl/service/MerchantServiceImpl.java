@@ -35,10 +35,7 @@ public class MerchantServiceImpl implements MerchantService {
 
   @Override
   public MerchantResponse create(NewMerchantRequest request) {
-    Set<ConstraintViolation<NewMerchantRequest>> constraintViolations = validator.validate(request);
-    if (!constraintViolations.isEmpty()) {
-      throw new ConstraintViolationException(constraintViolations);
-    }
+    validateRequest(request);
 
     if (merchantRepository.existsByName(request.getName())) {
       throw new ConflictException(String.format("Merchant with name %s already exists", request.getName()));
@@ -59,7 +56,7 @@ public class MerchantServiceImpl implements MerchantService {
 
   @Override
   public MerchantResponse getById(UUID id) {
-    Optional<Merchant> merchant = merchantRepository.findById(id);
+    Optional<Merchant> merchant = merchantRepository.findWithItemsById(id);
     if (merchant.isEmpty()) {
       throw new NotFoundException(String.format("Merchant with ID: %s is not found", id));
     }
@@ -69,7 +66,8 @@ public class MerchantServiceImpl implements MerchantService {
 
   @Override
   public MerchantItemResponse createItem(UUID id, NewMerchantItemRequest request) {
-    if (!merchantRepository.existsById(id)) {
+    Optional<Merchant> merchant = merchantRepository.findById(id);
+    if (merchant.isEmpty()) {
       throw new NotFoundException(String.format("Merchant with ID: %s is not found", id));
     }
 
@@ -87,7 +85,7 @@ public class MerchantServiceImpl implements MerchantService {
       ));
     }
 
-    MerchantItem merchantItem = MerchantMapper.fromNewItemRequest(id, request);
+    MerchantItem merchantItem = MerchantMapper.fromNewItemRequest(merchant.get(), request);
     MerchantItem createdItem = merchantItemRepository.save(merchantItem);
 
     return MerchantMapper.toItemResponse(createdItem);

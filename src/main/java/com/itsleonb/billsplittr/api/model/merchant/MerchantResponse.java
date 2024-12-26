@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -19,4 +20,5 @@ public class MerchantResponse {
   private String name;
   private MerchantType type;
   private String address;
+  private List<MerchantItemResponse> items;
 }

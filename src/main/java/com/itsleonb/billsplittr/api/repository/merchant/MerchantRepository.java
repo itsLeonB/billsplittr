@@ -1,6 +1,7 @@
 package com.itsleonb.billsplittr.api.repository.merchant;
 
 import com.itsleonb.billsplittr.api.entity.merchant.Merchant;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +17,7 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
   List<Merchant> searchByName(@Param("name") String name);
 
   boolean existsByName(String name);
+
+  @EntityGraph(attributePaths = {"items"})
+  Optional<Merchant> findWithItemsById(UUID id);
 }

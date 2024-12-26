@@ -8,7 +8,6 @@ import com.itsleonb.billsplittr.api.model.merchant.NewMerchantItemRequest;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class MerchantMapper {
@@ -26,6 +25,7 @@ public class MerchantMapper {
       .name(merchant.getName())
       .type(merchant.getType())
       .address(merchant.getAddress())
+      .items(toItemResponses(merchant.getItems()))
       .build();
   }
 
@@ -35,9 +35,9 @@ public class MerchantMapper {
       .collect(Collectors.toList());
   }
 
-  public static MerchantItem fromNewItemRequest(UUID id, NewMerchantItemRequest request) {
+  public static MerchantItem fromNewItemRequest(Merchant merchant, NewMerchantItemRequest request) {
     return MerchantItem.builder()
-      .merchantId(id)
+      .merchant(merchant)
       .name(request.getName())
       .price(request.getPrice())
       .build();
@@ -49,5 +49,15 @@ public class MerchantMapper {
       .name(item.getName())
       .price(item.getPrice())
       .build();
+  }
+
+  public static List<MerchantItemResponse> toItemResponses(List<MerchantItem> items) {
+    if (items == null) {
+      return null;
+    }
+
+    return items.stream()
+      .map(MerchantMapper::toItemResponse)
+      .collect(Collectors.toList());
   }
 }
