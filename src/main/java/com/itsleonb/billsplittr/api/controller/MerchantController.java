@@ -1,7 +1,9 @@
 package com.itsleonb.billsplittr.api.controller;
 
 import com.itsleonb.billsplittr.api.model.JsonResponse;
+import com.itsleonb.billsplittr.api.model.merchant.MerchantItemResponse;
 import com.itsleonb.billsplittr.api.model.merchant.MerchantResponse;
+import com.itsleonb.billsplittr.api.model.merchant.NewMerchantItemRequest;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,4 +36,14 @@ public interface MerchantController {
     produces = MediaType.APPLICATION_JSON_VALUE
   )
   JsonResponse<MerchantResponse> handleGetById(@PathVariable UUID id);
+
+  @PostMapping(
+    path = "/{id}/items",
+    consumes = MediaType.APPLICATION_JSON_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  JsonResponse<MerchantItemResponse> handleCreateItem(
+    @PathVariable UUID id,
+    @RequestBody NewMerchantItemRequest request
+  );
 }

@@ -15,5 +15,5 @@ public interface MerchantRepository extends JpaRepository<Merchant, UUID> {
   @Query("SELECT m FROM Merchant m WHERE LOWER(m.name) LIKE LOWER(CONCAT(:name, '%'))")
   List<Merchant> searchByName(@Param("name") String name);
 
-  Optional<Merchant> findByName(String name);
+  boolean existsByName(String name);
 }

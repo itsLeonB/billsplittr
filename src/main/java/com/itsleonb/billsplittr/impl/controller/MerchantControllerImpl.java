@@ -3,7 +3,9 @@ package com.itsleonb.billsplittr.impl.controller;
 import com.itsleonb.billsplittr.api.controller.MerchantController;
 import com.itsleonb.billsplittr.api.exception.BadRequestException;
 import com.itsleonb.billsplittr.api.model.JsonResponse;
+import com.itsleonb.billsplittr.api.model.merchant.MerchantItemResponse;
 import com.itsleonb.billsplittr.api.model.merchant.MerchantResponse;
+import com.itsleonb.billsplittr.api.model.merchant.NewMerchantItemRequest;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 import com.itsleonb.billsplittr.api.service.MerchantService;
 import lombok.AllArgsConstructor;
@@ -47,6 +49,16 @@ public class MerchantControllerImpl implements MerchantController {
     MerchantResponse response = merchantService.getById(id);
 
     return JsonResponse.<MerchantResponse>builder()
+      .success(true)
+      .data(response)
+      .build();
+  }
+
+  @Override
+  public JsonResponse<MerchantItemResponse> handleCreateItem(UUID id, NewMerchantItemRequest request) {
+    MerchantItemResponse response = merchantService.createItem(id, request);
+
+    return JsonResponse.<MerchantItemResponse>builder()
       .success(true)
       .data(response)
       .build();
