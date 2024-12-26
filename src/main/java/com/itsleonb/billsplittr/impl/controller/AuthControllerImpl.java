@@ -5,7 +5,7 @@ import com.itsleonb.billsplittr.api.model.JsonResponse;
 import com.itsleonb.billsplittr.api.model.auth.LoginRequest;
 import com.itsleonb.billsplittr.api.model.auth.LoginResponse;
 import com.itsleonb.billsplittr.api.model.auth.RegisterRequest;
-import com.itsleonb.billsplittr.impl.service.auth.AuthServiceImpl;
+import com.itsleonb.billsplittr.api.service.AuthService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
 public class AuthControllerImpl implements AuthController {
-  private AuthServiceImpl authService;
+  private AuthService authService;
 
   @Override
   public JsonResponse<String> handleRegister(RegisterRequest request) {
