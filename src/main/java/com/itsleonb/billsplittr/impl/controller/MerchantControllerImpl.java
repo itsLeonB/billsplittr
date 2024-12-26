@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor(onConstructor = @__(@Autowired))
@@ -38,6 +39,16 @@ public class MerchantControllerImpl implements MerchantController {
     return JsonResponse.<List<MerchantResponse>>builder()
       .success(true)
       .data(responses)
+      .build();
+  }
+
+  @Override
+  public JsonResponse<MerchantResponse> handleGetById(UUID id) {
+    MerchantResponse response = merchantService.getById(id);
+
+    return JsonResponse.<MerchantResponse>builder()
+      .success(true)
+      .data(response)
       .build();
   }
 }

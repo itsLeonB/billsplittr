@@ -5,12 +5,14 @@ import com.itsleonb.billsplittr.api.model.merchant.MerchantResponse;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.UUID;
 
 @RequestMapping("/merchants")
 public interface MerchantController {
@@ -26,4 +28,10 @@ public interface MerchantController {
     produces = MediaType.APPLICATION_JSON_VALUE
   )
   JsonResponse<List<MerchantResponse>> handleFind(@RequestParam String name);
+
+  @GetMapping(
+    path = "/{id}",
+    produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  JsonResponse<MerchantResponse> handleGetById(@PathVariable UUID id);
 }

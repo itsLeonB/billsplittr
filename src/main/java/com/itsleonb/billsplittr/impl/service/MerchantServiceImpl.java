@@ -2,6 +2,7 @@ package com.itsleonb.billsplittr.impl.service;
 
 import com.itsleonb.billsplittr.api.entity.merchant.Merchant;
 import com.itsleonb.billsplittr.api.exception.ConflictException;
+import com.itsleonb.billsplittr.api.exception.NotFoundException;
 import com.itsleonb.billsplittr.api.model.merchant.MerchantResponse;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 import com.itsleonb.billsplittr.api.repository.merchant.MerchantRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor(onConstructor_ = @__(@Autowired))
@@ -47,5 +49,15 @@ public class MerchantServiceImpl implements MerchantService {
     List<Merchant> merchants = merchantRepository.searchByName(name);
 
     return MerchantMapper.toResponses(merchants);
+  }
+
+  @Override
+  public MerchantResponse getById(UUID id) {
+    Optional<Merchant> merchant = merchantRepository.findById(id);
+    if (merchant.isEmpty()) {
+      throw new NotFoundException(String.format("Merchant with ID: %s is not found", id));
+    }
+
+    return MerchantMapper.toResponse(merchant.get());
   }
 }
