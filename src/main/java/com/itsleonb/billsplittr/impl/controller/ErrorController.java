@@ -1,5 +1,6 @@
 package com.itsleonb.billsplittr.impl.controller;
 
+import com.itsleonb.billsplittr.api.exception.BadRequestException;
 import com.itsleonb.billsplittr.api.exception.ConflictException;
 import com.itsleonb.billsplittr.api.exception.NotFoundException;
 import com.itsleonb.billsplittr.api.model.JsonResponse;
@@ -17,7 +18,11 @@ import java.sql.SQLException;
 @Slf4j
 @RestControllerAdvice
 public class ErrorController {
-  @ExceptionHandler({ConstraintViolationException.class, HttpMessageNotReadableException.class})
+  @ExceptionHandler({
+    ConstraintViolationException.class,
+    HttpMessageNotReadableException.class,
+    BadRequestException.class
+  })
   public ResponseEntity<JsonResponse<String>> badRequestException(Exception exception) {
     return errorResponse(exception, HttpStatus.BAD_REQUEST);
   }

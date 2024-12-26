@@ -1,6 +1,7 @@
 package com.itsleonb.billsplittr.impl.service;
 
 import com.itsleonb.billsplittr.api.entity.merchant.Merchant;
+import com.itsleonb.billsplittr.api.exception.ConflictException;
 import com.itsleonb.billsplittr.api.model.merchant.MerchantResponse;
 import com.itsleonb.billsplittr.api.model.merchant.NewMerchantRequest;
 import com.itsleonb.billsplittr.api.repository.merchant.MerchantRepository;
@@ -13,6 +14,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -28,9 +31,21 @@ public class MerchantServiceImpl implements MerchantService {
       throw new ConstraintViolationException(constraintViolations);
     }
 
+    Optional<Merchant> existingMerchant = merchantRepository.findByName(request.getName());
+    if (existingMerchant.isPresent()) {
+      throw new ConflictException(String.format("Merchant with name %s already exists", request.getName()));
+    }
+
     Merchant merchantToCreate = MerchantMapper.fromNewRequest(request);
     Merchant createdMerchant = merchantRepository.save(merchantToCreate);
 
     return MerchantMapper.toResponse(createdMerchant);
+  }
+
+  @Override
+  public List<MerchantResponse> find(String name) {
+    List<Merchant> merchants = merchantRepository.searchByName(name);
+
+    return MerchantMapper.toResponses(merchants);
   }
 }
