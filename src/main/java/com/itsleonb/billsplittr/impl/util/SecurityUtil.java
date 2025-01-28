@@ -10,10 +10,11 @@ public class SecurityUtil {
   public String getCurrentUserEmail() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication == null || !authentication.isAuthenticated()) {
-      throw new SecurityException("Unaunthenticated");
+      throw new SecurityException("Unauthenticated");
     }
 
     UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+    
     return userDetails.getUsername();
   }
 }

@@ -16,7 +16,7 @@ public class JsonResponse<T> {
   private T data;
   private ErrorResponse error;
 
-  public static JsonResponse<String> NewErrorResponse(Exception e) {
+  public static JsonResponse<String> newErrorResponse(Exception e) {
     return JsonResponse.<String>builder()
       .success(false)
       .error(ErrorResponse.builder()

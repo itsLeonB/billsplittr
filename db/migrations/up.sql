@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS user_profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users (id),
+    user_id UUID NOT NULL UNIQUE REFERENCES users (id),
     name TEXT,
     nickname TEXT,
     avatar TEXT,
