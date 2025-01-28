@@ -42,3 +42,15 @@ CREATE TABLE IF NOT EXISTS merchant_items (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ
 );
+
+CREATE TYPE friendship_status AS ENUM ('PENDING', 'ACCEPTED', 'BLOCKED');
+
+CREATE TABLE IF NOT EXISTS user_friendships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id_1 UUID NOT NULL REFERENCES users (id),
+    user_id_2 UUID NOT NULL REFERENCES users (id),
+    status friendship_status NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
+);
