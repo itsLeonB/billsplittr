@@ -1,0 +1,7 @@
+package appconstant
+
+const (
+	MsgAuthUserNotFound       = "user is not found"
+	MsgAuthDuplicateUser      = "user with username %s is already registered"
+	MsgAuthUnknownCredentials = "unknown credentials, please check your username and password"
+)
