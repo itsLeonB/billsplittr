@@ -42,7 +42,7 @@ func (ah *AuthHandler) HandleRegister() gin.HandlerFunc {
 		}
 
 		ctx.JSON(
-			http.StatusOK,
+			http.StatusCreated,
 			ezutil.NewResponse(appconstant.MsgRegisterSuccess),
 		)
 	}
@@ -71,7 +71,7 @@ func (ah *AuthHandler) HandleLogin() gin.HandlerFunc {
 
 func (ah *AuthHandler) HandleProfile() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		parsedUserID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserId)
+		parsedUserID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

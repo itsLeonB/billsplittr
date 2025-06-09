@@ -21,21 +21,19 @@ func NewUserService(userRepository repository.UserRepository) UserService {
 }
 
 func (us *userServiceImpl) ExistsByID(ctx context.Context, id uuid.UUID) (bool, error) {
-	spec := entity.User{}
-	spec.ID = id
-
-	user, err := us.userRepository.Find(ctx, spec)
+	user, err := us.findById(ctx, id)
 	if err != nil {
 		return false, err
 	}
-	if user.IsZero() {
-		return false, nil
-	}
 
-	return true, nil
+	return !user.IsZero(), nil
 }
 
 func (us *userServiceImpl) GetByID(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
+	return us.findById(ctx, id)
+}
+
+func (us *userServiceImpl) findById(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
 	spec := entity.User{}
 	spec.ID = id
 

@@ -1,5 +1,5 @@
 package appconstant
 
 const (
-	ContextUserId = "userId"
+	ContextUserID = "userId"
 )

@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,6 +31,10 @@ func DefaultConfigs() ezutil.Config {
 	timeout, _ := time.ParseDuration("10s")
 	tokenDuration, _ := time.ParseDuration("24h")
 	cookieDuration, _ := time.ParseDuration("24h")
+	secretKey, err := ezutil.GenerateRandomString(32)
+	if err != nil {
+		log.Fatal("error generating secret key: %w", err)
+	}
 
 	appConfig := ezutil.App{
 		Env:        "debug",
@@ -40,7 +45,7 @@ func DefaultConfigs() ezutil.Config {
 	}
 
 	authConfig := ezutil.Auth{
-		SecretKey:      "secret",
+		SecretKey:      secretKey,
 		TokenDuration:  tokenDuration,
 		CookieDuration: cookieDuration,
 		Issuer:         "billsplittr",

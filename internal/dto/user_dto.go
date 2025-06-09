@@ -13,3 +13,7 @@ type UserResponse struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt,omitzero"`
 }
+
+func (ur *UserResponse) IsZero() bool {
+	return ur.ID == uuid.Nil
+}

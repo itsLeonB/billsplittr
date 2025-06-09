@@ -71,7 +71,7 @@ func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserSer
 			return false, nil, err
 		}
 
-		tokenUserId, exists := claims.Data[appconstant.ContextUserId]
+		tokenUserId, exists := claims.Data[appconstant.ContextUserID]
 		if !exists {
 			return false, nil, eris.New("missing user ID from token")
 		}
@@ -93,7 +93,7 @@ func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserSer
 		}
 
 		authData := map[string]any{
-			appconstant.ContextUserId: userID,
+			appconstant.ContextUserID: userID,
 		}
 
 		return true, authData, nil

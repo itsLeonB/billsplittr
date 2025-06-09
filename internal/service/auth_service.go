@@ -34,7 +34,7 @@ func NewAuthService(
 }
 
 func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterRequest) error {
-	err := ezutil.WithinTransaction(ctx, as.transactor, func(ctx context.Context) error {
+	return ezutil.WithinTransaction(ctx, as.transactor, func(ctx context.Context) error {
 		spec := entity.User{Username: request.Username}
 
 		existingUser, err := as.userRepository.Find(ctx, spec)
@@ -59,12 +59,6 @@ func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterReq
 
 		return nil
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (as *authServiceImpl) Login(ctx context.Context, request dto.LoginRequest) (dto.LoginResponse, error) {

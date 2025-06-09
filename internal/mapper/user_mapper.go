@@ -8,7 +8,7 @@ import (
 
 func UserToAuthData(user entity.User) map[string]any {
 	return map[string]any{
-		appconstant.ContextUserId: user.ID,
+		appconstant.ContextUserID: user.ID,
 	}
 }
 
