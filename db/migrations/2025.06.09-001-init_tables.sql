@@ -24,7 +24,10 @@ COMMENT ON COLUMN user_profiles.user_id IS 'Nullable. Can be NULL for peers who 
 CREATE TABLE IF NOT EXISTS transfer_methods (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    display TEXT NOT NULL
+    display TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS debt_transactions (
@@ -50,7 +53,7 @@ CREATE TABLE IF NOT EXISTS group_expenses (
     deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE IF NOT EXISTS group_expenses_participants (
+CREATE TABLE IF NOT EXISTS group_expense_participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     group_expense_id UUID NOT NULL REFERENCES group_expenses(id),
     participant_profile_id UUID NOT NULL REFERENCES user_profiles(id),
@@ -69,6 +72,6 @@ CREATE INDEX IF NOT EXISTS debt_transactions_transfer_method_id_idx ON debt_tran
 CREATE INDEX IF NOT EXISTS debt_transactions_created_at_idx ON debt_transactions(created_at);
 CREATE INDEX IF NOT EXISTS group_expenses_payer_profile_id_idx ON group_expenses(payer_profile_id);
 CREATE INDEX IF NOT EXISTS group_expenses_created_at_idx ON group_expenses(created_at);
-CREATE INDEX IF NOT EXISTS group_expenses_participants_group_expense_id_idx ON group_expenses_participants(group_expense_id);
-CREATE INDEX IF NOT EXISTS group_expenses_participants_participant_profile_id_idx ON group_expenses_participants(participant_profile_id);
-CREATE INDEX IF NOT EXISTS group_expenses_participants_created_at_idx ON group_expenses_participants(created_at);
+CREATE INDEX IF NOT EXISTS group_expense_participants_group_expense_id_idx ON group_expense_participants(group_expense_id);
+CREATE INDEX IF NOT EXISTS group_expense_participants_participant_profile_id_idx ON group_expense_participants(participant_profile_id);
+CREATE INDEX IF NOT EXISTS group_expense_participants_created_at_idx ON group_expense_participants(created_at);

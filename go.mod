@@ -8,6 +8,7 @@ require (
 	github.com/itsLeonB/ezutil v0.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/rotisserie/eris v0.5.4
+	github.com/shopspring/decimal v1.4.0
 	gorm.io/gorm v1.30.0
 )
 

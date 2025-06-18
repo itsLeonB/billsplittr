@@ -16,52 +16,16 @@ func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *prov
 	authMiddleware := ezutil.NewAuthMiddleware("Bearer", tokenCheckFunc)
 	errorMiddleware := ezutil.NewErrorMiddleware()
 
-	routeConfigs := []ezutil.RouteConfig{
-		{
-			Group: "/api",
-			Handlers: []gin.HandlerFunc{
-				errorMiddleware,
-			},
-			Versions: []ezutil.RouteVersionConfig{
-				{
-					Version:  1,
-					Handlers: []gin.HandlerFunc{},
-					Groups: []ezutil.RouteGroupConfig{
-						{
-							Group:    "/auth",
-							Handlers: []gin.HandlerFunc{},
-							Endpoints: []ezutil.EndpointConfig{
-								{
-									Method:   "POST",
-									Endpoint: "/register",
-									Handlers: []gin.HandlerFunc{
-										handlers.Auth.HandleRegister(),
-									},
-								},
-								{
-									Method:   "POST",
-									Endpoint: "/login",
-									Handlers: []gin.HandlerFunc{
-										handlers.Auth.HandleLogin(),
-									},
-								},
-								{
-									Method:   "GET",
-									Endpoint: "/me",
-									Handlers: []gin.HandlerFunc{
-										authMiddleware,
-										handlers.Auth.HandleProfile(),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	apiRoutes := router.Group("/api", errorMiddleware)
 
-	ezutil.SetupRoutes(router, routeConfigs)
+	v1 := apiRoutes.Group("/v1")
+
+	authRoutes := v1.Group("/auth")
+	authRoutes.POST("/register", handlers.Auth.HandleRegister())
+	authRoutes.POST("/login", handlers.Auth.HandleLogin())
+
+	protectedRoutes := v1.Group("/", authMiddleware)
+	protectedRoutes.GET("/profile", handlers.Auth.HandleProfile())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

@@ -8,6 +8,6 @@ type User struct {
 	Password string
 }
 
-func (u *User) IsZero() bool {
+func (u User) IsZero() bool {
 	return u.ID == uuid.Nil
 }
