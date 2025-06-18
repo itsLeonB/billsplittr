@@ -4,7 +4,7 @@ import "github.com/google/uuid"
 
 type User struct {
 	BaseEntity
-	Username string
+	Email    string
 	Password string
 }
 

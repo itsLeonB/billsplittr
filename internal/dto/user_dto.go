@@ -8,7 +8,7 @@ import (
 
 type UserResponse struct {
 	ID        uuid.UUID `json:"id"`
-	Username  string    `json:"username"`
+	Email     string    `json:"username"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt,omitzero"`

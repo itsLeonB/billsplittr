@@ -35,14 +35,14 @@ func NewAuthService(
 
 func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterRequest) error {
 	return ezutil.WithinTransaction(ctx, as.transactor, func(ctx context.Context) error {
-		spec := entity.User{Username: request.Username}
+		spec := entity.User{Email: request.Email}
 
 		existingUser, err := as.userRepository.Find(ctx, spec)
 		if err != nil {
 			return err
 		}
 		if !existingUser.IsZero() {
-			return ezutil.ConflictError(fmt.Sprintf(appconstant.MsgAuthDuplicateUser, request.Username))
+			return ezutil.ConflictError(fmt.Sprintf(appconstant.MsgAuthDuplicateUser, request.Email))
 		}
 
 		hash, err := as.hashService.Hash(request.Password)
@@ -62,7 +62,7 @@ func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterReq
 }
 
 func (as *authServiceImpl) Login(ctx context.Context, request dto.LoginRequest) (dto.LoginResponse, error) {
-	spec := entity.User{Username: request.Username}
+	spec := entity.User{Email: request.Email}
 
 	user, err := as.userRepository.Find(ctx, spec)
 	if err != nil {
