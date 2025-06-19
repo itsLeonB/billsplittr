@@ -28,7 +28,7 @@ func (ur *userRepositoryGorm) Insert(ctx context.Context, user entity.User) (ent
 
 	err = db.Create(&user).Error
 	if err != nil {
-		return entity.User{}, eris.Wrap(err, appconstant.MsgInsertData)
+		return entity.User{}, eris.Wrap(err, appconstant.ErrDataInsert)
 	}
 
 	return user, nil
@@ -47,7 +47,7 @@ func (ur *userRepositoryGorm) Find(ctx context.Context, spec entity.User) (entit
 		if err == gorm.ErrRecordNotFound {
 			return entity.User{}, nil // No user found
 		}
-		return entity.User{}, eris.Wrap(err, appconstant.MsgGetData)
+		return entity.User{}, eris.Wrap(err, appconstant.ErrDataSelect)
 	}
 
 	return user, nil

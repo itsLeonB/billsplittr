@@ -10,8 +10,8 @@ type Friendship struct {
 	ProfileID1 uuid.UUID
 	ProfileID2 uuid.UUID
 	Type       appconstant.FriendshipType
-	Profile1   UserProfile
-	Profile2   UserProfile
+	Profile1   UserProfile `gorm:"foreignKey:ProfileID1"`
+	Profile2   UserProfile `gorm:"foreignKey:ProfileID2"`
 }
 
 type FriendshipSpecification struct {

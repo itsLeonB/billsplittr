@@ -22,16 +22,16 @@ func FriendshipToResponse(userProfileID uuid.UUID, friendship entity.Friendship)
 		ProfileName: friendProfile.Name,
 		CreatedAt:   friendship.CreatedAt,
 		UpdatedAt:   friendship.UpdatedAt,
-		DeletedAt:   friendship.DeletedAt,
+		DeletedAt:   friendship.DeletedAt.Time,
 	}, nil
 }
 
 func selectFriendProfile(userProfileID uuid.UUID, friendship entity.Friendship) (entity.UserProfile, error) {
 	switch userProfileID {
-	case friendship.Profile1.ID:
-		return friendship.Profile1, nil
-	case friendship.Profile2.ID:
+	case friendship.ProfileID1:
 		return friendship.Profile2, nil
+	case friendship.ProfileID2:
+		return friendship.Profile1, nil
 	default:
 		return entity.UserProfile{}, eris.New(fmt.Sprintf(
 			"mismatched user profile ID: %s with friendship ID: %s",

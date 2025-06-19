@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
-	github.com/itsLeonB/ezutil v0.10.0
+	github.com/itsLeonB/ezutil v0.11.0
 	github.com/joho/godotenv v1.5.1
 	github.com/rotisserie/eris v0.5.4
 	github.com/shopspring/decimal v1.4.0

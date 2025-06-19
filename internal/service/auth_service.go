@@ -38,7 +38,7 @@ func NewAuthService(
 }
 
 func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterRequest) error {
-	return ezutil.WithinTransaction(ctx, as.transactor, func(ctx context.Context) error {
+	return as.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := entity.User{Email: request.Email}
 
 		existingUser, err := as.userRepository.Find(ctx, spec)
@@ -46,7 +46,7 @@ func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterReq
 			return err
 		}
 		if !existingUser.IsZero() {
-			return ezutil.ConflictError(fmt.Sprintf(appconstant.MsgAuthDuplicateUser, request.Email))
+			return ezutil.ConflictError(fmt.Sprintf(appconstant.ErrAuthDuplicateUser, request.Email))
 		}
 
 		hash, err := as.hashService.Hash(request.Password)
@@ -82,7 +82,7 @@ func (as *authServiceImpl) Login(ctx context.Context, request dto.LoginRequest) 
 		return dto.LoginResponse{}, err
 	}
 	if user.IsZero() {
-		return dto.LoginResponse{}, ezutil.NotFoundError(appconstant.MsgAuthUnknownCredentials)
+		return dto.LoginResponse{}, ezutil.NotFoundError(appconstant.ErrAuthUnknownCredentials)
 	}
 
 	ok, err := as.hashService.CheckHash(user.Password, request.Password)
@@ -90,7 +90,7 @@ func (as *authServiceImpl) Login(ctx context.Context, request dto.LoginRequest) 
 		return dto.LoginResponse{}, err
 	}
 	if !ok {
-		return dto.LoginResponse{}, ezutil.NotFoundError(appconstant.MsgAuthUnknownCredentials)
+		return dto.LoginResponse{}, ezutil.NotFoundError(appconstant.ErrAuthUnknownCredentials)
 	}
 
 	token, err := as.jwtService.CreateToken(mapper.UserToAuthData(user))

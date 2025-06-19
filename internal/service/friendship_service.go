@@ -42,19 +42,17 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 ) (dto.FriendshipResponse, error) {
 	var response dto.FriendshipResponse
 
-	err := ezutil.WithinTransaction(ctx, fs.transactor, func(ctx context.Context) error {
+	err := fs.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		user, err := fs.findUser(ctx, request.UserID)
 		if err != nil {
 			return err
 		}
 
-		userProfileID := user.Profile.ID
-
-		if err = fs.validateExistingAnonymousFriendship(ctx, userProfileID, request.Name); err != nil {
+		if err = fs.validateExistingAnonymousFriendship(ctx, user.Profile.ID, request.Name); err != nil {
 			return err
 		}
 
-		response, err = fs.insertAnonymousFriendship(ctx, userProfileID, request.Name)
+		response, err = fs.insertAnonymousFriendship(ctx, user.Profile, request.Name)
 		if err != nil {
 			return err
 		}
@@ -78,10 +76,10 @@ func (fs *friendshipServiceImpl) findUser(ctx context.Context, id uuid.UUID) (en
 		return entity.User{}, err
 	}
 	if user.IsZero() {
-		return entity.User{}, ezutil.NotFoundError(fmt.Sprintf(appconstant.MsgUserNotFound, id))
+		return entity.User{}, ezutil.NotFoundError(fmt.Sprintf(appconstant.ErrUserNotFound, id))
 	}
 	if user.IsDeleted() {
-		return entity.User{}, ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.MsgUserDeleted, id))
+		return entity.User{}, ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrUserDeleted, id))
 	}
 
 	return user, nil
@@ -102,7 +100,7 @@ func (fs *friendshipServiceImpl) validateExistingAnonymousFriendship(
 		return err
 	}
 	if !existingFriendship.IsZero() && !existingFriendship.IsDeleted() {
-		return ezutil.ConflictError(fmt.Sprintf("anonymous friend named: %s already exists", friendName))
+		return ezutil.ConflictError(fmt.Sprintf("anonymous friend named %s already exists", friendName))
 	}
 
 	return nil
@@ -110,7 +108,7 @@ func (fs *friendshipServiceImpl) validateExistingAnonymousFriendship(
 
 func (fs *friendshipServiceImpl) insertAnonymousFriendship(
 	ctx context.Context,
-	userProfileID uuid.UUID,
+	userProfile entity.UserProfile,
 	friendName string,
 ) (dto.FriendshipResponse, error) {
 	newProfile := entity.UserProfile{Name: friendName}
@@ -120,7 +118,7 @@ func (fs *friendshipServiceImpl) insertAnonymousFriendship(
 		return dto.FriendshipResponse{}, err
 	}
 
-	newFriendship, err := orderProfileID(userProfileID, insertedProfile.ID)
+	newFriendship, err := orderProfileID(userProfile, insertedProfile)
 	if err != nil {
 		return dto.FriendshipResponse{}, err
 	}
@@ -132,20 +130,24 @@ func (fs *friendshipServiceImpl) insertAnonymousFriendship(
 		return dto.FriendshipResponse{}, err
 	}
 
-	return mapper.FriendshipToResponse(userProfileID, insertedFriendship)
+	return mapper.FriendshipToResponse(userProfile.ID, insertedFriendship)
 }
 
-func orderProfileID(profileID1, profileID2 uuid.UUID) (entity.Friendship, error) {
-	switch util.CompareUUID(profileID1, profileID2) {
+func orderProfileID(userProfile, friendProfile entity.UserProfile) (entity.Friendship, error) {
+	switch util.CompareUUID(userProfile.ID, friendProfile.ID) {
 	case 1:
 		return entity.Friendship{
-			ProfileID1: profileID2,
-			ProfileID2: profileID1,
+			ProfileID1: friendProfile.ID,
+			ProfileID2: userProfile.ID,
+			Profile1:   friendProfile,
+			Profile2:   userProfile,
 		}, nil
 	case -1:
 		return entity.Friendship{
-			ProfileID1: profileID1,
-			ProfileID2: profileID2,
+			ProfileID1: userProfile.ID,
+			ProfileID2: friendProfile.ID,
+			Profile1:   userProfile,
+			Profile2:   friendProfile,
 		}, nil
 	default:
 		return entity.Friendship{}, eris.New("both IDs are equal, cannot create friendship")

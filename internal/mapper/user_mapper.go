@@ -18,7 +18,7 @@ func UserToResponse(user entity.User) dto.UserResponse {
 		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		DeletedAt: user.DeletedAt,
+		DeletedAt: user.DeletedAt.Time,
 	}
 }
 
@@ -29,6 +29,6 @@ func UserToProfileResponse(user entity.User) dto.ProfileResponse {
 		Name:      user.Profile.Name,
 		CreatedAt: user.Profile.CreatedAt,
 		UpdatedAt: user.Profile.UpdatedAt,
-		DeletedAt: user.Profile.DeletedAt,
+		DeletedAt: user.Profile.DeletedAt.Time,
 	}
 }

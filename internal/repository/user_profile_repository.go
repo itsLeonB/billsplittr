@@ -25,7 +25,7 @@ func (upr *userProfileRepositoryGorm) Insert(ctx context.Context, profile entity
 	}
 
 	if err = db.Create(&profile).Error; err != nil {
-		return entity.UserProfile{}, eris.Wrap(err, appconstant.MsgInsertData)
+		return entity.UserProfile{}, eris.Wrap(err, appconstant.ErrDataInsert)
 	}
 
 	return profile, nil

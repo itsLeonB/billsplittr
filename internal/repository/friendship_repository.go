@@ -25,7 +25,7 @@ func (fr *friendshipRepositoryGorm) Insert(ctx context.Context, friendship entit
 	}
 
 	if err = db.Create(&friendship).Error; err != nil {
-		return entity.Friendship{}, eris.Wrap(err, appconstant.MsgInsertData)
+		return entity.Friendship{}, eris.Wrap(err, appconstant.ErrDataInsert)
 	}
 
 	return friendship, nil
@@ -41,17 +41,20 @@ func (fr *friendshipRepositoryGorm) FindFirst(ctx context.Context, spec entity.F
 
 	err = db.
 		Scopes(ezutil.WhereBySpec(spec.Friendship)).
-		Joins("JOIN user_profiles AS up1 ON up1.id = friendships.profile_id_1").
-		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id_2").
+		Joins("JOIN user_profiles AS up1 ON up1.id = friendships.profile_id1").
+		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id2").
 		Where(
-			fr.db.Where("up1.name = ? AND friendships.profile_id_1 <> ?", spec.Name, spec.ProfileID).
-				Or("up2.name = ? AND friendships.profile_id_2 <> ?", spec.Name, spec.ProfileID),
+			fr.db.Where("up1.name = ? AND friendships.profile_id1 <> ?", spec.Name, spec.ProfileID).
+				Or("up2.name = ? AND friendships.profile_id2 <> ?", spec.Name, spec.ProfileID),
 		).
 		Take(&friendship).
 		Error
 
 	if err != nil {
-		return entity.Friendship{}, eris.Wrap(err, appconstant.MsgGetData)
+		if err == gorm.ErrRecordNotFound {
+			return entity.Friendship{}, nil
+		}
+		return entity.Friendship{}, eris.Wrap(err, appconstant.ErrDataSelect)
 	}
 
 	return friendship, nil

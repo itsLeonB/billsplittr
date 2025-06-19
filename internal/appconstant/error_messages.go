@@ -1,10 +1,15 @@
 package appconstant
 
 const (
-	MsgAuthUserNotFound       = "user is not found"
-	MsgAuthDuplicateUser      = "user with username %s is already registered"
-	MsgAuthUnknownCredentials = "unknown credentials, please check your username and password"
+	ErrDataSelect = "error retrieving data"
+	ErrDataInsert = "error inserting new data"
+	ErrDataUpdate = "error updating data"
+	ErrDataDelete = "error deleting data"
 
-	MsgUserNotFound = "user with ID: %s is not found"
-	MsgUserDeleted  = "user with ID: %s is deleted"
+	ErrAuthUserNotFound       = "user is not found"
+	ErrAuthDuplicateUser      = "user with username %s is already registered"
+	ErrAuthUnknownCredentials = "unknown credentials, please check your username and password"
+
+	ErrUserNotFound = "user with ID: %s is not found"
+	ErrUserDeleted  = "user with ID: %s is deleted"
 )

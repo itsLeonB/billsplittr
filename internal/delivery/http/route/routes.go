@@ -56,7 +56,7 @@ func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserSer
 			return false, nil, err
 		}
 		if !exists {
-			return false, nil, ezutil.UnauthorizedError(appconstant.MsgAuthUserNotFound)
+			return false, nil, ezutil.UnauthorizedError(appconstant.ErrAuthUserNotFound)
 		}
 
 		authData := map[string]any{
