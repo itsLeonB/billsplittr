@@ -15,6 +15,7 @@ type Friendship struct {
 }
 
 type FriendshipSpecification struct {
+	Specification
 	Friendship
 	ProfileID uuid.UUID
 	Name      string

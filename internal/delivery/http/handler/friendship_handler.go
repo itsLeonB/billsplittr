@@ -52,3 +52,24 @@ func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 		)
 	}
 }
+
+func (fh *FriendshipHandler) HandleGetAll() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := fh.friendshipService.GetAll(ctx, userID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}

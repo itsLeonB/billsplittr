@@ -20,4 +20,5 @@ type UserService interface {
 
 type FriendshipService interface {
 	CreateAnonymous(ctx context.Context, request dto.NewAnonymousFriendshipRequest) (dto.FriendshipResponse, error)
+	GetAll(ctx context.Context, userID uuid.UUID) ([]dto.FriendshipResponse, error)
 }

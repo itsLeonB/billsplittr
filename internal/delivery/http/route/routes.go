@@ -29,6 +29,7 @@ func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *prov
 	protectedRoutes.GET("/profile", handlers.Profile.HandleProfile())
 
 	protectedRoutes.POST("/friendships", handlers.Friendship.HandleCreateAnonymousFriendship())
+	protectedRoutes.GET("/friendships", handlers.Friendship.HandleGetAll())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

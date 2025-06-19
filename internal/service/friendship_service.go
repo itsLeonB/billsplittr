@@ -67,6 +67,26 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 	return response, nil
 }
 
+func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) ([]dto.FriendshipResponse, error) {
+	user, err := fs.findUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	spec := entity.FriendshipSpecification{ProfileID: user.Profile.ID}
+	spec.PreloadRelations = []string{"Profile1", "Profile2"}
+
+	friendships, err := fs.friendshipRepository.FindAll(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	mapperFunc := func(friendship entity.Friendship) (dto.FriendshipResponse, error) {
+		return mapper.FriendshipToResponse(user.Profile.ID, friendship)
+	}
+
+	return ezutil.MapSliceWithError(friendships, mapperFunc)
+}
+
 func (fs *friendshipServiceImpl) findUser(ctx context.Context, id uuid.UUID) (entity.User, error) {
 	userSpec := entity.User{}
 	userSpec.ID = id

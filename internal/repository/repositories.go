@@ -17,5 +17,6 @@ type UserProfileRepository interface {
 
 type FriendshipRepository interface {
 	Insert(ctx context.Context, friendship entity.Friendship) (entity.Friendship, error)
+	FindAll(ctx context.Context, spec entity.FriendshipSpecification) ([]entity.Friendship, error)
 	FindFirst(ctx context.Context, spec entity.FriendshipSpecification) (entity.Friendship, error)
 }

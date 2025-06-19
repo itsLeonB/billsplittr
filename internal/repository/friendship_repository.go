@@ -5,6 +5,7 @@ import (
 
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
@@ -58,6 +59,31 @@ func (fr *friendshipRepositoryGorm) FindFirst(ctx context.Context, spec entity.F
 	}
 
 	return friendship, nil
+}
+
+func (fr *friendshipRepositoryGorm) FindAll(ctx context.Context, spec entity.FriendshipSpecification) ([]entity.Friendship, error) {
+	var friendships []entity.Friendship
+
+	db, err := fr.getGormInstance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.
+		Where(entity.Friendship{ProfileID1: spec.ProfileID}).
+		Or(entity.Friendship{ProfileID2: spec.ProfileID}).
+		Scopes(
+			ezutil.PreloadRelations(spec.PreloadRelations),
+			util.DefaultOrder(),
+		).
+		Find(&friendships).
+		Error
+
+	if err != nil {
+		return nil, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return friendships, nil
 }
 
 func (fr *friendshipRepositoryGorm) getGormInstance(ctx context.Context) (*gorm.DB, error) {
