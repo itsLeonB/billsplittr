@@ -6,14 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
+type ProfileResponse struct {
+	UserID    uuid.UUID `json:"userId"`
+	ProfileID uuid.UUID `json:"profileId"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	DeletedAt time.Time `json:"deletedAt,omitzero"`
-}
-
-func (ur *UserResponse) IsZero() bool {
-	return ur.ID == uuid.Nil
 }

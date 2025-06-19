@@ -11,12 +11,17 @@ import (
 )
 
 type userServiceImpl struct {
-	userRepository repository.UserRepository
+	userRepository        repository.UserRepository
+	userProfileRepository repository.UserProfileRepository
 }
 
-func NewUserService(userRepository repository.UserRepository) UserService {
+func NewUserService(
+	userRepository repository.UserRepository,
+	userProfileRepository repository.UserProfileRepository,
+) UserService {
 	return &userServiceImpl{
-		userRepository: userRepository,
+		userRepository,
+		userProfileRepository,
 	}
 }
 
@@ -30,20 +35,34 @@ func (us *userServiceImpl) ExistsByID(ctx context.Context, id uuid.UUID) (bool, 
 }
 
 func (us *userServiceImpl) GetByID(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
-	return us.findById(ctx, id)
+	user, err := us.findById(ctx, id)
+	if err != nil {
+		return dto.UserResponse{}, err
+	}
+
+	return mapper.UserToResponse(user), nil
 }
 
-func (us *userServiceImpl) findById(ctx context.Context, id uuid.UUID) (dto.UserResponse, error) {
+func (us *userServiceImpl) GetProfile(ctx context.Context, id uuid.UUID) (dto.ProfileResponse, error) {
+	user, err := us.findById(ctx, id)
+	if err != nil {
+		return dto.ProfileResponse{}, err
+	}
+
+	return mapper.UserToProfileResponse(user), nil
+}
+
+func (us *userServiceImpl) findById(ctx context.Context, id uuid.UUID) (entity.User, error) {
 	spec := entity.User{}
 	spec.ID = id
 
 	user, err := us.userRepository.Find(ctx, spec)
 	if err != nil {
-		return dto.UserResponse{}, err
+		return entity.User{}, err
 	}
 	if user.IsZero() {
-		return dto.UserResponse{}, nil
+		return entity.User{}, nil
 	}
 
-	return mapper.UserToResponse(user), nil
+	return user, nil
 }

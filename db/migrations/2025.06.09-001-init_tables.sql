@@ -1,5 +1,6 @@
 -- Enums
 CREATE TYPE debt_transaction_type AS ENUM ('LEND', 'REPAY');
+CREATE TYPE friendship_type AS ENUM ('REAL', 'ANON');
 
 -- Tables
 CREATE TABLE IF NOT EXISTS users (
@@ -20,6 +21,18 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     deleted_at TIMESTAMPTZ
 );
 COMMENT ON COLUMN user_profiles.user_id IS 'Nullable. Can be NULL for peers who do not have an account in the app';
+
+CREATE TABLE IF NOT EXISTS friendships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id_1 UUID NOT NULL REFERENCES user_profiles(id),
+    profile_id_2 UUID NOT NULL REFERENCES user_profiles(id),
+    type friendship_type NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ,
+    CONSTRAINT unique_friendship UNIQUE (profile_id_1, profile_id_2),
+    CONSTRAINT profile_order CHECK (profile_id_1 < profile_id_2)
+);
 
 CREATE TABLE IF NOT EXISTS transfer_methods (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -66,6 +79,10 @@ CREATE TABLE IF NOT EXISTS group_expense_participants (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS user_profiles_user_id_idx ON user_profiles(user_id);
+CREATE INDEX IF NOT EXISTS user_profiles_name_idx ON user_profiles(name);
+CREATE INDEX IF NOT EXISTS friendships_profile_id_1_idx ON friendships(profile_id_1);
+CREATE INDEX IF NOT EXISTS friendships_profile_id_2_idx ON friendships(profile_id_2);
+CREATE INDEX IF NOT EXISTS friendships_type_idx ON friendships(type);
 CREATE INDEX IF NOT EXISTS debt_transactions_lender_profile_id_idx ON debt_transactions(lender_profile_id);
 CREATE INDEX IF NOT EXISTS debt_transactions_borrower_profile_id_idx ON debt_transactions(borrower_profile_id);
 CREATE INDEX IF NOT EXISTS debt_transactions_transfer_method_id_idx ON debt_transactions(transfer_method_id);

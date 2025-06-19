@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/ezutil"
+	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +28,7 @@ func (ur *userRepositoryGorm) Insert(ctx context.Context, user entity.User) (ent
 
 	err = db.Create(&user).Error
 	if err != nil {
-		return entity.User{}, err
+		return entity.User{}, eris.Wrap(err, appconstant.MsgInsertData)
 	}
 
 	return user, nil
@@ -40,12 +42,12 @@ func (ur *userRepositoryGorm) Find(ctx context.Context, spec entity.User) (entit
 		return entity.User{}, err
 	}
 
-	db = db.Scopes(ezutil.WhereBySpec(spec))
+	db = db.Scopes(ezutil.WhereBySpec(spec), ezutil.PreloadRelations([]string{"Profile"}))
 	if err := db.First(&user).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return entity.User{}, nil // No user found
 		}
-		return entity.User{}, err // Other errors
+		return entity.User{}, eris.Wrap(err, appconstant.MsgGetData)
 	}
 
 	return user, nil

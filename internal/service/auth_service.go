@@ -9,14 +9,16 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 )
 
 type authServiceImpl struct {
-	hashService    ezutil.HashService
-	jwtService     ezutil.JWTService
-	userRepository repository.UserRepository
-	transactor     ezutil.Transactor
+	hashService           ezutil.HashService
+	jwtService            ezutil.JWTService
+	userRepository        repository.UserRepository
+	transactor            ezutil.Transactor
+	userProfileRepository repository.UserProfileRepository
 }
 
 func NewAuthService(
@@ -24,12 +26,14 @@ func NewAuthService(
 	jwtService ezutil.JWTService,
 	userRepository repository.UserRepository,
 	transactor ezutil.Transactor,
+	userProfileRepository repository.UserProfileRepository,
 ) AuthService {
 	return &authServiceImpl{
-		hashService:    hashService,
-		jwtService:     jwtService,
-		userRepository: userRepository,
-		transactor:     transactor,
+		hashService,
+		jwtService,
+		userRepository,
+		transactor,
+		userProfileRepository,
 	}
 }
 
@@ -52,8 +56,17 @@ func (as *authServiceImpl) Register(ctx context.Context, request dto.RegisterReq
 
 		spec.Password = hash
 
-		_, err = as.userRepository.Insert(ctx, spec)
+		user, err := as.userRepository.Insert(ctx, spec)
 		if err != nil {
+			return err
+		}
+
+		profile := entity.UserProfile{
+			UserID: user.ID,
+			Name:   util.GetNameFromEmail(request.Email),
+		}
+
+		if _, err = as.userProfileRepository.Insert(ctx, profile); err != nil {
 			return err
 		}
 

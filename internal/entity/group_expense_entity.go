@@ -11,7 +11,3 @@ type GroupExpenses struct {
 	TotalAmount    decimal.Decimal
 	Description    string
 }
-
-func (ge GroupExpenses) IsZero() bool {
-	return ge.ID == uuid.Nil
-}

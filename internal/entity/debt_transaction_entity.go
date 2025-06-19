@@ -15,7 +15,3 @@ type DebtTransaction struct {
 	TransferMethodID  uuid.UUID
 	Description       string
 }
-
-func (dt DebtTransaction) IsZero() bool {
-	return dt.ID == uuid.Nil
-}

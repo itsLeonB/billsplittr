@@ -25,7 +25,10 @@ func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *prov
 	authRoutes.POST("/login", handlers.Auth.HandleLogin())
 
 	protectedRoutes := v1.Group("/", authMiddleware)
-	protectedRoutes.GET("/profile", handlers.Auth.HandleProfile())
+
+	protectedRoutes.GET("/profile", handlers.Profile.HandleProfile())
+
+	protectedRoutes.POST("/friendships", handlers.Friendship.HandleCreateAnonymousFriendship())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

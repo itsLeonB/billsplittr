@@ -12,7 +12,3 @@ type GroupExpenseParticipant struct {
 	ShareAmount          decimal.Decimal
 	Description          string
 }
-
-func (gep GroupExpenseParticipant) IsZero() bool {
-	return gep.ID == uuid.Nil
-}

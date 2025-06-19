@@ -8,6 +8,7 @@ type UserProfile struct {
 	Name   string
 }
 
-func (up UserProfile) IsZero() bool {
-	return up.ID == uuid.Nil
+type UserProfileSpecification struct {
+	Specification
+	UserProfile
 }
