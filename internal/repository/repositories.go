@@ -20,3 +20,12 @@ type FriendshipRepository interface {
 	FindAll(ctx context.Context, spec entity.FriendshipSpecification) ([]entity.Friendship, error)
 	FindFirst(ctx context.Context, spec entity.FriendshipSpecification) (entity.Friendship, error)
 }
+
+type DebtTransactionRepository interface {
+	Insert(ctx context.Context, debtTransaction entity.DebtTransaction) (entity.DebtTransaction, error)
+}
+
+type TransferMethodRepository interface {
+	FindAll(ctx context.Context, spec entity.TransferMethod) ([]entity.TransferMethod, error)
+	FindFirst(ctx context.Context, spec entity.TransferMethod) (entity.TransferMethod, error)
+}

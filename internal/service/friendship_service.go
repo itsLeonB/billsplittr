@@ -17,22 +17,22 @@ import (
 
 type friendshipServiceImpl struct {
 	transactor            ezutil.Transactor
-	userRepository        repository.UserRepository
 	userProfileRepository repository.UserProfileRepository
 	friendshipRepository  repository.FriendshipRepository
+	userService           UserService
 }
 
 func NewFriendshipRepository(
 	transactor ezutil.Transactor,
-	userRepository repository.UserRepository,
 	userProfileRepository repository.UserProfileRepository,
 	friendshipRepository repository.FriendshipRepository,
+	userService UserService,
 ) FriendshipService {
 	return &friendshipServiceImpl{
 		transactor,
-		userRepository,
 		userProfileRepository,
 		friendshipRepository,
+		userService,
 	}
 }
 
@@ -43,7 +43,7 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 	var response dto.FriendshipResponse
 
 	err := fs.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		user, err := fs.findUser(ctx, request.UserID)
+		user, err := fs.userService.GetByIDForUpdate(ctx, request.UserID)
 		if err != nil {
 			return err
 		}
@@ -68,11 +68,11 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 }
 
 func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) ([]dto.FriendshipResponse, error) {
-	user, err := fs.findUser(ctx, userID)
+	user, err := fs.userService.GetByIDForUpdate(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	spec := entity.FriendshipSpecification{ProfileID: user.Profile.ID}
+	spec := entity.FriendshipSpecification{ProfileID1: user.Profile.ID}
 	spec.PreloadRelations = []string{"Profile1", "Profile2"}
 
 	friendships, err := fs.friendshipRepository.FindAll(ctx, spec)
@@ -87,31 +87,13 @@ func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) (
 	return ezutil.MapSliceWithError(friendships, mapperFunc)
 }
 
-func (fs *friendshipServiceImpl) findUser(ctx context.Context, id uuid.UUID) (entity.User, error) {
-	userSpec := entity.User{}
-	userSpec.ID = id
-
-	user, err := fs.userRepository.Find(ctx, userSpec)
-	if err != nil {
-		return entity.User{}, err
-	}
-	if user.IsZero() {
-		return entity.User{}, ezutil.NotFoundError(fmt.Sprintf(appconstant.ErrUserNotFound, id))
-	}
-	if user.IsDeleted() {
-		return entity.User{}, ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrUserDeleted, id))
-	}
-
-	return user, nil
-}
-
 func (fs *friendshipServiceImpl) validateExistingAnonymousFriendship(
 	ctx context.Context,
 	userProfileID uuid.UUID,
 	friendName string,
 ) error {
 	friendshipSpec := entity.FriendshipSpecification{}
-	friendshipSpec.ProfileID = userProfileID
+	friendshipSpec.ProfileID1 = userProfileID
 	friendshipSpec.Name = friendName
 	friendshipSpec.Type = appconstant.Anonymous
 

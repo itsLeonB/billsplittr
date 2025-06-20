@@ -40,17 +40,19 @@ func (fr *friendshipRepositoryGorm) FindFirst(ctx context.Context, spec entity.F
 		return entity.Friendship{}, err
 	}
 
-	err = db.
+	query := db.
 		Scopes(ezutil.WhereBySpec(spec.Friendship)).
 		Joins("JOIN user_profiles AS up1 ON up1.id = friendships.profile_id1").
-		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id2").
-		Where(
-			fr.db.Where("up1.name = ? AND friendships.profile_id1 <> ?", spec.Name, spec.ProfileID).
-				Or("up2.name = ? AND friendships.profile_id2 <> ?", spec.Name, spec.ProfileID),
-		).
-		Take(&friendship).
-		Error
+		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id2")
 
+	if spec.Name != "" {
+		query = query.Where(
+			fr.db.Where("up1.name = ? AND friendships.profile_id1 <> ?", spec.Name, spec.ProfileID1).
+				Or("up2.name = ? AND friendships.profile_id2 <> ?", spec.Name, spec.ProfileID1),
+		)
+	}
+
+	err = query.Take(&friendship).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return entity.Friendship{}, nil
@@ -70,8 +72,8 @@ func (fr *friendshipRepositoryGorm) FindAll(ctx context.Context, spec entity.Fri
 	}
 
 	err = db.
-		Where(entity.Friendship{ProfileID1: spec.ProfileID}).
-		Or(entity.Friendship{ProfileID2: spec.ProfileID}).
+		Where(entity.Friendship{ProfileID1: spec.ProfileID1}).
+		Or(entity.Friendship{ProfileID2: spec.ProfileID1}).
 		Scopes(
 			ezutil.PreloadRelations(spec.PreloadRelations),
 			util.DefaultOrder(),

@@ -11,7 +11,6 @@ import (
 )
 
 func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *provider.Services) {
-	// Middlewares
 	tokenCheckFunc := newTokenCheckFunc(services.JWT, services.User)
 	authMiddleware := ezutil.NewAuthMiddleware("Bearer", tokenCheckFunc)
 	errorMiddleware := ezutil.NewErrorMiddleware()
@@ -30,6 +29,10 @@ func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *prov
 
 	protectedRoutes.POST("/friendships", handlers.Friendship.HandleCreateAnonymousFriendship())
 	protectedRoutes.GET("/friendships", handlers.Friendship.HandleGetAll())
+
+	protectedRoutes.GET("/transfer-methods", handlers.TransferMethod.HandleGetAll())
+
+	protectedRoutes.POST("/debts", handlers.Debt.HandleCreate())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

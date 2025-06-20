@@ -12,4 +12,10 @@ const (
 
 	ErrUserNotFound = "user with ID: %s is not found"
 	ErrUserDeleted  = "user with ID: %s is deleted"
+
+	ErrFriendshipNotFound = "friendship not found"
+	ErrFriendshipDeleted  = "friendship is deleted"
+
+	ErrTransferMethodNotFound = "transfer method with ID: %s is not found"
+	ErrTransferMethodDeleted  = "transfer method with ID: %s is deleted"
 )

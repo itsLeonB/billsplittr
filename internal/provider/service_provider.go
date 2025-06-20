@@ -6,10 +6,12 @@ import (
 )
 
 type Services struct {
-	Auth       service.AuthService
-	User       service.UserService
-	JWT        ezutil.JWTService
-	Friendship service.FriendshipService
+	Auth           service.AuthService
+	User           service.UserService
+	JWT            ezutil.JWTService
+	Friendship     service.FriendshipService
+	Debt           service.DebtService
+	TransferMethod service.TransferMethodService
 }
 
 func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Services {
@@ -25,21 +27,34 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 	)
 
 	userService := service.NewUserService(
+		repositories.Transactor,
 		repositories.User,
 		repositories.UserProfile,
 	)
 
 	friendshipService := service.NewFriendshipRepository(
 		repositories.Transactor,
-		repositories.User,
 		repositories.UserProfile,
 		repositories.Friendship,
+		userService,
 	)
 
+	debtService := service.NewDebtService(
+		repositories.Transactor,
+		repositories.Friendship,
+		userService,
+		repositories.DebtTransaction,
+		repositories.TransferMethod,
+	)
+
+	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
+
 	return &Services{
-		Auth:       authService,
-		User:       userService,
-		JWT:        jwtService,
-		Friendship: friendshipService,
+		Auth:           authService,
+		User:           userService,
+		JWT:            jwtService,
+		Friendship:     friendshipService,
+		Debt:           debtService,
+		TransferMethod: transferMethodService,
 	}
 }

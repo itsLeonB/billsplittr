@@ -14,4 +14,5 @@ type DebtTransaction struct {
 	Amount            decimal.Decimal
 	TransferMethodID  uuid.UUID
 	Description       string
+	TransferMethod    TransferMethod
 }
