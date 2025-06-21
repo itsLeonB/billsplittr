@@ -58,31 +58,19 @@ func (us *userServiceImpl) GetProfile(ctx context.Context, id uuid.UUID) (dto.Pr
 	return mapper.UserToProfileResponse(user), nil
 }
 
-func (us *userServiceImpl) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (entity.User, error) {
-	var user entity.User
+func (us *userServiceImpl) GetEntityByID(ctx context.Context, id uuid.UUID) (entity.User, error) {
+	userSpec := entity.User{}
+	userSpec.ID = id
 
-	err := us.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		userSpec := entity.User{}
-		userSpec.ID = id
-
-		foundUser, err := us.userRepository.Find(ctx, userSpec)
-		if err != nil {
-			return err
-		}
-		if foundUser.IsZero() {
-			return ezutil.NotFoundError(fmt.Sprintf(appconstant.ErrUserNotFound, id))
-		}
-		if foundUser.IsDeleted() {
-			return ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrUserDeleted, id))
-		}
-
-		user = foundUser
-
-		return nil
-	})
-
+	user, err := us.userRepository.Find(ctx, userSpec)
 	if err != nil {
 		return entity.User{}, err
+	}
+	if user.IsZero() {
+		return entity.User{}, ezutil.NotFoundError(fmt.Sprintf(appconstant.ErrUserNotFound, id))
+	}
+	if user.IsDeleted() {
+		return entity.User{}, ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrUserDeleted, id))
 	}
 
 	return user, nil

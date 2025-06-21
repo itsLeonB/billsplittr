@@ -1,44 +1,28 @@
 package mapper
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
-	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/ezutil"
 )
 
-func NewDebtTransactionRequestToEntity(
-	userProfileID uuid.UUID,
-	request dto.NewDebtTransactionRequest,
-) (entity.DebtTransaction, error) {
-	lenderProfileID, borrowerProfileID, err := selectLenderBorrowerProfileID(userProfileID, request)
-	if err != nil {
-		return entity.DebtTransaction{}, err
+func DebtTransactionToResponse(userProfileID uuid.UUID, transaction entity.DebtTransaction) dto.DebtTransactionResponse {
+	var profileID uuid.UUID
+	if userProfileID == transaction.BorrowerProfileID && userProfileID != transaction.LenderProfileID {
+		profileID = transaction.LenderProfileID
+	} else if userProfileID == transaction.LenderProfileID && userProfileID != transaction.BorrowerProfileID {
+		profileID = transaction.BorrowerProfileID
 	}
 
-	return entity.DebtTransaction{
-		LenderProfileID:   lenderProfileID,
-		BorrowerProfileID: borrowerProfileID,
-		Type:              appconstant.Lend,
-		Amount:            request.Amount,
-		TransferMethodID:  request.TransferMethodID,
-		Description:       request.Description,
-	}, nil
-}
-
-func selectLenderBorrowerProfileID(
-	userProfileID uuid.UUID,
-	request dto.NewDebtTransactionRequest,
-) (uuid.UUID, uuid.UUID, error) {
-	switch request.Action {
-	case appconstant.BorrowAction:
-		return request.FriendProfileID, userProfileID, nil
-	case appconstant.LendAction:
-		return userProfileID, request.FriendProfileID, nil
-	default:
-		return uuid.Nil, uuid.Nil, ezutil.UnprocessableEntityError(fmt.Sprintf("unsupported action: %s", request.Action))
+	return dto.DebtTransactionResponse{
+		ID:             transaction.ID,
+		ProfileID:      profileID,
+		Type:           transaction.Type,
+		Amount:         transaction.Amount,
+		TransferMethod: transaction.TransferMethod.Display,
+		Description:    transaction.Description,
+		CreatedAt:      transaction.CreatedAt,
+		UpdatedAt:      transaction.UpdatedAt,
+		DeletedAt:      transaction.DeletedAt.Time,
 	}
 }

@@ -17,7 +17,7 @@ type UserService interface {
 	ExistsByID(ctx context.Context, id uuid.UUID) (bool, error)
 	GetByID(ctx context.Context, id uuid.UUID) (dto.UserResponse, error)
 	GetProfile(ctx context.Context, id uuid.UUID) (dto.ProfileResponse, error)
-	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (entity.User, error)
+	GetEntityByID(ctx context.Context, id uuid.UUID) (entity.User, error)
 }
 
 type FriendshipService interface {
@@ -27,6 +27,7 @@ type FriendshipService interface {
 
 type DebtService interface {
 	RecordNewTransaction(ctx context.Context, request dto.NewDebtTransactionRequest) (dto.DebtTransactionResponse, error)
+	GetTransactions(ctx context.Context, userProfileID uuid.UUID) ([]dto.DebtTransactionResponse, error)
 }
 
 type TransferMethodService interface {

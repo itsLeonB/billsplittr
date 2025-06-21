@@ -43,7 +43,7 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 	var response dto.FriendshipResponse
 
 	err := fs.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		user, err := fs.userService.GetByIDForUpdate(ctx, request.UserID)
+		user, err := fs.userService.GetEntityByID(ctx, request.UserID)
 		if err != nil {
 			return err
 		}
@@ -68,7 +68,7 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 }
 
 func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) ([]dto.FriendshipResponse, error) {
-	user, err := fs.userService.GetByIDForUpdate(ctx, userID)
+	user, err := fs.userService.GetEntityByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

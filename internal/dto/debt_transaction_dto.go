@@ -12,7 +12,7 @@ type NewDebtTransactionRequest struct {
 	UserID           uuid.UUID
 	UserProfileID    uuid.UUID
 	FriendProfileID  uuid.UUID          `json:"friendProfileId" binding:"required"`
-	Action           appconstant.Action `json:"action" binding:"oneof=LEND BORROW"`
+	Action           appconstant.Action `json:"action" binding:"oneof=LEND BORROW RECEIVE RETURN"`
 	Amount           decimal.Decimal    `json:"amount" binding:"required"`
 	TransferMethodID uuid.UUID          `json:"transferMethodId" binding:"required"`
 	Description      string             `json:"description"`

@@ -44,3 +44,7 @@ func (dc *borrowingAnonDebtCalculator) MapEntityToResponse(debtTransaction entit
 		DeletedAt:      debtTransaction.DeletedAt.Time,
 	}
 }
+
+func (dc *borrowingAnonDebtCalculator) Validate(newTransaction entity.DebtTransaction, allTransactions []entity.DebtTransaction) error {
+	return nil
+}

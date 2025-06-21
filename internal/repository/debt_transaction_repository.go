@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/ezutil"
@@ -29,6 +30,52 @@ func (dtr *debtTransactionRepositoryGorm) Insert(ctx context.Context, debtTransa
 	}
 
 	return debtTransaction, nil
+}
+
+func (dtr *debtTransactionRepositoryGorm) FindAllByProfileID(
+	ctx context.Context,
+	userProfileID, friendProfileID uuid.UUID,
+) ([]entity.DebtTransaction, error) {
+	var transactions []entity.DebtTransaction
+
+	db, err := dtr.getGormInstance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.
+		Where("lender_profile_id = ? AND borrower_profile_id = ?", userProfileID, friendProfileID).
+		Or("lender_profile_id = ? AND borrower_profile_id = ?", friendProfileID, userProfileID).
+		Find(&transactions).
+		Error
+
+	if err != nil {
+		return nil, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return transactions, nil
+}
+
+func (dtr *debtTransactionRepositoryGorm) FindAllByUserProfileID(ctx context.Context, userProfileID uuid.UUID) ([]entity.DebtTransaction, error) {
+	var transactions []entity.DebtTransaction
+
+	db, err := dtr.getGormInstance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.
+		Where("lender_profile_id = ?", userProfileID).
+		Or("borrower_profile_id = ?", userProfileID).
+		Preload("TransferMethod").
+		Find(&transactions).
+		Error
+
+	if err != nil {
+		return nil, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return transactions, nil
 }
 
 func (dtr *debtTransactionRepositoryGorm) getGormInstance(ctx context.Context) (*gorm.DB, error) {

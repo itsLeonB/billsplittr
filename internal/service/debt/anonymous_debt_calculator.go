@@ -10,11 +10,14 @@ type AnonymousDebtCalculator interface {
 	GetAction() appconstant.Action
 	MapRequestToEntity(request dto.NewDebtTransactionRequest) entity.DebtTransaction
 	MapEntityToResponse(debtTransaction entity.DebtTransaction) dto.DebtTransactionResponse
+	Validate(newTransaction entity.DebtTransaction, allTransactions []entity.DebtTransaction) error
 }
 
 var initFuncs = []func() AnonymousDebtCalculator{
 	newBorrowingAnonDebtCalculator,
 	newLendingAnonDebtCalculator,
+	newReceivingAnonDebtCalculator,
+	newReturningAnonDebtCalculator,
 }
 
 func NewAnonymousDebtCalculatorStrategies() map[appconstant.Action]AnonymousDebtCalculator {

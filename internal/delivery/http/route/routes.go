@@ -33,6 +33,7 @@ func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *prov
 	protectedRoutes.GET("/transfer-methods", handlers.TransferMethod.HandleGetAll())
 
 	protectedRoutes.POST("/debts", handlers.Debt.HandleCreate())
+	protectedRoutes.GET("/debts", handlers.Debt.HandleGetAll())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

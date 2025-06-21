@@ -8,6 +8,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/billsplittr/internal/service/debt"
 	"github.com/itsLeonB/ezutil"
@@ -47,7 +48,7 @@ func (ds *debtServiceImpl) RecordNewTransaction(
 ) (dto.DebtTransactionResponse, error) {
 	var response dto.DebtTransactionResponse
 
-	if request.Amount.Compare(decimal.Decimal{}) < 1 {
+	if request.Amount.Compare(decimal.Zero) < 1 {
 		return dto.DebtTransactionResponse{}, ezutil.ValidationError("amount must be greater than 0")
 	}
 
@@ -57,20 +58,9 @@ func (ds *debtServiceImpl) RecordNewTransaction(
 	}
 
 	err = ds.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		user, err := ds.userService.GetByIDForUpdate(ctx, request.UserID)
+		debtTransactions, err := ds.getDebtTransactions(ctx, &request)
 		if err != nil {
 			return err
-		}
-
-		request.UserProfileID = user.Profile.ID
-
-		friendship, err := ds.findExistingFriendship(ctx, request.UserProfileID, request.FriendProfileID)
-		if err != nil {
-			return err
-		}
-
-		if friendship.Type != appconstant.Anonymous {
-			return ezutil.UnprocessableEntityError("flow is forbidden for non-anonymous friendships")
 		}
 
 		calculator, err := ds.selectAnonCalculator(request.Action)
@@ -79,6 +69,10 @@ func (ds *debtServiceImpl) RecordNewTransaction(
 		}
 
 		newDebt := calculator.MapRequestToEntity(request)
+
+		if err = calculator.Validate(newDebt, debtTransactions); err != nil {
+			return err
+		}
 
 		insertedDebt, err := ds.debtTransactionRepository.Insert(ctx, newDebt)
 		if err != nil {
@@ -99,10 +93,45 @@ func (ds *debtServiceImpl) RecordNewTransaction(
 	return response, nil
 }
 
-func (ds *debtServiceImpl) findExistingFriendship(
-	ctx context.Context,
-	userProfileID, friendProfileID uuid.UUID,
-) (entity.Friendship, error) {
+func (ds *debtServiceImpl) GetTransactions(ctx context.Context, userID uuid.UUID) ([]dto.DebtTransactionResponse, error) {
+	user, err := ds.userService.GetEntityByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	transactions, err := ds.debtTransactionRepository.FindAllByUserProfileID(ctx, user.Profile.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	mapperFunc := func(transaction entity.DebtTransaction) dto.DebtTransactionResponse {
+		return mapper.DebtTransactionToResponse(user.Profile.ID, transaction)
+	}
+
+	return ezutil.MapSlice(transactions, mapperFunc), nil
+}
+
+func (ds *debtServiceImpl) getDebtTransactions(ctx context.Context, request *dto.NewDebtTransactionRequest) ([]entity.DebtTransaction, error) {
+	user, err := ds.userService.GetEntityByID(ctx, request.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	request.UserProfileID = user.Profile.ID
+
+	friendship, err := ds.getFriendship(ctx, request.UserProfileID, request.FriendProfileID)
+	if err != nil {
+		return nil, err
+	}
+
+	if friendship.Type != appconstant.Anonymous {
+		return nil, ezutil.UnprocessableEntityError("flow is forbidden for non-anonymous friendships")
+	}
+
+	return ds.debtTransactionRepository.FindAllByProfileID(ctx, request.UserProfileID, request.FriendProfileID)
+}
+
+func (ds *debtServiceImpl) getFriendship(ctx context.Context, userProfileID, friendProfileID uuid.UUID) (entity.Friendship, error) {
 	friendshipSpec := entity.FriendshipSpecification{}
 	friendshipSpec.ProfileID1 = userProfileID
 	friendshipSpec.ProfileID2 = friendProfileID
