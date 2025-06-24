@@ -7,8 +7,8 @@ const (
 	ErrDataDelete = "error deleting data"
 
 	ErrAuthUserNotFound       = "user is not found"
-	ErrAuthDuplicateUser      = "user with username %s is already registered"
-	ErrAuthUnknownCredentials = "unknown credentials, please check your username and password"
+	ErrAuthDuplicateUser      = "user with email %s is already registered"
+	ErrAuthUnknownCredentials = "unknown credentials, please check your email/password"
 
 	ErrUserNotFound = "user with ID: %s is not found"
 	ErrUserDeleted  = "user with ID: %s is deleted"

@@ -8,7 +8,7 @@ import (
 
 func GetNameFromEmail(email string) string {
 	parts := strings.SplitN(email, "@", 2)
-	if len(parts) == 0 {
+	if len(parts) < 2 || parts[0] == "" {
 		return ""
 	}
 	localPart := parts[0]

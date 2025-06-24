@@ -46,5 +46,7 @@ func (dc *borrowingAnonDebtCalculator) MapEntityToResponse(debtTransaction entit
 }
 
 func (dc *borrowingAnonDebtCalculator) Validate(newTransaction entity.DebtTransaction, allTransactions []entity.DebtTransaction) error {
+	// Currently does not validate stuff
+	// User can record borrow of any amount for anonymous friend
 	return nil
 }

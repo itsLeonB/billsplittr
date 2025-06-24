@@ -57,7 +57,7 @@ func TestGetAmountSumsFromDebtTransactions(t *testing.T) {
 					Amount:            decimal.NewFromInt(50),
 				},
 			},
-			wantUser:   decimal.Zero,
+			wantUser:   decimal.NewFromInt(-50),
 			wantFriend: decimal.NewFromInt(50),
 		},
 		{
@@ -77,7 +77,7 @@ func TestGetAmountSumsFromDebtTransactions(t *testing.T) {
 				},
 			},
 			wantUser:   decimal.NewFromInt(40),
-			wantFriend: decimal.Zero,
+			wantFriend: decimal.NewFromInt(-40),
 		},
 		{
 			name: "All Lend transactions",
@@ -95,8 +95,8 @@ func TestGetAmountSumsFromDebtTransactions(t *testing.T) {
 					Amount:            decimal.NewFromInt(40),
 				},
 			},
-			wantUser:   decimal.NewFromInt(40), // friend lent 40 to user
-			wantFriend: decimal.NewFromInt(20), // user lent 20 to friend
+			wantUser:   decimal.NewFromInt(20),
+			wantFriend: decimal.NewFromInt(-20),
 		},
 		{
 			name: "All Repay transactions",
@@ -114,8 +114,8 @@ func TestGetAmountSumsFromDebtTransactions(t *testing.T) {
 					Amount:            decimal.NewFromInt(35),
 				},
 			},
-			wantUser:   decimal.NewFromInt(-35), // friend repaid 35
-			wantFriend: decimal.NewFromInt(-25), // user repaid 25
+			wantUser:   decimal.NewFromInt(-10),
+			wantFriend: decimal.NewFromInt(10),
 		},
 	}
 

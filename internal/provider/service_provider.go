@@ -32,7 +32,7 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		repositories.UserProfile,
 	)
 
-	friendshipService := service.NewFriendshipRepository(
+	friendshipService := service.NewFriendshipService(
 		repositories.Transactor,
 		repositories.UserProfile,
 		repositories.Friendship,

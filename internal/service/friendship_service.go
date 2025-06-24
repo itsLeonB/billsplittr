@@ -22,7 +22,7 @@ type friendshipServiceImpl struct {
 	userService           UserService
 }
 
-func NewFriendshipRepository(
+func NewFriendshipService(
 	transactor ezutil.Transactor,
 	userProfileRepository repository.UserProfileRepository,
 	friendshipRepository repository.FriendshipRepository,

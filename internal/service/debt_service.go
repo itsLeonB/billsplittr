@@ -58,7 +58,7 @@ func (ds *debtServiceImpl) RecordNewTransaction(
 	}
 
 	err = ds.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		debtTransactions, err := ds.getDebtTransactions(ctx, &request)
+		debtTransactions, err := ds.getDebtTransactionsAndPatchRequest(ctx, &request)
 		if err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func (ds *debtServiceImpl) GetTransactions(ctx context.Context, userID uuid.UUID
 	return ezutil.MapSlice(transactions, mapperFunc), nil
 }
 
-func (ds *debtServiceImpl) getDebtTransactions(ctx context.Context, request *dto.NewDebtTransactionRequest) ([]entity.DebtTransaction, error) {
+func (ds *debtServiceImpl) getDebtTransactionsAndPatchRequest(ctx context.Context, request *dto.NewDebtTransactionRequest) ([]entity.DebtTransaction, error) {
 	user, err := ds.userService.GetEntityByID(ctx, request.UserID)
 	if err != nil {
 		return nil, err

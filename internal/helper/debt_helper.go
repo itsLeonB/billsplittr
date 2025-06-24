@@ -15,18 +15,20 @@ func GetAmountSumsFromDebtTransactions(
 
 	for _, transaction := range transactions {
 		if transaction.LenderProfileID == userProfileID && transaction.BorrowerProfileID == friendProfileID {
-			if transaction.Type == appconstant.Lend {
+			switch transaction.Type {
+			case appconstant.Lend:
 				friendAmount = friendAmount.Add(transaction.Amount)
 				userAmount = userAmount.Sub(transaction.Amount)
-			} else if transaction.Type == appconstant.Repay {
+			case appconstant.Repay:
 				friendAmount = friendAmount.Sub(transaction.Amount)
 				userAmount = userAmount.Add(transaction.Amount)
 			}
 		} else if transaction.LenderProfileID == friendProfileID && transaction.BorrowerProfileID == userProfileID {
-			if transaction.Type == appconstant.Lend {
+			switch transaction.Type {
+			case appconstant.Lend:
 				userAmount = userAmount.Add(transaction.Amount)
 				friendAmount = friendAmount.Sub(transaction.Amount)
-			} else if transaction.Type == appconstant.Repay {
+			case appconstant.Repay:
 				userAmount = userAmount.Sub(transaction.Amount)
 				friendAmount = friendAmount.Add(transaction.Amount)
 			}

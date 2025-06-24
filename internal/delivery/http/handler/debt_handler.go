@@ -22,11 +22,19 @@ func NewDebtHandler(debtService service.DebtService) *DebtHandler {
 
 func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
 		request, err := ezutil.BindRequest[dto.NewDebtTransactionRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
+
+		request.UserID = userID
 
 		response, err := dh.debtService.RecordNewTransaction(ctx, request)
 		if err != nil {
