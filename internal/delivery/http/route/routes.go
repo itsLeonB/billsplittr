@@ -1,6 +1,7 @@
 package route
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -10,10 +11,23 @@ import (
 	"github.com/rotisserie/eris"
 )
 
-func SetupRoutes(router *gin.Engine, handlers *provider.Handlers, services *provider.Services) {
+func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.Handlers, services *provider.Services) {
 	tokenCheckFunc := newTokenCheckFunc(services.JWT, services.User)
 	authMiddleware := ezutil.NewAuthMiddleware("Bearer", tokenCheckFunc)
 	errorMiddleware := ezutil.NewErrorMiddleware()
+
+	corsConfig := cors.Config{
+		AllowOrigins:     configs.App.ClientUrls,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}
+
+	corsMiddleware := ezutil.NewCorsMiddleware(&corsConfig)
+
+	// Apply CORS middleware to the entire router first
+	router.Use(corsMiddleware)
 
 	apiRoutes := router.Group("/api", errorMiddleware)
 

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
@@ -68,6 +69,7 @@ func (dtr *debtTransactionRepositoryGorm) FindAllByUserProfileID(ctx context.Con
 		Where("lender_profile_id = ?", userProfileID).
 		Or("borrower_profile_id = ?", userProfileID).
 		Preload("TransferMethod").
+		Scopes(util.DefaultOrder()).
 		Find(&transactions).
 		Error
 

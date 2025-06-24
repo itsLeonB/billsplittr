@@ -19,7 +19,7 @@ func SetupHTTPServer(configs *ezutil.Config) *http.Server {
 
 	gin.SetMode(configs.App.Env)
 	r := gin.Default()
-	route.SetupRoutes(r, handlers, services)
+	route.SetupRoutes(r, configs, handlers, services)
 
 	return &http.Server{
 		Addr:    fmt.Sprintf(":%s", configs.App.Port),
