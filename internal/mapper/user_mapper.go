@@ -15,9 +15,20 @@ func UserToAuthData(user entity.User) map[string]any {
 func UserToResponse(user entity.User) dto.UserResponse {
 	return dto.UserResponse{
 		ID:        user.ID,
-		Username:  user.Username,
+		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		DeletedAt: user.DeletedAt.Time,
+	}
+}
+
+func UserToProfileResponse(user entity.User) dto.ProfileResponse {
+	return dto.ProfileResponse{
+		UserID:    user.ID,
+		ProfileID: user.Profile.ID,
+		Name:      user.Profile.Name,
+		CreatedAt: user.Profile.CreatedAt,
+		UpdatedAt: user.Profile.UpdatedAt,
+		DeletedAt: user.Profile.DeletedAt.Time,
 	}
 }

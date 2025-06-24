@@ -6,3 +6,6 @@ api-hotreload:
 
 lint:
 	golangci-lint run ./...
+
+test:
+	go test ./internal/tests/...

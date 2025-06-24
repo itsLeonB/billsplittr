@@ -1,13 +1,13 @@
 package dto
 
 type RegisterRequest struct {
-	Username             string `json:"username" binding:"required"`
+	Email                string `json:"email" binding:"required,email,min=3"`
 	Password             string `json:"password" binding:"required,eqfield=PasswordConfirmation"`
 	PasswordConfirmation string `json:"passwordConfirmation" binding:"required"`
 }
 
 type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email,min=3"`
 	Password string `json:"password" binding:"required"`
 }
 

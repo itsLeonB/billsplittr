@@ -1,0 +1,101 @@
+package repository
+
+import (
+	"context"
+
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
+	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/util"
+	"github.com/itsLeonB/ezutil"
+	"github.com/rotisserie/eris"
+	"gorm.io/gorm"
+)
+
+type friendshipRepositoryGorm struct {
+	db *gorm.DB
+}
+
+func NewFriendshipRepository(db *gorm.DB) FriendshipRepository {
+	return &friendshipRepositoryGorm{db}
+}
+
+func (fr *friendshipRepositoryGorm) Insert(ctx context.Context, friendship entity.Friendship) (entity.Friendship, error) {
+	db, err := fr.getGormInstance(ctx)
+	if err != nil {
+		return entity.Friendship{}, err
+	}
+
+	if err = db.Create(&friendship).Error; err != nil {
+		return entity.Friendship{}, eris.Wrap(err, appconstant.ErrDataInsert)
+	}
+
+	return friendship, nil
+}
+
+func (fr *friendshipRepositoryGorm) FindFirst(ctx context.Context, spec entity.FriendshipSpecification) (entity.Friendship, error) {
+	var friendship entity.Friendship
+
+	db, err := fr.getGormInstance(ctx)
+	if err != nil {
+		return entity.Friendship{}, err
+	}
+
+	query := db.
+		Scopes(ezutil.WhereBySpec(spec.Friendship)).
+		Joins("JOIN user_profiles AS up1 ON up1.id = friendships.profile_id1").
+		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id2")
+
+	if spec.Name != "" {
+		query = query.Where(
+			fr.db.Where("up1.name = ? AND friendships.profile_id1 <> ?", spec.Name, spec.ProfileID1).
+				Or("up2.name = ? AND friendships.profile_id2 <> ?", spec.Name, spec.ProfileID1),
+		)
+	}
+
+	err = query.Take(&friendship).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.Friendship{}, nil
+		}
+		return entity.Friendship{}, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return friendship, nil
+}
+
+func (fr *friendshipRepositoryGorm) FindAll(ctx context.Context, spec entity.FriendshipSpecification) ([]entity.Friendship, error) {
+	var friendships []entity.Friendship
+
+	db, err := fr.getGormInstance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.
+		Where(entity.Friendship{ProfileID1: spec.ProfileID1}).
+		Or(entity.Friendship{ProfileID2: spec.ProfileID1}).
+		Scopes(
+			ezutil.PreloadRelations(spec.PreloadRelations),
+			util.DefaultOrder(),
+		).
+		Find(&friendships).
+		Error
+
+	if err != nil {
+		return nil, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return friendships, nil
+}
+
+func (fr *friendshipRepositoryGorm) getGormInstance(ctx context.Context) (*gorm.DB, error) {
+	tx, err := ezutil.GetTxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if tx != nil {
+		return tx, nil
+	}
+
+	return fr.db.WithContext(ctx), nil
+}
