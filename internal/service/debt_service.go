@@ -133,8 +133,17 @@ func (ds *debtServiceImpl) getDebtTransactionsAndPatchRequest(ctx context.Contex
 
 func (ds *debtServiceImpl) getFriendship(ctx context.Context, userProfileID, friendProfileID uuid.UUID) (entity.Friendship, error) {
 	friendshipSpec := entity.FriendshipSpecification{}
-	friendshipSpec.ProfileID1 = userProfileID
-	friendshipSpec.ProfileID2 = friendProfileID
+	userProfile := entity.UserProfile{}
+	userProfile.ID = userProfileID
+	friendProfile := entity.UserProfile{}
+	friendProfile.ID = friendProfileID
+
+	friendshipEntity, err := mapper.OrderProfilesToFriendship(userProfile, friendProfile)
+	if err != nil {
+		return entity.Friendship{}, err
+	}
+
+	friendshipSpec.Friendship = friendshipEntity
 
 	friendship, err := ds.friendshipRepository.FindFirst(ctx, friendshipSpec)
 	if err != nil {

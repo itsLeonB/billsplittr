@@ -10,9 +10,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
-	"github.com/rotisserie/eris"
 )
 
 type friendshipServiceImpl struct {
@@ -72,7 +70,8 @@ func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) (
 	if err != nil {
 		return nil, err
 	}
-	spec := entity.FriendshipSpecification{ProfileID1: user.Profile.ID}
+	spec := entity.FriendshipSpecification{}
+	spec.ProfileID1 = user.Profile.ID
 	spec.PreloadRelations = []string{"Profile1", "Profile2"}
 
 	friendships, err := fs.friendshipRepository.FindAll(ctx, spec)
@@ -120,7 +119,7 @@ func (fs *friendshipServiceImpl) insertAnonymousFriendship(
 		return dto.FriendshipResponse{}, err
 	}
 
-	newFriendship, err := orderProfileID(userProfile, insertedProfile)
+	newFriendship, err := mapper.OrderProfilesToFriendship(userProfile, insertedProfile)
 	if err != nil {
 		return dto.FriendshipResponse{}, err
 	}
@@ -133,25 +132,4 @@ func (fs *friendshipServiceImpl) insertAnonymousFriendship(
 	}
 
 	return mapper.FriendshipToResponse(userProfile.ID, insertedFriendship)
-}
-
-func orderProfileID(userProfile, friendProfile entity.UserProfile) (entity.Friendship, error) {
-	switch util.CompareUUID(userProfile.ID, friendProfile.ID) {
-	case 1:
-		return entity.Friendship{
-			ProfileID1: friendProfile.ID,
-			ProfileID2: userProfile.ID,
-			Profile1:   friendProfile,
-			Profile2:   userProfile,
-		}, nil
-	case -1:
-		return entity.Friendship{
-			ProfileID1: userProfile.ID,
-			ProfileID2: friendProfile.ID,
-			Profile1:   userProfile,
-			Profile2:   friendProfile,
-		}, nil
-	default:
-		return entity.Friendship{}, eris.New("both IDs are equal, cannot create friendship")
-	}
 }

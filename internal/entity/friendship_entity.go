@@ -17,7 +17,5 @@ type Friendship struct {
 type FriendshipSpecification struct {
 	Specification
 	Friendship
-	ProfileID1 uuid.UUID
-	ProfileID2 uuid.UUID
-	Name       string
+	Name string
 }
