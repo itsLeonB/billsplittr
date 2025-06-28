@@ -1,6 +1,8 @@
 package route
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,7 +21,7 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 	corsConfig := cors.Config{
 		AllowOrigins:     configs.App.ClientUrls,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Origin", "Cache-Control"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}
@@ -41,8 +43,10 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 
 	protectedRoutes.GET("/profile", handlers.Profile.HandleProfile())
 
-	protectedRoutes.POST("/friendships", handlers.Friendship.HandleCreateAnonymousFriendship())
-	protectedRoutes.GET("/friendships", handlers.Friendship.HandleGetAll())
+	friendshipRoutes := protectedRoutes.Group("/friendships")
+	friendshipRoutes.POST("", handlers.Friendship.HandleCreateAnonymousFriendship())
+	friendshipRoutes.GET("", handlers.Friendship.HandleGetAll())
+	friendshipRoutes.GET(fmt.Sprintf("/:%s", appconstant.ContextFriendshipID), handlers.Friendship.HandleGetDetails())
 
 	protectedRoutes.GET("/transfer-methods", handlers.TransferMethod.HandleGetAll())
 

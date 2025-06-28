@@ -22,6 +22,7 @@ type DebtTransactionResponse struct {
 	ID             uuid.UUID                       `json:"id"`
 	ProfileID      uuid.UUID                       `json:"profileId"`
 	Type           appconstant.DebtTransactionType `json:"type"`
+	Action         appconstant.Action              `json:"action"`
 	Amount         decimal.Decimal                 `json:"amount"`
 	TransferMethod string                          `json:"transferMethod"`
 	Description    string                          `json:"description"`

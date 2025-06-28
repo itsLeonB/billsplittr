@@ -41,7 +41,10 @@ func (fr *friendshipRepositoryGorm) FindFirst(ctx context.Context, spec entity.F
 	}
 
 	query := db.
-		Scopes(ezutil.WhereBySpec(spec.Friendship)).
+		Scopes(
+			ezutil.WhereBySpec(spec.Friendship),
+			ezutil.PreloadRelations(spec.PreloadRelations),
+		).
 		Joins("JOIN user_profiles AS up1 ON up1.id = friendships.profile_id1").
 		Joins("JOIN user_profiles AS up2 ON up2.id = friendships.profile_id2")
 

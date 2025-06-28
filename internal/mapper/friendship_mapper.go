@@ -1,17 +1,17 @@
 package mapper
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/helper"
 	"github.com/itsLeonB/billsplittr/internal/util"
+	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 )
 
 func FriendshipToResponse(userProfileID uuid.UUID, friendship entity.Friendship) (dto.FriendshipResponse, error) {
-	friendProfile, err := selectFriendProfile(userProfileID, friendship)
+	_, friendProfile, err := helper.SelectProfiles(userProfileID, friendship)
 	if err != nil {
 		return dto.FriendshipResponse{}, err
 	}
@@ -25,21 +25,6 @@ func FriendshipToResponse(userProfileID uuid.UUID, friendship entity.Friendship)
 		UpdatedAt:   friendship.UpdatedAt,
 		DeletedAt:   friendship.DeletedAt.Time,
 	}, nil
-}
-
-func selectFriendProfile(userProfileID uuid.UUID, friendship entity.Friendship) (entity.UserProfile, error) {
-	switch userProfileID {
-	case friendship.ProfileID1:
-		return friendship.Profile2, nil
-	case friendship.ProfileID2:
-		return friendship.Profile1, nil
-	default:
-		return entity.UserProfile{}, eris.New(fmt.Sprintf(
-			"mismatched user profile ID: %s with friendship ID: %s",
-			userProfileID,
-			friendship.ID,
-		))
-	}
 }
 
 func OrderProfilesToFriendship(userProfile, friendProfile entity.UserProfile) (entity.Friendship, error) {
@@ -61,4 +46,49 @@ func OrderProfilesToFriendship(userProfile, friendProfile entity.UserProfile) (e
 	default:
 		return entity.Friendship{}, eris.New("both IDs are equal, cannot create friendship")
 	}
+}
+
+func MapToFriendshipWithProfile(userProfileID uuid.UUID, friendship entity.Friendship) (dto.FriendshipWithProfile, error) {
+	friendshipResponse, err := FriendshipToResponse(userProfileID, friendship)
+	if err != nil {
+		return dto.FriendshipWithProfile{}, err
+	}
+
+	userProfile, friendProfile, err := helper.SelectProfiles(userProfileID, friendship)
+	if err != nil {
+		return dto.FriendshipWithProfile{}, err
+	}
+
+	return dto.FriendshipWithProfile{
+		Friendship:    friendshipResponse,
+		UserProfile:   ProfileToResponse(userProfile),
+		FriendProfile: ProfileToResponse(friendProfile),
+	}, nil
+}
+
+func MapToFriendDetailsResponse(
+	userProfileID uuid.UUID,
+	friendship entity.Friendship,
+	debtTransactions []entity.DebtTransaction,
+) (dto.FriendDetailsResponse, error) {
+	friendshipWithProfile, err := MapToFriendshipWithProfile(userProfileID, friendship)
+	if err != nil {
+		return dto.FriendDetailsResponse{}, err
+	}
+
+	friendProfile := friendshipWithProfile.FriendProfile
+
+	return dto.FriendDetailsResponse{
+		Friend: dto.FriendDetails{
+			ID:        friendship.ID,
+			ProfileID: friendProfile.ProfileID,
+			Name:      friendProfile.Name,
+			Type:      friendship.Type,
+			CreatedAt: friendship.CreatedAt,
+			UpdatedAt: friendship.UpdatedAt,
+			DeletedAt: friendship.DeletedAt.Time,
+		},
+		Balance:      MapToFriendBalanceSummary(userProfileID, debtTransactions),
+		Transactions: ezutil.MapSlice(debtTransactions, GetDebtTransactionSimpleMapper(userProfileID)),
+	}, nil
 }

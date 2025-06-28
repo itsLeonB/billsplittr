@@ -11,6 +11,7 @@ type DebtTransaction struct {
 	LenderProfileID   uuid.UUID
 	BorrowerProfileID uuid.UUID
 	Type              appconstant.DebtTransactionType
+	Action            appconstant.Action
 	Amount            decimal.Decimal
 	TransferMethodID  uuid.UUID
 	Description       string

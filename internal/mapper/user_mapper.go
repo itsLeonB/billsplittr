@@ -32,3 +32,14 @@ func UserToProfileResponse(user entity.User) dto.ProfileResponse {
 		DeletedAt: user.Profile.DeletedAt.Time,
 	}
 }
+
+func ProfileToResponse(profile entity.UserProfile) dto.ProfileResponse {
+	return dto.ProfileResponse{
+		UserID:    profile.UserID,
+		ProfileID: profile.ID,
+		Name:      profile.Name,
+		CreatedAt: profile.CreatedAt,
+		UpdatedAt: profile.UpdatedAt,
+		DeletedAt: profile.DeletedAt.Time,
+	}
+}
