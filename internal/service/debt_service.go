@@ -104,11 +104,7 @@ func (ds *debtServiceImpl) GetTransactions(ctx context.Context, userID uuid.UUID
 		return nil, err
 	}
 
-	mapperFunc := func(transaction entity.DebtTransaction) dto.DebtTransactionResponse {
-		return mapper.DebtTransactionToResponse(user.Profile.ID, transaction)
-	}
-
-	return ezutil.MapSlice(transactions, mapperFunc), nil
+	return ezutil.MapSlice(transactions, mapper.GetDebtTransactionSimpleMapper(user.Profile.ID)), nil
 }
 
 func (ds *debtServiceImpl) getDebtTransactionsAndPatchRequest(ctx context.Context, request *dto.NewDebtTransactionRequest) ([]entity.DebtTransaction, error) {

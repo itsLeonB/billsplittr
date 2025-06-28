@@ -1,6 +1,7 @@
 -- Enums
 CREATE TYPE debt_transaction_type AS ENUM ('LEND', 'REPAY');
 CREATE TYPE friendship_type AS ENUM ('REAL', 'ANON');
+CREATE TYPE debt_transaction_action AS ENUM ('LEND', 'BORROW', 'RECEIVE', 'RETURN');
 
 -- Tables
 CREATE TABLE IF NOT EXISTS users (
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS debt_transactions (
     lender_profile_id UUID NOT NULL REFERENCES user_profiles(id),
     borrower_profile_id UUID NOT NULL REFERENCES user_profiles(id),
     type debt_transaction_type NOT NULL,
+    action debt_transaction_action NOT NULL,
     amount NUMERIC(20, 2) NOT NULL,
     transfer_method_id UUID NOT NULL REFERENCES transfer_methods(id),
     description TEXT,

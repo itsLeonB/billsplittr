@@ -9,6 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 )
 
@@ -62,6 +63,33 @@ func (fh *FriendshipHandler) HandleGetAll() gin.HandlerFunc {
 		}
 
 		response, err := fh.friendshipService.GetAll(ctx, userID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}
+
+func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID, err := util.GetUserID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		friendshipID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextFriendshipID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := fh.friendshipService.GetDetails(ctx, userID, friendshipID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

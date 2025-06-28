@@ -14,10 +14,11 @@ import (
 )
 
 type friendshipServiceImpl struct {
-	transactor            ezutil.Transactor
-	userProfileRepository repository.UserProfileRepository
-	friendshipRepository  repository.FriendshipRepository
-	userService           UserService
+	transactor                ezutil.Transactor
+	userProfileRepository     repository.UserProfileRepository
+	friendshipRepository      repository.FriendshipRepository
+	userService               UserService
+	debtTransactionRepository repository.DebtTransactionRepository
 }
 
 func NewFriendshipService(
@@ -25,12 +26,14 @@ func NewFriendshipService(
 	userProfileRepository repository.UserProfileRepository,
 	friendshipRepository repository.FriendshipRepository,
 	userService UserService,
+	debtTransactionRepository repository.DebtTransactionRepository,
 ) FriendshipService {
 	return &friendshipServiceImpl{
 		transactor,
 		userProfileRepository,
 		friendshipRepository,
 		userService,
+		debtTransactionRepository,
 	}
 }
 
@@ -84,6 +87,31 @@ func (fs *friendshipServiceImpl) GetAll(ctx context.Context, userID uuid.UUID) (
 	}
 
 	return ezutil.MapSliceWithError(friendships, mapperFunc)
+}
+
+func (fs *friendshipServiceImpl) GetDetails(ctx context.Context, userID, friendshipID uuid.UUID) (dto.FriendDetailsResponse, error) {
+	user, err := fs.userService.GetEntityByID(ctx, userID)
+	if err != nil {
+		return dto.FriendDetailsResponse{}, err
+	}
+
+	spec := entity.FriendshipSpecification{}
+	spec.ID = friendshipID
+	spec.PreloadRelations = []string{"Profile1", "Profile2"}
+	friendship, err := fs.friendshipRepository.FindFirst(ctx, spec)
+	if err != nil {
+		return dto.FriendDetailsResponse{}, err
+	}
+	if friendship.IsZero() {
+		return dto.FriendDetailsResponse{}, ezutil.NotFoundError(appconstant.ErrFriendshipNotFound)
+	}
+
+	debtTransactions, err := fs.debtTransactionRepository.FindAllByProfileID(ctx, friendship.ProfileID1, friendship.ProfileID2)
+	if err != nil {
+		return dto.FriendDetailsResponse{}, err
+	}
+
+	return mapper.MapToFriendDetailsResponse(user.Profile.ID, friendship, debtTransactions)
 }
 
 func (fs *friendshipServiceImpl) validateExistingAnonymousFriendship(

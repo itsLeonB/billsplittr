@@ -28,6 +28,7 @@ func (dc *returningAnonDebtCalculator) MapRequestToEntity(request dto.NewDebtTra
 	return entity.DebtTransaction{
 		LenderProfileID:   request.FriendProfileID,
 		BorrowerProfileID: request.UserProfileID,
+		Action:            dc.action,
 		Type:              appconstant.Repay,
 		Amount:            request.Amount,
 		TransferMethodID:  request.TransferMethodID,
@@ -40,6 +41,7 @@ func (dc *returningAnonDebtCalculator) MapEntityToResponse(debtTransaction entit
 		ID:             debtTransaction.ID,
 		ProfileID:      debtTransaction.LenderProfileID,
 		Type:           debtTransaction.Type,
+		Action:         debtTransaction.Action,
 		Amount:         debtTransaction.Amount,
 		TransferMethod: debtTransaction.TransferMethod.Display,
 		Description:    debtTransaction.Description,

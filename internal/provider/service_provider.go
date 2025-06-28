@@ -37,6 +37,7 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		repositories.UserProfile,
 		repositories.Friendship,
 		userService,
+		repositories.DebtTransaction,
 	)
 
 	debtService := service.NewDebtService(
