@@ -55,6 +55,6 @@ func MapToFriendBalanceSummary(userProfileID uuid.UUID, debtTransactions []entit
 		TotalOwedToYou: totalOwedToYou,
 		TotalYouOwe:    totalYouOwe,
 		NetBalance:     totalOwedToYou.Sub(totalYouOwe),
-		Currency:       "IDR",
+		Currency:       appconstant.IDR,
 	}
 }
