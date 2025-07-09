@@ -9,6 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/shopspring/decimal"
 )
@@ -43,7 +44,7 @@ func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	return mapper.GroupExpenseToResponse(insertedGroupExpense), nil
+	return mapper.GroupExpenseToResponse(insertedGroupExpense, uuid.Nil), nil
 }
 
 func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
@@ -52,22 +53,32 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	spec := entity.GroupExpense{
-		CreatedByProfileID: user.Profile.ID,
-	}
+	spec := entity.GroupExpenseSpecification{}
+	spec.CreatorProfileID = user.Profile.ID
+	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
 	if err != nil {
 		return nil, err
 	}
 
-	return ezutil.MapSlice(groupExpenses, mapper.GroupExpenseToResponse), nil
+	return ezutil.MapSlice(groupExpenses, mapper.GetGroupExpenseSimpleMapper(user.Profile.ID)), nil
 }
 
 func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
+	userID, err := util.FindUserID(ctx)
+	if err != nil {
+		return dto.GroupExpenseResponse{}, err
+	}
+
+	user, err := ges.userService.GetEntityByID(ctx, userID)
+	if err != nil {
+		return dto.GroupExpenseResponse{}, err
+	}
+
 	spec := entity.GroupExpenseSpecification{}
 	spec.ID = id
-	spec.PreloadRelations = []string{"Items", "OtherFees"}
+	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
 	groupExpense, err := ges.groupExpenseRepository.FindFirst(ctx, spec)
 	if err != nil {
@@ -80,7 +91,7 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		return dto.GroupExpenseResponse{}, ezutil.NotFoundError(appconstant.ErrGroupExpenseDeleted(id))
 	}
 
-	return mapper.GroupExpenseToResponse(groupExpense), nil
+	return mapper.GroupExpenseToResponse(groupExpense, user.Profile.ID), nil
 }
 
 func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context, request *dto.NewGroupExpenseRequest) error {

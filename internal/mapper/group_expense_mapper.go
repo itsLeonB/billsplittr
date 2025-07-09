@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/ezutil"
@@ -8,27 +9,39 @@ import (
 
 func GroupExpenseRequestToEntity(request dto.NewGroupExpenseRequest) entity.GroupExpense {
 	return entity.GroupExpense{
-		PayerProfileID:     request.PayerProfileID,
-		TotalAmount:        request.TotalAmount,
-		Description:        request.Description,
-		Items:              ezutil.MapSlice(request.Items, expenseItemRequestToEntity),
-		OtherFees:          ezutil.MapSlice(request.OtherFees, otherFeeRequestToEntity),
-		CreatedByProfileID: request.CreatedByProfileID,
+		PayerProfileID:   request.PayerProfileID,
+		TotalAmount:      request.TotalAmount,
+		Description:      request.Description,
+		Items:            ezutil.MapSlice(request.Items, expenseItemRequestToEntity),
+		OtherFees:        ezutil.MapSlice(request.OtherFees, otherFeeRequestToEntity),
+		CreatorProfileID: request.CreatedByProfileID,
 	}
 }
 
-func GroupExpenseToResponse(groupExpense entity.GroupExpense) dto.GroupExpenseResponse {
+func GetGroupExpenseSimpleMapper(userProfileID uuid.UUID) func(groupExpense entity.GroupExpense) dto.GroupExpenseResponse {
+	return func(groupExpense entity.GroupExpense) dto.GroupExpenseResponse {
+		return GroupExpenseToResponse(groupExpense, userProfileID)
+	}
+}
+
+func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid.UUID) dto.GroupExpenseResponse {
 	return dto.GroupExpenseResponse{
-		ID:                 groupExpense.ID,
-		PayerProfileID:     groupExpense.PayerProfileID,
-		TotalAmount:        groupExpense.TotalAmount,
-		Description:        groupExpense.Description,
-		Items:              ezutil.MapSlice(groupExpense.Items, expenseItemToResponse),
-		OtherFees:          ezutil.MapSlice(groupExpense.OtherFees, otherFeeToResponse),
-		CreatedByProfileID: groupExpense.CreatedByProfileID,
-		CreatedAt:          groupExpense.CreatedAt,
-		UpdatedAt:          groupExpense.UpdatedAt,
-		DeletedAt:          groupExpense.DeletedAt.Time,
+		ID:                    groupExpense.ID,
+		PayerProfileID:        groupExpense.PayerProfileID,
+		PayerName:             groupExpense.PayerProfile.Name,
+		PaidByUser:            groupExpense.PayerProfileID == userProfileID,
+		TotalAmount:           groupExpense.TotalAmount,
+		Description:           groupExpense.Description,
+		Items:                 ezutil.MapSlice(groupExpense.Items, expenseItemToResponse),
+		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, otherFeeToResponse),
+		CreatorProfileID:      groupExpense.CreatorProfileID,
+		CreatorName:           groupExpense.CreatorProfile.Name,
+		CreatedByUser:         groupExpense.CreatorProfileID == userProfileID,
+		Confirmed:             groupExpense.Confirmed,
+		ParticipantsConfirmed: groupExpense.ParticipantsConfirmed,
+		CreatedAt:             groupExpense.CreatedAt,
+		UpdatedAt:             groupExpense.UpdatedAt,
+		DeletedAt:             groupExpense.DeletedAt.Time,
 	}
 }
 

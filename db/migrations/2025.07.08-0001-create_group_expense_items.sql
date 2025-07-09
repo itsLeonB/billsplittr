@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS group_expense_other_fees (
 ALTER TABLE group_expenses
 ADD COLUMN confirmed BOOLEAN NOT NULL DEFAULT FALSE,
 ADD COLUMN participants_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
-ADD COLUMN created_by_profile_id UUID NOT NULL REFERENCES user_profiles(id);
+ADD COLUMN creator_profile_id UUID NOT NULL REFERENCES user_profiles(id);
 
 ALTER TABLE group_expense_participants
 ADD COLUMN confirmed BOOLEAN NOT NULL DEFAULT FALSE;

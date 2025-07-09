@@ -29,16 +29,22 @@ type NewOtherFeeRequest struct {
 }
 
 type GroupExpenseResponse struct {
-	ID                 uuid.UUID             `json:"id"`
-	PayerProfileID     uuid.UUID             `json:"payerProfileId"`
-	TotalAmount        decimal.Decimal       `json:"totalAmount"`
-	Description        string                `json:"description"`
-	Items              []ExpenseItemResponse `json:"items,omitempty"`
-	OtherFees          []OtherFeeResponse    `json:"otherFees,omitempty"`
-	CreatedByProfileID uuid.UUID             `json:"createdByProfileId"`
-	CreatedAt          time.Time             `json:"createdAt"`
-	UpdatedAt          time.Time             `json:"updatedAt"`
-	DeletedAt          time.Time             `json:"deletedAt,omitzero"`
+	ID                    uuid.UUID             `json:"id"`
+	PayerProfileID        uuid.UUID             `json:"payerProfileId"`
+	PayerName             string                `json:"payerName,omitempty"`
+	PaidByUser            bool                  `json:"paidByUser"`
+	TotalAmount           decimal.Decimal       `json:"totalAmount"`
+	Description           string                `json:"description"`
+	Items                 []ExpenseItemResponse `json:"items,omitempty"`
+	OtherFees             []OtherFeeResponse    `json:"otherFees,omitempty"`
+	CreatorProfileID      uuid.UUID             `json:"creatorProfileId"`
+	CreatorName           string                `json:"creatorName,omitempty"`
+	CreatedByUser         bool                  `json:"createdByUser"`
+	Confirmed             bool                  `json:"confirmed"`
+	ParticipantsConfirmed bool                  `json:"participantsConfirmed"`
+	CreatedAt             time.Time             `json:"createdAt"`
+	UpdatedAt             time.Time             `json:"updatedAt"`
+	DeletedAt             time.Time             `json:"deletedAt,omitzero"`
 }
 
 type ExpenseItemResponse struct {
