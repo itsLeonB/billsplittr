@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/shopspring/decimal"
 )
@@ -55,7 +55,7 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 
 	spec := entity.GroupExpenseSpecification{}
 	spec.CreatorProfileID = user.Profile.ID
-	spec.PreloadRelations = []string{"Items", "OtherFees"}
+	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
 	if err != nil {
@@ -66,7 +66,7 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 }
 
 func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
-	userID, err := ezutil.GetFromContext[uuid.UUID](ctx.(*gin.Context), appconstant.ContextUserID)
+	userID, err := util.FindUserID(ctx)
 	if err != nil {
 		return dto.GroupExpenseResponse{}, err
 	}
