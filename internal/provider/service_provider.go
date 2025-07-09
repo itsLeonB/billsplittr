@@ -12,6 +12,7 @@ type Services struct {
 	Friendship     service.FriendshipService
 	Debt           service.DebtService
 	TransferMethod service.TransferMethodService
+	GroupExpense   service.GroupExpenseService
 }
 
 func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Services {
@@ -50,6 +51,12 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 
 	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
 
+	groupExpenseService := service.NewGroupExpenseService(
+		repositories.GroupExpense,
+		userService,
+		friendshipService,
+	)
+
 	return &Services{
 		Auth:           authService,
 		User:           userService,
@@ -57,5 +64,6 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		Friendship:     friendshipService,
 		Debt:           debtService,
 		TransferMethod: transferMethodService,
+		GroupExpense:   groupExpenseService,
 	}
 }

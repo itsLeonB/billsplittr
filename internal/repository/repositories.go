@@ -20,6 +20,7 @@ type FriendshipRepository interface {
 	Insert(ctx context.Context, friendship entity.Friendship) (entity.Friendship, error)
 	FindAll(ctx context.Context, spec entity.FriendshipSpecification) ([]entity.Friendship, error)
 	FindFirst(ctx context.Context, spec entity.FriendshipSpecification) (entity.Friendship, error)
+	FindByProfileIDs(ctx context.Context, profileID1, profileID2 uuid.UUID) (entity.Friendship, error)
 }
 
 type DebtTransactionRepository interface {
@@ -31,4 +32,10 @@ type DebtTransactionRepository interface {
 type TransferMethodRepository interface {
 	FindAll(ctx context.Context, spec entity.TransferMethod) ([]entity.TransferMethod, error)
 	FindFirst(ctx context.Context, spec entity.TransferMethod) (entity.TransferMethod, error)
+}
+
+type GroupExpenseRepository interface {
+	Insert(ctx context.Context, groupExpense entity.GroupExpense) (entity.GroupExpense, error)
+	FindAll(ctx context.Context, spec entity.GroupExpense) ([]entity.GroupExpense, error)
+	FindFirst(ctx context.Context, spec entity.GroupExpenseSpecification) (entity.GroupExpense, error)
 }

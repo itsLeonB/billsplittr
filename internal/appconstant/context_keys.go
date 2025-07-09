@@ -1,6 +1,7 @@
 package appconstant
 
 const (
-	ContextUserID       = "userID"
-	ContextFriendshipID = "friendshipID"
+	ContextUserID         = "userID"
+	ContextFriendshipID   = "friendshipID"
+	ContextGroupExpenseID = "groupExpenseID"
 )

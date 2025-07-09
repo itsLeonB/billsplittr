@@ -24,6 +24,7 @@ type FriendshipService interface {
 	CreateAnonymous(ctx context.Context, request dto.NewAnonymousFriendshipRequest) (dto.FriendshipResponse, error)
 	GetAll(ctx context.Context, userID uuid.UUID) ([]dto.FriendshipResponse, error)
 	GetDetails(ctx context.Context, userID, friendshipID uuid.UUID) (dto.FriendDetailsResponse, error)
+	IsFriends(ctx context.Context, profileID1, profileID2 uuid.UUID) (bool, error)
 }
 
 type DebtService interface {
@@ -33,4 +34,10 @@ type DebtService interface {
 
 type TransferMethodService interface {
 	GetAll(ctx context.Context) ([]dto.TransferMethodResponse, error)
+}
+
+type GroupExpenseService interface {
+	CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error)
+	GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error)
+	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 }

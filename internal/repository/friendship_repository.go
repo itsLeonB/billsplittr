@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/util"
@@ -89,6 +90,27 @@ func (fr *friendshipRepositoryGorm) FindAll(ctx context.Context, spec entity.Fri
 	}
 
 	return friendships, nil
+}
+
+func (fr *friendshipRepositoryGorm) FindByProfileIDs(ctx context.Context, profileID1, profileID2 uuid.UUID) (entity.Friendship, error) {
+	db, err := fr.getGormInstance(ctx)
+	if err != nil {
+		return entity.Friendship{}, err
+	}
+
+	var friendship entity.Friendship
+	err = db.Where("(profile_id1 = ? AND profile_id2 = ?) OR (profile_id1 = ? AND profile_id2 = ?)", profileID1, profileID2, profileID2, profileID1).
+		First(&friendship).
+		Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.Friendship{}, nil
+		}
+		return entity.Friendship{}, eris.Wrap(err, appconstant.ErrDataSelect)
+	}
+
+	return friendship, nil
 }
 
 func (fr *friendshipRepositoryGorm) getGormInstance(ctx context.Context) (*gorm.DB, error) {

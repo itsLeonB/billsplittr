@@ -8,6 +8,7 @@ type Handlers struct {
 	Profile        *handler.ProfileHandler
 	TransferMethod *handler.TransferMethodHandler
 	Debt           *handler.DebtHandler
+	GroupExpense   *handler.GroupExpenseHandler
 }
 
 func ProvideHandlers(services *Services) *Handlers {
@@ -17,5 +18,6 @@ func ProvideHandlers(services *Services) *Handlers {
 		Profile:        handler.NewProfileHandler(services.User),
 		TransferMethod: handler.NewTransferMethodHandler(services.TransferMethod),
 		Debt:           handler.NewDebtHandler(services.Debt),
+		GroupExpense:   handler.NewGroupExpenseHandler(services.GroupExpense),
 	}
 }
