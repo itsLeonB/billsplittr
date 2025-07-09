@@ -11,4 +11,5 @@ type GroupExpenseParticipant struct {
 	ParticipantProfileID uuid.UUID
 	ShareAmount          decimal.Decimal
 	Description          string
+	Confirmed            bool
 }

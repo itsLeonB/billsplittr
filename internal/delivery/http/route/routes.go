@@ -52,6 +52,11 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 
 	protectedRoutes.POST("/debts", handlers.Debt.HandleCreate())
 	protectedRoutes.GET("/debts", handlers.Debt.HandleGetAll())
+
+	groupExpenseRoutes := protectedRoutes.Group("/group-expenses")
+	groupExpenseRoutes.POST("", handlers.GroupExpense.HandleCreateDraft())
+	groupExpenseRoutes.GET("", handlers.GroupExpense.HandleGetAllCreated())
+	groupExpenseRoutes.GET(fmt.Sprintf("/:%s", appconstant.ContextGroupExpenseID), handlers.GroupExpense.HandleGetDetails())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {
