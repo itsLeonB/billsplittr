@@ -36,6 +36,6 @@ type TransferMethodRepository interface {
 
 type GroupExpenseRepository interface {
 	Insert(ctx context.Context, groupExpense entity.GroupExpense) (entity.GroupExpense, error)
-	FindAll(ctx context.Context, spec entity.GroupExpense) ([]entity.GroupExpense, error)
+	FindAll(ctx context.Context, spec entity.GroupExpenseSpecification) ([]entity.GroupExpense, error)
 	FindFirst(ctx context.Context, spec entity.GroupExpenseSpecification) (entity.GroupExpense, error)
 }

@@ -14,7 +14,9 @@ type GroupExpense struct {
 	OtherFees             []OtherFee
 	Confirmed             bool
 	ParticipantsConfirmed bool
-	CreatedByProfileID    uuid.UUID
+	CreatorProfileID      uuid.UUID
+	PayerProfile          UserProfile `gorm:"foreignKey:PayerProfileID"`
+	CreatorProfile        UserProfile `gorm:"foreignKey:CreatorProfileID"`
 }
 
 type ExpenseItem struct {

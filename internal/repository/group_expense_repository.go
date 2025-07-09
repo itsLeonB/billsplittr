@@ -32,7 +32,7 @@ func (ger *groupExpenseRepositoryGorm) Insert(ctx context.Context, groupExpense 
 	return groupExpense, nil
 }
 
-func (ger *groupExpenseRepositoryGorm) FindAll(ctx context.Context, spec entity.GroupExpense) ([]entity.GroupExpense, error) {
+func (ger *groupExpenseRepositoryGorm) FindAll(ctx context.Context, spec entity.GroupExpenseSpecification) ([]entity.GroupExpense, error) {
 	var groupExpenses []entity.GroupExpense
 
 	db, err := ger.getGormInstance(ctx)
@@ -40,7 +40,11 @@ func (ger *groupExpenseRepositoryGorm) FindAll(ctx context.Context, spec entity.
 		return nil, err
 	}
 
-	err = db.Scopes(ezutil.WhereBySpec(spec), util.DefaultOrder()).
+	err = db.Scopes(
+		ezutil.WhereBySpec(spec.GroupExpense),
+		util.DefaultOrder(),
+		ezutil.PreloadRelations(spec.PreloadRelations),
+	).
 		Find(&groupExpenses).
 		Error
 
