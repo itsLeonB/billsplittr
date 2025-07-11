@@ -120,7 +120,7 @@ func (cr *crudRepositoryGorm[T]) Delete(ctx context.Context, model T) error {
 	}
 
 	if err = db.Unscoped().Delete(&model).Error; err != nil {
-		return eris.Wrap(err, appconstant.ErrDataUpdate)
+		return eris.Wrap(err, appconstant.ErrDataDelete)
 	}
 
 	return nil

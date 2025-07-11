@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -106,7 +105,10 @@ func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExp
 		return dto.ExpenseItemResponse{}, err
 	}
 	if expenseItem.IsZero() {
-		return dto.ExpenseItemResponse{}, ezutil.NotFoundError(fmt.Sprintf("expense item ID: %s is not found", expenseItemID))
+		return dto.ExpenseItemResponse{}, ezutil.NotFoundError(util.NotFoundMessage(spec.Model))
+	}
+	if expenseItem.IsDeleted() {
+		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 	}
 
 	return mapper.ExpenseItemToResponse(expenseItem), nil

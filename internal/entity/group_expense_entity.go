@@ -37,7 +37,7 @@ func (ei ExpenseItem) TableName() string {
 }
 
 func (ei ExpenseItem) SimpleName() string {
-	return "group expense item"
+	return "expense item"
 }
 
 type ItemParticipant struct {
