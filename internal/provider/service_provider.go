@@ -52,9 +52,11 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
 
 	groupExpenseService := service.NewGroupExpenseService(
+		repositories.Transactor,
 		repositories.GroupExpense,
 		userService,
 		friendshipService,
+		repositories.ExpenseItem,
 	)
 
 	return &Services{

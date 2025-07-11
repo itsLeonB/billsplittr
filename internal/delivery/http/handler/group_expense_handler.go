@@ -95,3 +95,66 @@ func (geh *GroupExpenseHandler) HandleGetDetails() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleGetItemDetails() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := geh.groupExpenseService.GetItemDetails(ctx, groupExpenseID, expenseItemID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.UpdateExpenseItemRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+		request.ID = expenseItemID
+
+		response, err := geh.groupExpenseService.UpdateItem(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}

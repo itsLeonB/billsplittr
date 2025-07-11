@@ -40,4 +40,6 @@ type GroupExpenseService interface {
 	CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error)
 	GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error)
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
+	GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error)
+	UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error)
 }

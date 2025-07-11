@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil"
 )
@@ -13,6 +14,7 @@ type Repositories struct {
 	DebtTransaction repository.DebtTransactionRepository
 	TransferMethod  repository.TransferMethodRepository
 	GroupExpense    repository.GroupExpenseRepository
+	ExpenseItem     repository.ExpenseItemRepository
 }
 
 func ProvideRepositories(configs *ezutil.Config) *Repositories {
@@ -23,6 +25,7 @@ func ProvideRepositories(configs *ezutil.Config) *Repositories {
 		Friendship:      repository.NewFriendshipRepository(configs.GORM),
 		DebtTransaction: repository.NewDebtTransactionRepository(configs.GORM),
 		TransferMethod:  repository.NewTransferMethodRepository(configs.GORM),
-		GroupExpense:    repository.NewGroupExpenseRepository(configs.GORM),
+		GroupExpense:    repository.NewCRUDRepository[entity.GroupExpense](configs.GORM),
+		ExpenseItem:     repository.NewExpenseItemRepository(configs.GORM),
 	}
 }
