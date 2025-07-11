@@ -19,16 +19,36 @@ type GroupExpense struct {
 	CreatorProfile        UserProfile `gorm:"foreignKey:CreatorProfileID"`
 }
 
+func (ge GroupExpense) SimpleName() string {
+	return "group expense"
+}
+
 type ExpenseItem struct {
 	BaseEntity
 	GroupExpenseID uuid.UUID
 	Name           string
 	Amount         decimal.Decimal
 	Quantity       int
+	Participants   []ItemParticipant `gorm:"foreignKey:ExpenseItemID"`
 }
 
-func (ei *ExpenseItem) TableName() string {
+func (ei ExpenseItem) TableName() string {
 	return "group_expense_items"
+}
+
+func (ei ExpenseItem) SimpleName() string {
+	return "group expense item"
+}
+
+type ItemParticipant struct {
+	BaseEntity
+	ExpenseItemID uuid.UUID
+	ProfileID     uuid.UUID
+	Share         decimal.Decimal
+}
+
+func (ip ItemParticipant) TableName() string {
+	return "group_expense_item_participants"
 }
 
 type OtherFee struct {
@@ -38,7 +58,7 @@ type OtherFee struct {
 	Amount         decimal.Decimal
 }
 
-func (of *OtherFee) TableName() string {
+func (of OtherFee) TableName() string {
 	return "group_expense_other_fees"
 }
 

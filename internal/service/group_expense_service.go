@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -15,20 +16,26 @@ import (
 )
 
 type groupExpenseServiceImpl struct {
+	transactor             ezutil.Transactor
 	groupExpenseRepository repository.GroupExpenseRepository
 	userService            UserService
 	friendshipService      FriendshipService
+	expenseItemRepository  repository.ExpenseItemRepository
 }
 
 func NewGroupExpenseService(
+	transactor ezutil.Transactor,
 	groupExpenseRepository repository.GroupExpenseRepository,
 	userService UserService,
 	friendshipService FriendshipService,
+	expenseItemRepository repository.ExpenseItemRepository,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
+		transactor,
 		groupExpenseRepository,
 		userService,
 		friendshipService,
+		expenseItemRepository,
 	}
 }
 
@@ -53,8 +60,8 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	spec := entity.GroupExpenseSpecification{}
-	spec.CreatorProfileID = user.Profile.ID
+	spec := entity.GenericSpec[entity.GroupExpense]{}
+	spec.Model.CreatorProfileID = user.Profile.ID
 	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
@@ -76,22 +83,119 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	spec := entity.GroupExpenseSpecification{}
-	spec.ID = id
+	spec := entity.GenericSpec[entity.GroupExpense]{}
+	spec.Model.ID = id
 	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
-	groupExpense, err := ges.groupExpenseRepository.FindFirst(ctx, spec)
+	groupExpense, err := ges.getGroupExpense(ctx, spec)
 	if err != nil {
 		return dto.GroupExpenseResponse{}, err
 	}
-	if groupExpense.IsZero() {
-		return dto.GroupExpenseResponse{}, ezutil.NotFoundError(appconstant.ErrGroupExpenseNotFound(id))
-	}
-	if groupExpense.IsDeleted() {
-		return dto.GroupExpenseResponse{}, ezutil.NotFoundError(appconstant.ErrGroupExpenseDeleted(id))
-	}
 
 	return mapper.GroupExpenseToResponse(groupExpense, user.Profile.ID), nil
+}
+
+func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error) {
+	spec := entity.GenericSpec[entity.ExpenseItem]{}
+	spec.Model.ID = expenseItemID
+	spec.Model.GroupExpenseID = groupExpenseID
+	spec.PreloadRelations = []string{"Participants"}
+
+	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+	if expenseItem.IsZero() {
+		return dto.ExpenseItemResponse{}, ezutil.NotFoundError(fmt.Sprintf("expense item ID: %s is not found", expenseItemID))
+	}
+
+	return mapper.ExpenseItemToResponse(expenseItem), nil
+}
+
+func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error) {
+	var response dto.ExpenseItemResponse
+
+	if request.Amount.Cmp(decimal.Zero) == 0 {
+		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be more than 0")
+	}
+
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		spec := entity.GenericSpec[entity.ExpenseItem]{}
+		spec.Model.ID = request.ID
+		spec.ForUpdate = true
+
+		expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
+		if err != nil {
+			return err
+		}
+		if expenseItem.IsZero() {
+			return ezutil.NotFoundError(util.NotFoundMessage(spec.Model))
+		}
+		if expenseItem.IsDeleted() {
+			return ezutil.UnprocessableEntityError(util.DeletedMessage(expenseItem))
+		}
+
+		if util.CompareUUID(request.GroupExpenseID, expenseItem.GroupExpenseID) != 0 {
+			return ezutil.UnprocessableEntityError("mismatched group expense ID")
+		}
+
+		groupExpenseSpec := entity.GenericSpec[entity.GroupExpense]{}
+		groupExpenseSpec.Model.ID = expenseItem.GroupExpenseID
+		groupExpenseSpec.ForUpdate = true
+
+		groupExpense, err := ges.getGroupExpense(ctx, groupExpenseSpec)
+		if err != nil {
+			return err
+		}
+
+		patchedExpenseItem := mapper.PatchExpenseItemWithRequest(expenseItem, request)
+
+		updatedExpenseItem, err := ges.expenseItemRepository.Update(ctx, patchedExpenseItem)
+		if err != nil {
+			return err
+		}
+
+		oldAmount := expenseItem.Amount.Mul(decimal.NewFromInt(int64(expenseItem.Quantity)))
+		newAmount := updatedExpenseItem.Amount.Mul(decimal.NewFromInt(int64(updatedExpenseItem.Quantity)))
+
+		groupExpense.TotalAmount = groupExpense.TotalAmount.
+			Sub(oldAmount).
+			Add(newAmount)
+
+		if _, err := ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
+			return err
+		}
+
+		updatedParticipants := ezutil.MapSlice(request.Participants, mapper.ItemParticipantRequestToEntity)
+		if err := ges.expenseItemRepository.SyncParticipants(ctx, updatedExpenseItem.ID, updatedParticipants); err != nil {
+			return err
+		}
+
+		response = mapper.ExpenseItemToResponse(updatedExpenseItem)
+
+		return nil
+	})
+
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec entity.GenericSpec[entity.GroupExpense]) (entity.GroupExpense, error) {
+	groupExpense, err := ges.groupExpenseRepository.FindFirst(ctx, spec)
+	if err != nil {
+		return entity.GroupExpense{}, err
+	}
+	if groupExpense.IsZero() {
+		return entity.GroupExpense{}, ezutil.NotFoundError(util.NotFoundMessage(spec.Model))
+	}
+	if groupExpense.IsDeleted() {
+		return entity.GroupExpense{}, ezutil.UnprocessableEntityError(util.DeletedMessage(groupExpense))
+	}
+
+	return groupExpense, nil
 }
 
 func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context, request *dto.NewGroupExpenseRequest) error {

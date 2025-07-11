@@ -32,7 +32,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 		PaidByUser:            groupExpense.PayerProfileID == userProfileID,
 		TotalAmount:           groupExpense.TotalAmount,
 		Description:           groupExpense.Description,
-		Items:                 ezutil.MapSlice(groupExpense.Items, expenseItemToResponse),
+		Items:                 ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
 		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, otherFeeToResponse),
 		CreatorProfileID:      groupExpense.CreatorProfileID,
 		CreatorName:           groupExpense.CreatorProfile.Name,
@@ -45,15 +45,17 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 	}
 }
 
-func expenseItemToResponse(item entity.ExpenseItem) dto.ExpenseItemResponse {
+func ExpenseItemToResponse(item entity.ExpenseItem) dto.ExpenseItemResponse {
 	return dto.ExpenseItemResponse{
-		ID:        item.ID,
-		Name:      item.Name,
-		Amount:    item.Amount,
-		Quantity:  item.Quantity,
-		CreatedAt: item.CreatedAt,
-		UpdatedAt: item.UpdatedAt,
-		DeletedAt: item.DeletedAt.Time,
+		ID:             item.ID,
+		GroupExpenseID: item.GroupExpenseID,
+		Name:           item.Name,
+		Amount:         item.Amount,
+		Quantity:       item.Quantity,
+		CreatedAt:      item.CreatedAt,
+		UpdatedAt:      item.UpdatedAt,
+		DeletedAt:      item.DeletedAt.Time,
+		Participants:   ezutil.MapSlice(item.Participants, itemParticipantToResponse),
 	}
 }
 
@@ -65,6 +67,13 @@ func otherFeeToResponse(fee entity.OtherFee) dto.OtherFeeResponse {
 		CreatedAt: fee.CreatedAt,
 		UpdatedAt: fee.UpdatedAt,
 		DeletedAt: fee.DeletedAt.Time,
+	}
+}
+
+func itemParticipantToResponse(itemParticipant entity.ItemParticipant) dto.ItemParticipantResponse {
+	return dto.ItemParticipantResponse{
+		ProfileID: itemParticipant.ProfileID,
+		Share:     itemParticipant.Share,
 	}
 }
 
@@ -80,5 +89,19 @@ func otherFeeRequestToEntity(request dto.NewOtherFeeRequest) entity.OtherFee {
 	return entity.OtherFee{
 		Name:   request.Name,
 		Amount: request.Amount,
+	}
+}
+
+func PatchExpenseItemWithRequest(expenseItem entity.ExpenseItem, request dto.UpdateExpenseItemRequest) entity.ExpenseItem {
+	expenseItem.Name = request.Name
+	expenseItem.Amount = request.Amount
+	expenseItem.Quantity = request.Quantity
+	return expenseItem
+}
+
+func ItemParticipantRequestToEntity(itemParticipant dto.NewItemParticipantRequest) entity.ItemParticipant {
+	return entity.ItemParticipant{
+		ProfileID: itemParticipant.ProfileID,
+		Share:     itemParticipant.Share,
 	}
 }

@@ -1,9 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/itsLeonB/billsplittr/internal/entity"
 )
 
 func GetNameFromEmail(email string) string {
@@ -28,4 +31,12 @@ func capitalize(word string) string {
 		return ""
 	}
 	return string(unicode.ToUpper(rune(word[0]))) + strings.ToLower(word[1:])
+}
+
+func NotFoundMessage(ent entity.Entity) string {
+	return fmt.Sprintf("%s with ID: %s is not found", ent.SimpleName(), ent.GetID())
+}
+
+func DeletedMessage(ent entity.Entity) string {
+	return fmt.Sprintf("%s with ID: %s is deleted", ent.SimpleName(), ent.GetID())
 }

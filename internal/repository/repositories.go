@@ -5,7 +5,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"gorm.io/gorm"
 )
+
+type CRUDRepository[T any] interface {
+	Insert(ctx context.Context, model T) (T, error)
+	FindAll(ctx context.Context, spec entity.GenericSpec[T]) ([]T, error)
+	FindFirst(ctx context.Context, spec entity.GenericSpec[T]) (T, error)
+	Update(ctx context.Context, model T) (T, error)
+	Delete(ctx context.Context, model T) error
+	GetGormInstance(ctx context.Context) (*gorm.DB, error)
+}
 
 type UserRepository interface {
 	Insert(ctx context.Context, user entity.User) (entity.User, error)
@@ -35,7 +45,10 @@ type TransferMethodRepository interface {
 }
 
 type GroupExpenseRepository interface {
-	Insert(ctx context.Context, groupExpense entity.GroupExpense) (entity.GroupExpense, error)
-	FindAll(ctx context.Context, spec entity.GroupExpenseSpecification) ([]entity.GroupExpense, error)
-	FindFirst(ctx context.Context, spec entity.GroupExpenseSpecification) (entity.GroupExpense, error)
+	CRUDRepository[entity.GroupExpense]
+}
+
+type ExpenseItemRepository interface {
+	CRUDRepository[entity.ExpenseItem]
+	SyncParticipants(ctx context.Context, expenseItemID uuid.UUID, participants []entity.ItemParticipant) error
 }
