@@ -72,12 +72,7 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 }
 
 func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
-	userID, err := util.FindUserID(ctx)
-	if err != nil {
-		return dto.GroupExpenseResponse{}, err
-	}
-
-	user, err := ges.userService.GetEntityByID(ctx, userID)
+	profileID, err := util.GetProfileID(ctx)
 	if err != nil {
 		return dto.GroupExpenseResponse{}, err
 	}
@@ -91,14 +86,19 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	return mapper.GroupExpenseToResponse(groupExpense, user.Profile.ID), nil
+	return mapper.GroupExpenseToResponse(groupExpense, profileID), nil
 }
 
 func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error) {
+	profileID, err := util.GetProfileID(ctx)
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+
 	spec := entity.GenericSpec[entity.ExpenseItem]{}
 	spec.Model.ID = expenseItemID
 	spec.Model.GroupExpenseID = groupExpenseID
-	spec.PreloadRelations = []string{"Participants"}
+	spec.PreloadRelations = []string{"Participants", "Participants.Profile"}
 
 	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
 	if err != nil {
@@ -111,17 +111,22 @@ func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExp
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 	}
 
-	return mapper.ExpenseItemToResponse(expenseItem), nil
+	return mapper.ExpenseItemToResponse(expenseItem, profileID), nil
 }
 
 func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error) {
 	var response dto.ExpenseItemResponse
 
+	profileID, err := util.GetProfileID(ctx)
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+
 	if request.Amount.Cmp(decimal.Zero) == 0 {
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be more than 0")
 	}
 
-	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := entity.GenericSpec[entity.ExpenseItem]{}
 		spec.Model.ID = request.ID
 		spec.ForUpdate = true
@@ -173,7 +178,7 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 			return err
 		}
 
-		response = mapper.ExpenseItemToResponse(updatedExpenseItem)
+		response = mapper.ExpenseItemToResponse(updatedExpenseItem, profileID)
 
 		return nil
 	})

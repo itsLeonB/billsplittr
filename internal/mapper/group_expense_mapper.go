@@ -32,7 +32,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 		PaidByUser:            groupExpense.PayerProfileID == userProfileID,
 		TotalAmount:           groupExpense.TotalAmount,
 		Description:           groupExpense.Description,
-		Items:                 ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
+		Items:                 ezutil.MapSlice(groupExpense.Items, getExpenseItemSimpleMapper(userProfileID)),
 		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, otherFeeToResponse),
 		CreatorProfileID:      groupExpense.CreatorProfileID,
 		CreatorName:           groupExpense.CreatorProfile.Name,
@@ -45,7 +45,13 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 	}
 }
 
-func ExpenseItemToResponse(item entity.ExpenseItem) dto.ExpenseItemResponse {
+func getExpenseItemSimpleMapper(userProfileID uuid.UUID) func(item entity.ExpenseItem) dto.ExpenseItemResponse {
+	return func(item entity.ExpenseItem) dto.ExpenseItemResponse {
+		return ExpenseItemToResponse(item, userProfileID)
+	}
+}
+
+func ExpenseItemToResponse(item entity.ExpenseItem, userProfileID uuid.UUID) dto.ExpenseItemResponse {
 	return dto.ExpenseItemResponse{
 		ID:             item.ID,
 		GroupExpenseID: item.GroupExpenseID,
@@ -55,7 +61,7 @@ func ExpenseItemToResponse(item entity.ExpenseItem) dto.ExpenseItemResponse {
 		CreatedAt:      item.CreatedAt,
 		UpdatedAt:      item.UpdatedAt,
 		DeletedAt:      item.DeletedAt.Time,
-		Participants:   ezutil.MapSlice(item.Participants, itemParticipantToResponse),
+		Participants:   ezutil.MapSlice(item.Participants, getItemParticipantSimpleMapper(userProfileID)),
 	}
 }
 
@@ -70,10 +76,18 @@ func otherFeeToResponse(fee entity.OtherFee) dto.OtherFeeResponse {
 	}
 }
 
-func itemParticipantToResponse(itemParticipant entity.ItemParticipant) dto.ItemParticipantResponse {
+func getItemParticipantSimpleMapper(userProfileID uuid.UUID) func(itemParticipant entity.ItemParticipant) dto.ItemParticipantResponse {
+	return func(itemParticipant entity.ItemParticipant) dto.ItemParticipantResponse {
+		return itemParticipantToResponse(itemParticipant, userProfileID)
+	}
+}
+
+func itemParticipantToResponse(itemParticipant entity.ItemParticipant, userProfileID uuid.UUID) dto.ItemParticipantResponse {
 	return dto.ItemParticipantResponse{
-		ProfileID: itemParticipant.ProfileID,
-		Share:     itemParticipant.Share,
+		ProfileName: itemParticipant.Profile.Name,
+		ProfileID:   itemParticipant.ProfileID,
+		Share:       itemParticipant.Share,
+		IsUser:      itemParticipant.ProfileID == userProfileID,
 	}
 }
 

@@ -81,16 +81,14 @@ func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserSer
 			return false, nil, err
 		}
 
-		exists, err = userService.ExistsByID(ctx, userID)
+		user, err := userService.GetEntityByID(ctx, userID)
 		if err != nil {
 			return false, nil, err
 		}
-		if !exists {
-			return false, nil, ezutil.UnauthorizedError(appconstant.ErrAuthUserNotFound)
-		}
 
 		authData := map[string]any{
-			appconstant.ContextUserID: userID,
+			appconstant.ContextUserID:    userID,
+			appconstant.ContextProfileID: user.Profile.ID,
 		}
 
 		return true, authData, nil

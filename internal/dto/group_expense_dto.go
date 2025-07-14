@@ -83,6 +83,8 @@ type OtherFeeResponse struct {
 }
 
 type ItemParticipantResponse struct {
-	ProfileID uuid.UUID       `json:"profileId"`
-	Share     decimal.Decimal `json:"share"`
+	ProfileName string          `json:"profileName"`
+	ProfileID   uuid.UUID       `json:"profileId"`
+	Share       decimal.Decimal `json:"share"`
+	IsUser      bool            `json:"isUser"`
 }

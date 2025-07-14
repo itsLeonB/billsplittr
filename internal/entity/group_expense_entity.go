@@ -45,6 +45,7 @@ type ItemParticipant struct {
 	ExpenseItemID uuid.UUID
 	ProfileID     uuid.UUID
 	Share         decimal.Decimal
+	Profile       UserProfile `gorm:"foreignId:ProfileID"`
 }
 
 func (ip ItemParticipant) TableName() string {
