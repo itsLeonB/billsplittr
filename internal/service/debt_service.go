@@ -218,7 +218,7 @@ func (ds *debtServiceImpl) getTransferMethod(ctx context.Context, id uuid.UUID) 
 
 func (ds *debtServiceImpl) getGroupExpenseTransferMethod(ctx context.Context) (entity.TransferMethod, error) {
 	spec := ezutil.Specification[entity.TransferMethod]{}
-	spec.Model.Name = "GROUP_EXPENSE"
+	spec.Model.Name = appconstant.GroupExpenseTransferMethod
 
 	transferMethod, err := ds.transferMethodRepository.FindFirst(ctx, spec)
 	if err != nil {

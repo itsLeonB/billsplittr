@@ -154,7 +154,7 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
 		)
 	}
 }
