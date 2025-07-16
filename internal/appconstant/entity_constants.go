@@ -9,4 +9,6 @@ const (
 
 	Real      FriendshipType = "REAL"
 	Anonymous FriendshipType = "ANON"
+
+	GroupExpenseTransferMethod = "GROUP_EXPENSE"
 )

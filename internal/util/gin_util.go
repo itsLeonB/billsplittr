@@ -14,10 +14,10 @@ func GetUserID(ctx *gin.Context) (uuid.UUID, error) {
 	return ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
 }
 
-func FindUserID(ctx context.Context) (uuid.UUID, error) {
-	userID, ok := ctx.Value(appconstant.ContextUserID).(uuid.UUID)
+func GetProfileID(ctx context.Context) (uuid.UUID, error) {
+	profileID, ok := ctx.Value(appconstant.ContextProfileID).(uuid.UUID)
 	if !ok {
-		return uuid.Nil, eris.New("failed to retrieve user ID from context")
+		return uuid.Nil, eris.New("failed to retrieve profile ID from context")
 	}
-	return userID, nil
+	return profileID, nil
 }

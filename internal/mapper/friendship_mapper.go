@@ -5,7 +5,6 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/helper"
-	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 )
@@ -28,7 +27,7 @@ func FriendshipToResponse(userProfileID uuid.UUID, friendship entity.Friendship)
 }
 
 func OrderProfilesToFriendship(userProfile, friendProfile entity.UserProfile) (entity.Friendship, error) {
-	switch util.CompareUUID(userProfile.ID, friendProfile.ID) {
+	switch ezutil.CompareUUID(userProfile.ID, friendProfile.ID) {
 	case 1:
 		return entity.Friendship{
 			ProfileID1: friendProfile.ID,

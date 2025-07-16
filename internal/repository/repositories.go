@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/ezutil"
 )
 
 type UserRepository interface {
@@ -24,18 +25,25 @@ type FriendshipRepository interface {
 }
 
 type DebtTransactionRepository interface {
-	Insert(ctx context.Context, debtTransaction entity.DebtTransaction) (entity.DebtTransaction, error)
+	ezutil.CRUDRepository[entity.DebtTransaction]
 	FindAllByProfileID(ctx context.Context, userProfileID, friendProfileID uuid.UUID) ([]entity.DebtTransaction, error)
 	FindAllByUserProfileID(ctx context.Context, userProfileID uuid.UUID) ([]entity.DebtTransaction, error)
 }
 
 type TransferMethodRepository interface {
-	FindAll(ctx context.Context, spec entity.TransferMethod) ([]entity.TransferMethod, error)
-	FindFirst(ctx context.Context, spec entity.TransferMethod) (entity.TransferMethod, error)
+	ezutil.CRUDRepository[entity.TransferMethod]
 }
 
 type GroupExpenseRepository interface {
-	Insert(ctx context.Context, groupExpense entity.GroupExpense) (entity.GroupExpense, error)
-	FindAll(ctx context.Context, spec entity.GroupExpenseSpecification) ([]entity.GroupExpense, error)
-	FindFirst(ctx context.Context, spec entity.GroupExpenseSpecification) (entity.GroupExpense, error)
+	ezutil.CRUDRepository[entity.GroupExpense]
+	SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error
+}
+
+type ExpenseItemRepository interface {
+	ezutil.CRUDRepository[entity.ExpenseItem]
+	SyncParticipants(ctx context.Context, expenseItemID uuid.UUID, participants []entity.ItemParticipant) error
+}
+
+type ExpenseParticipantRepository interface {
+	ezutil.CRUDRepository[entity.ExpenseParticipant]
 }

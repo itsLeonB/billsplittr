@@ -1,9 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-	"unicode"
+
+	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/ezutil"
 )
 
 func GetNameFromEmail(email string) string {
@@ -17,15 +20,16 @@ func GetNameFromEmail(email string) string {
 	matches := re.FindAllString(localPart, -1)
 	if len(matches) > 0 {
 		name := matches[0]
-		return capitalize(name)
+		return ezutil.Capitalize(name)
 	}
 
 	return ""
 }
 
-func capitalize(word string) string {
-	if len(word) == 0 {
-		return ""
-	}
-	return string(unicode.ToUpper(rune(word[0]))) + strings.ToLower(word[1:])
+func NotFoundMessage(ent entity.Entity) string {
+	return fmt.Sprintf("%s with ID: %s is not found", ent.SimpleName(), ent.GetID())
+}
+
+func DeletedMessage(ent entity.Entity) string {
+	return fmt.Sprintf("%s with ID: %s is deleted", ent.SimpleName(), ent.GetID())
 }

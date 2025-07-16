@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
@@ -80,7 +79,7 @@ func (fr *friendshipRepositoryGorm) FindAll(ctx context.Context, spec entity.Fri
 		Or(entity.Friendship{ProfileID2: spec.ProfileID1}).
 		Scopes(
 			ezutil.PreloadRelations(spec.PreloadRelations),
-			util.DefaultOrder(),
+			ezutil.DefaultOrder(),
 		).
 		Find(&friendships).
 		Error

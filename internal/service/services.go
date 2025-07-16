@@ -30,6 +30,7 @@ type FriendshipService interface {
 type DebtService interface {
 	RecordNewTransaction(ctx context.Context, request dto.NewDebtTransactionRequest) (dto.DebtTransactionResponse, error)
 	GetTransactions(ctx context.Context, userProfileID uuid.UUID) ([]dto.DebtTransactionResponse, error)
+	ProcessConfirmedGroupExpense(ctx context.Context, groupExpenseID uuid.UUID) error
 }
 
 type TransferMethodService interface {
@@ -40,4 +41,7 @@ type GroupExpenseService interface {
 	CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error)
 	GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error)
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
+	GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error)
+	UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error)
+	ConfirmDraft(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 }

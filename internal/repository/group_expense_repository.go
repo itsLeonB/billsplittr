@@ -3,87 +3,56 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type groupExpenseRepositoryGorm struct {
+	ezutil.CRUDRepository[entity.GroupExpense]
 	db *gorm.DB
 }
 
 func NewGroupExpenseRepository(db *gorm.DB) GroupExpenseRepository {
-	return &groupExpenseRepositoryGorm{db}
+	return &groupExpenseRepositoryGorm{
+		ezutil.NewCRUDRepository[entity.GroupExpense](db),
+		db,
+	}
 }
 
-func (ger *groupExpenseRepositoryGorm) Insert(ctx context.Context, groupExpense entity.GroupExpense) (entity.GroupExpense, error) {
-	db, err := ger.getGormInstance(ctx)
+func (ger *groupExpenseRepositoryGorm) SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error {
+	db, err := ger.GetGormInstance(ctx)
 	if err != nil {
-		return entity.GroupExpense{}, err
+		return err
 	}
 
-	if err = db.Create(&groupExpense).Error; err != nil {
-		return entity.GroupExpense{}, eris.Wrap(err, appconstant.ErrDataInsert)
+	profileIDs := make([]uuid.UUID, len(participants))
+	for i, p := range participants {
+		participants[i].GroupExpenseID = groupExpenseID
+		profileIDs[i] = p.ParticipantProfileID
 	}
 
-	return groupExpense, nil
-}
-
-func (ger *groupExpenseRepositoryGorm) FindAll(ctx context.Context, spec entity.GroupExpenseSpecification) ([]entity.GroupExpense, error) {
-	var groupExpenses []entity.GroupExpense
-
-	db, err := ger.getGormInstance(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.Scopes(
-		ezutil.WhereBySpec(spec.GroupExpense),
-		util.DefaultOrder(),
-		ezutil.PreloadRelations(spec.PreloadRelations),
-	).
-		Find(&groupExpenses).
-		Error
-
-	if err != nil {
-		return nil, eris.Wrap(err, appconstant.ErrDataSelect)
-	}
-
-	return groupExpenses, nil
-}
-
-func (ger *groupExpenseRepositoryGorm) FindFirst(ctx context.Context, spec entity.GroupExpenseSpecification) (entity.GroupExpense, error) {
-	var groupExpense entity.GroupExpense
-
-	db, err := ger.getGormInstance(ctx)
-	if err != nil {
-		return entity.GroupExpense{}, err
-	}
-
-	err = db.Scopes(ezutil.WhereBySpec(spec.GroupExpense), ezutil.PreloadRelations(spec.PreloadRelations)).
-		Take(&groupExpense).
-		Error
-
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return entity.GroupExpense{}, nil
+	if len(participants) > 0 {
+		// For PostgreSQL
+		if err := db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "group_expense_id"}, {Name: "participant_profile_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"share_amount"}),
+		}).Create(&participants).Error; err != nil {
+			return eris.Wrap(err, appconstant.ErrDataUpdate)
 		}
-		return entity.GroupExpense{}, eris.Wrap(err, appconstant.ErrDataSelect)
 	}
 
-	return groupExpense, nil
-}
+	query := db.Where("group_expense_id = ?", groupExpenseID)
+	if len(profileIDs) > 0 {
+		query = query.Where("participant_profile_id NOT IN ?", profileIDs)
+	}
+	if err := query.Delete(&entity.ExpenseParticipant{}).Error; err != nil {
+		return err
+	}
 
-func (ger *groupExpenseRepositoryGorm) getGormInstance(ctx context.Context) (*gorm.DB, error) {
-	tx, err := ezutil.GetTxFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if tx != nil {
-		return tx, nil
-	}
-	return ger.db.WithContext(ctx), nil
+	return nil
 }

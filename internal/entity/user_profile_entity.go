@@ -12,3 +12,7 @@ type UserProfileSpecification struct {
 	Specification
 	UserProfile
 }
+
+func (up UserProfile) IsAnonymous() bool {
+	return up.UserID == uuid.Nil
+}
