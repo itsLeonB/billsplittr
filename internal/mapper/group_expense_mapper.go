@@ -117,7 +117,7 @@ func PatchExpenseItemWithRequest(expenseItem entity.ExpenseItem, request dto.Upd
 	return expenseItem
 }
 
-func ItemParticipantRequestToEntity(itemParticipant dto.NewItemParticipantRequest) entity.ItemParticipant {
+func ItemParticipantRequestToEntity(itemParticipant dto.ItemParticipantRequest) entity.ItemParticipant {
 	return entity.ItemParticipant{
 		ProfileID: itemParticipant.ProfileID,
 		Share:     itemParticipant.Share,

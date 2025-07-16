@@ -29,15 +29,15 @@ type NewOtherFeeRequest struct {
 }
 
 type UpdateExpenseItemRequest struct {
-	ID             uuid.UUID                   `json:"-"`
-	GroupExpenseID uuid.UUID                   `json:"-"`
-	Name           string                      `json:"name" binding:"required,min=3"`
-	Amount         decimal.Decimal             `json:"amount" binding:"required"`
-	Quantity       int                         `json:"quantity" binding:"required,min=1"`
-	Participants   []NewItemParticipantRequest `json:"participants" binding:"dive"`
+	ID             uuid.UUID                `json:"-"`
+	GroupExpenseID uuid.UUID                `json:"-"`
+	Name           string                   `json:"name" binding:"required,min=3"`
+	Amount         decimal.Decimal          `json:"amount" binding:"required"`
+	Quantity       int                      `json:"quantity" binding:"required,min=1"`
+	Participants   []ItemParticipantRequest `json:"participants" binding:"dive"`
 }
 
-type NewItemParticipantRequest struct {
+type ItemParticipantRequest struct {
 	ProfileID uuid.UUID       `json:"profileId" binding:"required"`
 	Share     decimal.Decimal `json:"share" binding:"required"`
 }
