@@ -158,3 +158,24 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := geh.groupExpenseService.ConfirmDraft(ctx, groupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+		)
+	}
+}

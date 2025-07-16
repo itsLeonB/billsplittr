@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -15,11 +17,13 @@ import (
 )
 
 type groupExpenseServiceImpl struct {
-	transactor             ezutil.Transactor
-	groupExpenseRepository repository.GroupExpenseRepository
-	userService            UserService
-	friendshipService      FriendshipService
-	expenseItemRepository  repository.ExpenseItemRepository
+	transactor                   ezutil.Transactor
+	groupExpenseRepository       repository.GroupExpenseRepository
+	userService                  UserService
+	friendshipService            FriendshipService
+	expenseItemRepository        repository.ExpenseItemRepository
+	expenseParticipantRepository repository.ExpenseParticipantRepository
+	debtService                  DebtService
 }
 
 func NewGroupExpenseService(
@@ -28,6 +32,8 @@ func NewGroupExpenseService(
 	userService UserService,
 	friendshipService FriendshipService,
 	expenseItemRepository repository.ExpenseItemRepository,
+	groupExpenseParticipantRepository repository.ExpenseParticipantRepository,
+	debtService DebtService,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
 		transactor,
@@ -35,6 +41,8 @@ func NewGroupExpenseService(
 		userService,
 		friendshipService,
 		expenseItemRepository,
+		groupExpenseParticipantRepository,
+		debtService,
 	}
 }
 
@@ -59,7 +67,7 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	spec := entity.GenericSpec[entity.GroupExpense]{}
+	spec := ezutil.Specification[entity.GroupExpense]{}
 	spec.Model.CreatorProfileID = user.Profile.ID
 	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
@@ -77,9 +85,18 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	spec := entity.GenericSpec[entity.GroupExpense]{}
+	spec := ezutil.Specification[entity.GroupExpense]{}
 	spec.Model.ID = id
-	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
+	spec.PreloadRelations = []string{
+		"Items",
+		"OtherFees",
+		"PayerProfile",
+		"CreatorProfile",
+		"Items.Participants",
+		"Items.Participants.Profile",
+		"Participants",
+		"Participants.Profile",
+	}
 
 	groupExpense, err := ges.getGroupExpense(ctx, spec)
 	if err != nil {
@@ -95,7 +112,7 @@ func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExp
 		return dto.ExpenseItemResponse{}, err
 	}
 
-	spec := entity.GenericSpec[entity.ExpenseItem]{}
+	spec := ezutil.Specification[entity.ExpenseItem]{}
 	spec.Model.ID = expenseItemID
 	spec.Model.GroupExpenseID = groupExpenseID
 	spec.PreloadRelations = []string{"Participants", "Participants.Profile"}
@@ -127,7 +144,7 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 	}
 
 	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		spec := entity.GenericSpec[entity.ExpenseItem]{}
+		spec := ezutil.Specification[entity.ExpenseItem]{}
 		spec.Model.ID = request.ID
 		spec.ForUpdate = true
 
@@ -142,11 +159,11 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 			return ezutil.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 		}
 
-		if util.CompareUUID(request.GroupExpenseID, expenseItem.GroupExpenseID) != 0 {
+		if ezutil.CompareUUID(request.GroupExpenseID, expenseItem.GroupExpenseID) != 0 {
 			return ezutil.UnprocessableEntityError("mismatched group expense ID")
 		}
 
-		groupExpenseSpec := entity.GenericSpec[entity.GroupExpense]{}
+		groupExpenseSpec := ezutil.Specification[entity.GroupExpense]{}
 		groupExpenseSpec.Model.ID = expenseItem.GroupExpenseID
 		groupExpenseSpec.ForUpdate = true
 
@@ -190,7 +207,106 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 	return response, nil
 }
 
-func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec entity.GenericSpec[entity.GroupExpense]) (entity.GroupExpense, error) {
+func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
+	var response dto.GroupExpenseResponse
+
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		userProfileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			return err
+		}
+
+		spec := ezutil.Specification[entity.GroupExpense]{}
+		spec.Model.ID = id
+		spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile", "Items.Participants", "Items.Participants.Profile"}
+		spec.ForUpdate = true
+
+		groupExpense, err := ges.getGroupExpense(ctx, spec)
+		if err != nil {
+			return err
+		}
+
+		if groupExpense.Confirmed {
+			return ezutil.UnprocessableEntityError("already confirmed")
+		}
+
+		isAllAnonymous := true
+		participantsByProfileID := make(map[uuid.UUID]entity.ExpenseParticipant)
+		for _, item := range groupExpense.Items {
+			if len(item.Participants) < 1 {
+				return ezutil.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
+			}
+			for _, participant := range item.Participants {
+				amountToAdd := item.Amount.Mul(participant.Share)
+				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
+					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
+				} else {
+					expenseParticipant := entity.ExpenseParticipant{
+						ParticipantProfileID: participant.ProfileID,
+						ShareAmount:          amountToAdd,
+					}
+					if participant.Profile.IsAnonymous() || participant.ProfileID == userProfileID {
+						expenseParticipant.Confirmed = true
+					} else {
+						isAllAnonymous = false
+					}
+					participantsByProfileID[participant.ProfileID] = expenseParticipant
+				}
+			}
+		}
+
+		groupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
+		for _, expenseParticipant := range participantsByProfileID {
+			groupExpenseParticipants = append(groupExpenseParticipants, expenseParticipant)
+		}
+
+		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, groupExpenseParticipants); err != nil {
+			return err
+		}
+
+		groupExpense.Confirmed = true
+		groupExpense.ParticipantsConfirmed = isAllAnonymous
+
+		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
+		if err != nil {
+			return err
+		}
+
+		if isAllAnonymous {
+			if err = ges.notifyParticipantsConfirmed(ctx, groupExpense.ID); err != nil {
+				return err
+			}
+		} else {
+			if err = ges.notifyDraftConfirmed(ctx); err != nil {
+				return err
+			}
+		}
+
+		response = mapper.GroupExpenseToResponse(updatedGroupExpense, userProfileID)
+
+		return nil
+	})
+
+	if err != nil {
+		return dto.GroupExpenseResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ges *groupExpenseServiceImpl) notifyParticipantsConfirmed(ctx context.Context, groupExpenseID uuid.UUID) error {
+	if os.Getenv("ENABLE_ASYNC") == "true" {
+		panic("to be implemented")
+	}
+
+	return ges.debtService.ProcessConfirmedGroupExpense(ctx, groupExpenseID)
+}
+
+func (ges *groupExpenseServiceImpl) notifyDraftConfirmed(ctx context.Context) error {
+	panic("to be implemented")
+}
+
+func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec ezutil.Specification[entity.GroupExpense]) (entity.GroupExpense, error) {
 	groupExpense, err := ges.groupExpenseRepository.FindFirst(ctx, spec)
 	if err != nil {
 		return entity.GroupExpense{}, err

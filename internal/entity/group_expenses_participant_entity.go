@@ -5,11 +5,16 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type GroupExpenseParticipant struct {
+type ExpenseParticipant struct {
 	BaseEntity
 	GroupExpenseID       uuid.UUID
 	ParticipantProfileID uuid.UUID
 	ShareAmount          decimal.Decimal
 	Description          string
 	Confirmed            bool
+	Profile              UserProfile `gorm:"foreignKey:ParticipantProfileID"`
+}
+
+func (ep ExpenseParticipant) TableName() string {
+	return "group_expense_participants"
 }

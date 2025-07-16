@@ -1,7 +1,10 @@
 package mapper
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/ezutil"
@@ -42,6 +45,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 		CreatedAt:             groupExpense.CreatedAt,
 		UpdatedAt:             groupExpense.UpdatedAt,
 		DeletedAt:             groupExpense.DeletedAt.Time,
+		Participants:          ezutil.MapSlice(groupExpense.Participants, getExpenseParticipantSimpleMapper(userProfileID)),
 	}
 }
 
@@ -118,4 +122,44 @@ func ItemParticipantRequestToEntity(itemParticipant dto.NewItemParticipantReques
 		ProfileID: itemParticipant.ProfileID,
 		Share:     itemParticipant.Share,
 	}
+}
+
+func ExpenseParticipantToResponse(expenseParticipant entity.ExpenseParticipant, userProfileID uuid.UUID) dto.ExpenseParticipantResponse {
+	return dto.ExpenseParticipantResponse{
+		ProfileName: expenseParticipant.Profile.Name,
+		ProfileID:   expenseParticipant.ParticipantProfileID,
+		ShareAmount: expenseParticipant.ShareAmount,
+		IsUser:      expenseParticipant.ParticipantProfileID == userProfileID,
+	}
+}
+
+func getExpenseParticipantSimpleMapper(userProfileID uuid.UUID) func(entity.ExpenseParticipant) dto.ExpenseParticipantResponse {
+	return func(ep entity.ExpenseParticipant) dto.ExpenseParticipantResponse {
+		return ExpenseParticipantToResponse(ep, userProfileID)
+	}
+}
+
+func GroupExpenseToDebtTransactions(groupExpense entity.GroupExpense, transferMethodID uuid.UUID) []entity.DebtTransaction {
+	action := appconstant.BorrowAction
+	if groupExpense.PayerProfileID == groupExpense.CreatorProfileID {
+		action = appconstant.LendAction
+	}
+
+	debtTransactions := make([]entity.DebtTransaction, 0, len(groupExpense.Participants))
+	for _, participant := range groupExpense.Participants {
+		if groupExpense.PayerProfileID == participant.ParticipantProfileID {
+			continue
+		}
+		debtTransactions = append(debtTransactions, entity.DebtTransaction{
+			LenderProfileID:   groupExpense.PayerProfileID,
+			BorrowerProfileID: participant.ParticipantProfileID,
+			Type:              appconstant.Lend,
+			Action:            action,
+			Amount:            participant.ShareAmount,
+			TransferMethodID:  transferMethodID,
+			Description:       fmt.Sprintf("Share for group expense: %s", groupExpense.Description),
+		})
+	}
+
+	return debtTransactions
 }

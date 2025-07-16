@@ -17,6 +17,7 @@ type GroupExpense struct {
 	CreatorProfileID      uuid.UUID
 	PayerProfile          UserProfile `gorm:"foreignKey:PayerProfileID"`
 	CreatorProfile        UserProfile `gorm:"foreignKey:CreatorProfileID"`
+	Participants          []ExpenseParticipant
 }
 
 func (ge GroupExpense) SimpleName() string {

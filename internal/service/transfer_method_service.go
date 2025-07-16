@@ -19,7 +19,7 @@ func NewTransferMethodService(transferMethodRepository repository.TransferMethod
 }
 
 func (tms *transferMethodServiceImpl) GetAll(ctx context.Context) ([]dto.TransferMethodResponse, error) {
-	transferMethods, err := tms.transferMethodRepository.FindAll(ctx, entity.TransferMethod{})
+	transferMethods, err := tms.transferMethodRepository.FindAll(ctx, ezutil.Specification[entity.TransferMethod]{})
 	if err != nil {
 		return nil, err
 	}

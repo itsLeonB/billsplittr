@@ -47,6 +47,7 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		userService,
 		repositories.DebtTransaction,
 		repositories.TransferMethod,
+		repositories.GroupExpense,
 	)
 
 	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
@@ -57,6 +58,8 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		userService,
 		friendshipService,
 		repositories.ExpenseItem,
+		repositories.ExpenseParticipant,
+		debtService,
 	)
 
 	return &Services{
