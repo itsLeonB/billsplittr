@@ -139,7 +139,7 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 		return dto.ExpenseItemResponse{}, err
 	}
 
-	if request.Amount.Cmp(decimal.Zero) == 0 {
+	if request.Amount.Cmp(decimal.Zero) <= 0 {
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be more than 0")
 	}
 
