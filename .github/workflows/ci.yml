@@ -31,19 +31,15 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-
 
       - name: Download dependencies
-        run: |
-          go mod download
-          cd test && go mod download
+        run: go mod download
 
       - name: Verify dependencies
-        run: |
-          go mod verify
-          cd test && go mod verify
+        run: go mod verify
 
       - name: Run tests
         run: make test-coverage
@@ -77,14 +73,12 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-1.24-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-1.24-
+            ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-
 
       - name: Download dependencies
-        run: |
-          go mod download
-          cd test && go mod download
+        run: go mod download
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
@@ -111,20 +105,15 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-
 
       - name: Download dependencies
-        run: |
-          go mod download
-          cd test && go mod download
+        run: go mod download
 
       - name: Build
         run: go build -v ./...
-
-      - name: Build test package
-        run: cd test && go build -v ./...
 
   security:
     name: Security Scan
@@ -145,14 +134,12 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-1.24-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-1.24-
+            ${{ runner.os }}-go-${{ hashFiles('go.mod') }}-
 
       - name: Download dependencies
-        run: |
-          go mod download
-          cd test && go mod download
+        run: go mod download
 
       - name: Install and Run Gosec
         run: |

@@ -27,11 +27,11 @@ test-verbose:
 
 test-coverage:
 	@echo "Running all tests with coverage report..."
-	go test -v -cover -coverprofile=../coverage.out ./internal/tests/...
+	go test -v -cover -coverprofile=coverage.out ./internal/tests/...
 
 test-coverage-html:
 	@echo "Running all tests and generating HTML coverage report..."
-	go test -v -cover -coverprofile=../coverage.out ./internal/tests/...
+	go test -v -cover -coverprofile=coverage.out ./internal/tests/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
