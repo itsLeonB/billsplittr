@@ -179,3 +179,14 @@ func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleGetFeeCalculationMethods() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		response := geh.groupExpenseService.GetFeeCalculationMethods()
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}

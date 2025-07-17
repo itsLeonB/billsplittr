@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/shopspring/decimal"
 )
 
@@ -24,8 +25,9 @@ type NewExpenseItemRequest struct {
 }
 
 type NewOtherFeeRequest struct {
-	Name   string          `json:"name" binding:"required,min=3"`
-	Amount decimal.Decimal `json:"amount" binding:"required"`
+	Name              string                           `json:"name" binding:"required,min=3"`
+	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`
 }
 
 type UpdateExpenseItemRequest struct {
@@ -75,12 +77,15 @@ type ExpenseItemResponse struct {
 }
 
 type OtherFeeResponse struct {
-	ID        uuid.UUID       `json:"id"`
-	Name      string          `json:"name"`
-	Amount    decimal.Decimal `json:"amount"`
-	CreatedAt time.Time       `json:"createdAt"`
-	UpdatedAt time.Time       `json:"updatedAt"`
-	DeletedAt time.Time       `json:"deletedAt,omitzero"`
+	ID                uuid.UUID                        `json:"id"`
+	Name              string                           `json:"name"`
+	Amount            decimal.Decimal                  `json:"amount"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod"`
+	Rate              decimal.Decimal                  `json:"rate,omitzero"`
+	CreatedAt         time.Time                        `json:"createdAt"`
+	UpdatedAt         time.Time                        `json:"updatedAt"`
+	DeletedAt         time.Time                        `json:"deletedAt,omitzero"`
+	Participants      []FeeParticipantResponse         `json:"participants,omitempty"`
 }
 
 type ItemParticipantResponse struct {
@@ -95,4 +100,17 @@ type ExpenseParticipantResponse struct {
 	ProfileID   uuid.UUID       `json:"profileId"`
 	ShareAmount decimal.Decimal `json:"shareAmount"`
 	IsUser      bool            `json:"isUser"`
+}
+
+type FeeParticipantResponse struct {
+	ProfileName string          `json:"profileName"`
+	ProfileID   uuid.UUID       `json:"profileId"`
+	ShareAmount decimal.Decimal `json:"shareAmount"`
+	IsUser      bool            `json:"isUser"`
+}
+
+type FeeCalculationMethodInfo struct {
+	Name        appconstant.FeeCalculationMethod `json:"name"`
+	Display     string                           `json:"display"`
+	Description string                           `json:"description"`
 }

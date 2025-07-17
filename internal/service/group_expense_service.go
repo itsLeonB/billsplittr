@@ -11,8 +11,10 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/billsplittr/internal/service/fee"
 	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
+	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
 )
 
@@ -24,6 +26,7 @@ type groupExpenseServiceImpl struct {
 	expenseItemRepository        repository.ExpenseItemRepository
 	expenseParticipantRepository repository.ExpenseParticipantRepository
 	debtService                  DebtService
+	feeCalculatorRegistry        map[appconstant.FeeCalculationMethod]fee.FeeCalculator
 }
 
 func NewGroupExpenseService(
@@ -43,6 +46,7 @@ func NewGroupExpenseService(
 		expenseItemRepository,
 		groupExpenseParticipantRepository,
 		debtService,
+		fee.NewFeeCalculatorRegistry(),
 	}
 }
 
@@ -231,13 +235,13 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 		}
 
 		isAllAnonymous := true
-		participantsByProfileID := make(map[uuid.UUID]entity.ExpenseParticipant)
+		participantsByProfileID := make(map[uuid.UUID]*entity.ExpenseParticipant)
 		for _, item := range groupExpense.Items {
 			if len(item.Participants) < 1 {
 				return ezutil.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
 			}
 			for _, participant := range item.Participants {
-				amountToAdd := item.Amount.Mul(participant.Share)
+				amountToAdd := item.Amount.Mul(participant.Share).Mul(decimal.NewFromInt(int64(item.Quantity)))
 				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
 					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
 				} else {
@@ -250,22 +254,46 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 					} else {
 						isAllAnonymous = false
 					}
-					participantsByProfileID[participant.ProfileID] = expenseParticipant
+					participantsByProfileID[participant.ProfileID] = &expenseParticipant
 				}
 			}
 		}
 
 		groupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
 		for _, expenseParticipant := range participantsByProfileID {
-			groupExpenseParticipants = append(groupExpenseParticipants, expenseParticipant)
+			groupExpenseParticipants = append(groupExpenseParticipants, *expenseParticipant)
 		}
 
-		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, groupExpenseParticipants); err != nil {
+		groupExpense.Participants = groupExpenseParticipants
+		updatedOtherFees, err := ges.calculateOtherFeeSplits(groupExpense)
+		if err != nil {
+			return err
+		}
+
+		for _, fee := range updatedOtherFees {
+			for _, participant := range fee.Participants {
+				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; !ok {
+					return eris.New("missing participant profile from other fee")
+				} else {
+					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(participant.ShareAmount)
+				}
+			}
+		}
+
+		updatedGroupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
+		for _, expenseParticipant := range participantsByProfileID {
+			updatedGroupExpenseParticipants = append(updatedGroupExpenseParticipants, *expenseParticipant)
+		}
+
+		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, updatedGroupExpenseParticipants); err != nil {
 			return err
 		}
 
 		groupExpense.Confirmed = true
 		groupExpense.ParticipantsConfirmed = isAllAnonymous
+		// TODO: explore cleaner way
+		groupExpense.Participants = nil // Prevent GORM updating child, already synced above
+		groupExpense.OtherFees = updatedOtherFees
 
 		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
 		if err != nil {
@@ -292,6 +320,40 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 	}
 
 	return response, nil
+}
+
+func (ges *groupExpenseServiceImpl) GetFeeCalculationMethods() []dto.FeeCalculationMethodInfo {
+	feeCalculationMethodInfos := make([]dto.FeeCalculationMethodInfo, 0, len(ges.feeCalculatorRegistry))
+	for _, feeCalculator := range ges.feeCalculatorRegistry {
+		feeCalculationMethodInfos = append(feeCalculationMethodInfos, feeCalculator.GetInfo())
+	}
+
+	return feeCalculationMethodInfos
+}
+
+func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(groupExpense entity.GroupExpense) ([]entity.OtherFee, error) {
+	var splitErr error
+
+	mapperFunc := func(fee entity.OtherFee) entity.OtherFee {
+		feeCalculator, ok := ges.feeCalculatorRegistry[fee.CalculationMethod]
+		if !ok {
+			splitErr = eris.Errorf("unsupported calculation method: %s", fee.CalculationMethod)
+			return entity.OtherFee{}
+		}
+
+		if err := feeCalculator.Validate(fee, groupExpense); err != nil {
+			splitErr = err
+			return entity.OtherFee{}
+		}
+
+		fee.Participants = feeCalculator.Split(fee, groupExpense)
+
+		return fee
+	}
+
+	splitFees := ezutil.MapSlice(groupExpense.OtherFees, mapperFunc)
+
+	return splitFees, splitErr
 }
 
 func (ges *groupExpenseServiceImpl) notifyParticipantsConfirmed(ctx context.Context, groupExpenseID uuid.UUID) error {

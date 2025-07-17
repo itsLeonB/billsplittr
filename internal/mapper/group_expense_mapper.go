@@ -36,7 +36,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense, userProfileID uuid
 		TotalAmount:           groupExpense.TotalAmount,
 		Description:           groupExpense.Description,
 		Items:                 ezutil.MapSlice(groupExpense.Items, getExpenseItemSimpleMapper(userProfileID)),
-		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, otherFeeToResponse),
+		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, getOtherFeeSimpleMapper(userProfileID)),
 		CreatorProfileID:      groupExpense.CreatorProfileID,
 		CreatorName:           groupExpense.CreatorProfile.Name,
 		CreatedByUser:         groupExpense.CreatorProfileID == userProfileID,
@@ -69,14 +69,38 @@ func ExpenseItemToResponse(item entity.ExpenseItem, userProfileID uuid.UUID) dto
 	}
 }
 
-func otherFeeToResponse(fee entity.OtherFee) dto.OtherFeeResponse {
+func getOtherFeeSimpleMapper(userProfileID uuid.UUID) func(entity.OtherFee) dto.OtherFeeResponse {
+	return func(fee entity.OtherFee) dto.OtherFeeResponse {
+		return otherFeeToResponse(fee, userProfileID)
+	}
+}
+
+func otherFeeToResponse(fee entity.OtherFee, userProfileID uuid.UUID) dto.OtherFeeResponse {
 	return dto.OtherFeeResponse{
-		ID:        fee.ID,
-		Name:      fee.Name,
-		Amount:    fee.Amount,
-		CreatedAt: fee.CreatedAt,
-		UpdatedAt: fee.UpdatedAt,
-		DeletedAt: fee.DeletedAt.Time,
+		ID:                fee.ID,
+		Name:              fee.Name,
+		Amount:            fee.Amount,
+		CalculationMethod: fee.CalculationMethod,
+		Rate:              fee.Rate.Decimal,
+		CreatedAt:         fee.CreatedAt,
+		UpdatedAt:         fee.UpdatedAt,
+		DeletedAt:         fee.DeletedAt.Time,
+		Participants:      ezutil.MapSlice(fee.Participants, getFeeParticipantSimpleMapper(userProfileID)),
+	}
+}
+
+func getFeeParticipantSimpleMapper(userProfileID uuid.UUID) func(entity.FeeParticipant) dto.FeeParticipantResponse {
+	return func(feeParticipant entity.FeeParticipant) dto.FeeParticipantResponse {
+		return feeParticipantToResponse(feeParticipant, userProfileID)
+	}
+}
+
+func feeParticipantToResponse(feeParticipant entity.FeeParticipant, userProfileID uuid.UUID) dto.FeeParticipantResponse {
+	return dto.FeeParticipantResponse{
+		ProfileName: feeParticipant.Profile.Name,
+		ProfileID:   feeParticipant.ProfileID,
+		ShareAmount: feeParticipant.ShareAmount,
+		IsUser:      feeParticipant.ProfileID == userProfileID,
 	}
 }
 
@@ -105,8 +129,9 @@ func expenseItemRequestToEntity(request dto.NewExpenseItemRequest) entity.Expens
 
 func otherFeeRequestToEntity(request dto.NewOtherFeeRequest) entity.OtherFee {
 	return entity.OtherFee{
-		Name:   request.Name,
-		Amount: request.Amount,
+		Name:              request.Name,
+		Amount:            request.Amount,
+		CalculationMethod: request.CalculationMethod,
 	}
 }
 
