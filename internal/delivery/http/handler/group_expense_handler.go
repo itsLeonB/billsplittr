@@ -284,3 +284,59 @@ func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleRemoveItem() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request := dto.DeleteExpenseItemRequest{
+			ID:             expenseItemID,
+			GroupExpenseID: groupExpenseID,
+		}
+
+		if err = geh.groupExpenseService.RemoveItem(ctx, request); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusNoContent, nil)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleRemoveFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		feeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request := dto.DeleteOtherFeeRequest{
+			ID:             feeID,
+			GroupExpenseID: groupExpenseID,
+		}
+
+		if err = geh.groupExpenseService.RemoveFee(ctx, request); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusNoContent, nil)
+	}
+}

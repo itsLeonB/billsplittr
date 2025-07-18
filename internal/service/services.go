@@ -48,4 +48,6 @@ type GroupExpenseService interface {
 	UpdateFee(ctx context.Context, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error)
 	AddItem(ctx context.Context, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error)
 	AddFee(ctx context.Context, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error)
+	RemoveItem(ctx context.Context, request dto.DeleteExpenseItemRequest) error
+	RemoveFee(ctx context.Context, request dto.DeleteOtherFeeRequest) error
 }

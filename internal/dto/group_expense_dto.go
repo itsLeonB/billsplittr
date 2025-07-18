@@ -124,3 +124,13 @@ type FeeCalculationMethodInfo struct {
 	Display     string                           `json:"display"`
 	Description string                           `json:"description"`
 }
+
+type DeleteExpenseItemRequest struct {
+	ID             uuid.UUID
+	GroupExpenseID uuid.UUID
+}
+
+type DeleteOtherFeeRequest struct {
+	ID             uuid.UUID
+	GroupExpenseID uuid.UUID
+}
