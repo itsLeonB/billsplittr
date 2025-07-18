@@ -44,4 +44,10 @@ type GroupExpenseService interface {
 	GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error)
 	UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error)
 	ConfirmDraft(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
+	GetFeeCalculationMethods() []dto.FeeCalculationMethodInfo
+	UpdateFee(ctx context.Context, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error)
+	AddItem(ctx context.Context, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error)
+	AddFee(ctx context.Context, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error)
+	RemoveItem(ctx context.Context, request dto.DeleteExpenseItemRequest) error
+	RemoveFee(ctx context.Context, request dto.DeleteOtherFeeRequest) error
 }

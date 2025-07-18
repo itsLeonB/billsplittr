@@ -16,6 +16,7 @@ type Repositories struct {
 	GroupExpense       repository.GroupExpenseRepository
 	ExpenseItem        repository.ExpenseItemRepository
 	ExpenseParticipant repository.ExpenseParticipantRepository
+	OtherFee           repository.OtherFeeRepository
 }
 
 func ProvideRepositories(configs *ezutil.Config) *Repositories {
@@ -29,5 +30,6 @@ func ProvideRepositories(configs *ezutil.Config) *Repositories {
 		GroupExpense:       repository.NewGroupExpenseRepository(configs.GORM),
 		ExpenseItem:        repository.NewExpenseItemRepository(configs.GORM),
 		ExpenseParticipant: ezutil.NewCRUDRepository[entity.ExpenseParticipant](configs.GORM),
+		OtherFee:           repository.NewOtherFeeRepository(configs.GORM),
 	}
 }

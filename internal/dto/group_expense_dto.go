@@ -4,12 +4,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/shopspring/decimal"
 )
 
 type NewGroupExpenseRequest struct {
 	PayerProfileID     uuid.UUID               `json:"payerProfileId"`
 	TotalAmount        decimal.Decimal         `json:"totalAmount" binding:"required"`
+	Subtotal           decimal.Decimal         `json:"subtotal" binding:"required"`
 	Description        string                  `json:"description"`
 	Items              []NewExpenseItemRequest `json:"items" binding:"required,min=1,dive"`
 	OtherFees          []NewOtherFeeRequest    `json:"otherFees" binding:"dive"`
@@ -18,14 +20,25 @@ type NewGroupExpenseRequest struct {
 }
 
 type NewExpenseItemRequest struct {
-	Name     string          `json:"name" binding:"required,min=3"`
-	Amount   decimal.Decimal `json:"amount" binding:"required"`
-	Quantity int             `json:"quantity" binding:"required,min=1"`
+	GroupExpenseID uuid.UUID       `json:"-"`
+	Name           string          `json:"name" binding:"required,min=3"`
+	Amount         decimal.Decimal `json:"amount" binding:"required"`
+	Quantity       int             `json:"quantity" binding:"required,min=1"`
 }
 
 type NewOtherFeeRequest struct {
-	Name   string          `json:"name" binding:"required,min=3"`
-	Amount decimal.Decimal `json:"amount" binding:"required"`
+	GroupExpenseID    uuid.UUID                        `json:"-"`
+	Name              string                           `json:"name" binding:"required,min=3"`
+	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`
+}
+
+type UpdateOtherFeeRequest struct {
+	ID                uuid.UUID                        `json:"-"`
+	GroupExpenseID    uuid.UUID                        `json:"-"`
+	Name              string                           `json:"name" binding:"required,min=3"`
+	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`
 }
 
 type UpdateExpenseItemRequest struct {
@@ -75,12 +88,14 @@ type ExpenseItemResponse struct {
 }
 
 type OtherFeeResponse struct {
-	ID        uuid.UUID       `json:"id"`
-	Name      string          `json:"name"`
-	Amount    decimal.Decimal `json:"amount"`
-	CreatedAt time.Time       `json:"createdAt"`
-	UpdatedAt time.Time       `json:"updatedAt"`
-	DeletedAt time.Time       `json:"deletedAt,omitzero"`
+	ID                uuid.UUID                        `json:"id"`
+	Name              string                           `json:"name"`
+	Amount            decimal.Decimal                  `json:"amount"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod"`
+	CreatedAt         time.Time                        `json:"createdAt"`
+	UpdatedAt         time.Time                        `json:"updatedAt"`
+	DeletedAt         time.Time                        `json:"deletedAt,omitzero"`
+	Participants      []FeeParticipantResponse         `json:"participants,omitempty"`
 }
 
 type ItemParticipantResponse struct {
@@ -95,4 +110,27 @@ type ExpenseParticipantResponse struct {
 	ProfileID   uuid.UUID       `json:"profileId"`
 	ShareAmount decimal.Decimal `json:"shareAmount"`
 	IsUser      bool            `json:"isUser"`
+}
+
+type FeeParticipantResponse struct {
+	ProfileName string          `json:"profileName"`
+	ProfileID   uuid.UUID       `json:"profileId"`
+	ShareAmount decimal.Decimal `json:"shareAmount"`
+	IsUser      bool            `json:"isUser"`
+}
+
+type FeeCalculationMethodInfo struct {
+	Name        appconstant.FeeCalculationMethod `json:"name"`
+	Display     string                           `json:"display"`
+	Description string                           `json:"description"`
+}
+
+type DeleteExpenseItemRequest struct {
+	ID             uuid.UUID
+	GroupExpenseID uuid.UUID
+}
+
+type DeleteOtherFeeRequest struct {
+	ID             uuid.UUID
+	GroupExpenseID uuid.UUID
 }

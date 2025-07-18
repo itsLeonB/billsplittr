@@ -22,8 +22,12 @@ func SetupHTTPServer(configs *ezutil.Config) *http.Server {
 	route.SetupRoutes(r, configs, handlers, services)
 
 	return &http.Server{
-		Addr:    fmt.Sprintf(":%s", configs.App.Port),
-		Handler: r,
+		Addr:              fmt.Sprintf(":%s", configs.App.Port),
+		Handler:           r,
+		ReadTimeout:       configs.App.Timeout,
+		ReadHeaderTimeout: configs.App.Timeout,
+		WriteTimeout:      configs.App.Timeout,
+		IdleTimeout:       configs.App.Timeout,
 	}
 }
 

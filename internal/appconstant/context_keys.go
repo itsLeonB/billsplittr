@@ -6,4 +6,5 @@ const (
 	ContextFriendshipID   = "friendshipID"
 	ContextGroupExpenseID = "groupExpenseID"
 	ContextExpenseItemID  = "expenseItemID"
+	ContextOtherFeeID     = "otherFeeID"
 )

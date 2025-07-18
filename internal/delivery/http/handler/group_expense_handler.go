@@ -179,3 +179,164 @@ func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleGetFeeCalculationMethods() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		response := geh.groupExpenseService.GetFeeCalculationMethods()
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		otherFeeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.UpdateOtherFeeRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+		request.ID = otherFeeID
+
+		response, err := geh.groupExpenseService.UpdateFee(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.NewExpenseItemRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+
+		response, err := geh.groupExpenseService.AddItem(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusCreated,
+			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.NewOtherFeeRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+
+		response, err := geh.groupExpenseService.AddFee(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusCreated,
+			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleRemoveItem() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request := dto.DeleteExpenseItemRequest{
+			ID:             expenseItemID,
+			GroupExpenseID: groupExpenseID,
+		}
+
+		if err = geh.groupExpenseService.RemoveItem(ctx, request); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusNoContent, nil)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleRemoveFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		feeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request := dto.DeleteOtherFeeRequest{
+			ID:             feeID,
+			GroupExpenseID: groupExpenseID,
+		}
+
+		if err = geh.groupExpenseService.RemoveFee(ctx, request); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusNoContent, nil)
+	}
+}

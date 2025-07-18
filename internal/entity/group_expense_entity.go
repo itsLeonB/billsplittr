@@ -2,6 +2,7 @@ package entity
 
 import (
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/shopspring/decimal"
 )
 
@@ -9,15 +10,16 @@ type GroupExpense struct {
 	BaseEntity
 	PayerProfileID        uuid.UUID
 	TotalAmount           decimal.Decimal
+	Subtotal              decimal.Decimal
 	Description           string
-	Items                 []ExpenseItem
-	OtherFees             []OtherFee
+	Items                 []ExpenseItem `gorm:"foreignKey:GroupExpenseID"`
+	OtherFees             []OtherFee    `gorm:"foreignKey:GroupExpenseID"`
 	Confirmed             bool
 	ParticipantsConfirmed bool
 	CreatorProfileID      uuid.UUID
-	PayerProfile          UserProfile `gorm:"foreignKey:PayerProfileID"`
-	CreatorProfile        UserProfile `gorm:"foreignKey:CreatorProfileID"`
-	Participants          []ExpenseParticipant
+	PayerProfile          UserProfile          `gorm:"foreignKey:PayerProfileID"`
+	CreatorProfile        UserProfile          `gorm:"foreignKey:CreatorProfileID"`
+	Participants          []ExpenseParticipant `gorm:"foreignKey:GroupExpenseID"`
 }
 
 func (ge GroupExpense) SimpleName() string {
@@ -46,7 +48,7 @@ type ItemParticipant struct {
 	ExpenseItemID uuid.UUID
 	ProfileID     uuid.UUID
 	Share         decimal.Decimal
-	Profile       UserProfile `gorm:"foreignId:ProfileID"`
+	Profile       UserProfile `gorm:"foreignKey:ProfileID"`
 }
 
 func (ip ItemParticipant) TableName() string {
@@ -55,9 +57,11 @@ func (ip ItemParticipant) TableName() string {
 
 type OtherFee struct {
 	BaseEntity
-	GroupExpenseID uuid.UUID
-	Name           string
-	Amount         decimal.Decimal
+	GroupExpenseID    uuid.UUID
+	Name              string
+	Amount            decimal.Decimal
+	CalculationMethod appconstant.FeeCalculationMethod
+	Participants      []FeeParticipant `gorm:"foreignKey:OtherFeeID"`
 }
 
 func (of OtherFee) TableName() string {
@@ -67,4 +71,16 @@ func (of OtherFee) TableName() string {
 type GroupExpenseSpecification struct {
 	GroupExpense
 	Specification
+}
+
+type FeeParticipant struct {
+	BaseEntity
+	OtherFeeID  uuid.UUID
+	ProfileID   uuid.UUID
+	ShareAmount decimal.Decimal
+	Profile     UserProfile `gorm:"foreignKey:ProfileID"`
+}
+
+func (fp FeeParticipant) TableName() string {
+	return "group_expense_other_fee_participants"
 }

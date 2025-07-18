@@ -60,6 +60,7 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		repositories.ExpenseItem,
 		repositories.ExpenseParticipant,
 		debtService,
+		repositories.OtherFee,
 	)
 
 	return &Services{
