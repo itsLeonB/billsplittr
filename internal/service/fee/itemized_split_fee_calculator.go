@@ -24,15 +24,19 @@ func (fc *itemizedSplitFeeCalculator) GetMethod() appconstant.FeeCalculationMeth
 
 func (fc *itemizedSplitFeeCalculator) Validate(fee entity.OtherFee, groupExpense entity.GroupExpense) error {
 	if fee.ID == uuid.Nil {
-		return eris.New("")
+		return eris.New("fee ID cannot be nil")
 	}
 
 	if fee.GroupExpenseID == uuid.Nil {
-		return eris.New("")
+		return eris.New("group expense ID cannot be nil")
 	}
 
 	if fee.Amount.IsZero() {
 		return eris.New("amount cannot be zero")
+	}
+
+	if groupExpense.Subtotal.IsZero() {
+		return eris.New("subtotal cannot be zero")
 	}
 
 	if len(groupExpense.Participants) < 1 {

@@ -50,7 +50,7 @@ func (ger *otherFeeRepositoryGorm) SyncParticipants(ctx context.Context, feeID u
 	if len(profileIDs) > 0 {
 		query = query.Where("profile_id NOT IN ?", profileIDs)
 	}
-	if err := query.Delete(&entity.ItemParticipant{}).Error; err != nil {
+	if err := query.Delete(&entity.FeeParticipant{}).Error; err != nil {
 		return err
 	}
 

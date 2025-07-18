@@ -25,11 +25,11 @@ func (fc *equalSplitFeeCalculator) GetMethod() appconstant.FeeCalculationMethod 
 
 func (fc *equalSplitFeeCalculator) Validate(fee entity.OtherFee, groupExpense entity.GroupExpense) error {
 	if fee.ID == uuid.Nil {
-		return eris.New("")
+		return eris.New("fee ID cannot be nil")
 	}
 
 	if fee.GroupExpenseID == uuid.Nil {
-		return eris.New("")
+		return eris.New("group expense ID cannot be nil")
 	}
 
 	if fee.Amount.IsZero() {
