@@ -46,4 +46,6 @@ type GroupExpenseService interface {
 	ConfirmDraft(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 	GetFeeCalculationMethods() []dto.FeeCalculationMethodInfo
 	UpdateFee(ctx context.Context, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error)
+	AddItem(ctx context.Context, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error)
+	AddFee(ctx context.Context, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error)
 }

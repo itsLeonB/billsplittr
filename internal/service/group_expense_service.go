@@ -381,6 +381,97 @@ func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, request dto.U
 	return response, nil
 }
 
+func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error) {
+	var response dto.ExpenseItemResponse
+
+	profileID, err := util.GetProfileID(ctx)
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+
+	if !request.Amount.IsPositive() {
+		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be positive")
+	}
+
+	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		spec := ezutil.Specification[entity.GroupExpense]{}
+		spec.Model.ID = request.GroupExpenseID
+		spec.ForUpdate = true
+		groupExpense, err := ges.getGroupExpense(ctx, spec)
+		if err != nil {
+			return err
+		}
+
+		expenseItem := mapper.ExpenseItemRequestToEntity(request)
+
+		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(expenseItem.Amount)
+		groupExpense.Subtotal = groupExpense.Subtotal.Add(expenseItem.Amount)
+		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
+			return err
+		}
+
+		insertedItem, err := ges.expenseItemRepository.Insert(ctx, expenseItem)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.ExpenseItemToResponse(insertedItem, profileID)
+
+		return nil
+	})
+
+	if err != nil {
+		return dto.ExpenseItemResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ges *groupExpenseServiceImpl) AddFee(ctx context.Context, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error) {
+	var response dto.OtherFeeResponse
+
+	profileID, err := util.GetProfileID(ctx)
+	if err != nil {
+		return dto.OtherFeeResponse{}, err
+	}
+
+	if !request.Amount.IsPositive() {
+		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError("amount must be positive")
+	}
+
+	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		spec := ezutil.Specification[entity.GroupExpense]{}
+		spec.Model.ID = request.GroupExpenseID
+		spec.ForUpdate = true
+		groupExpense, err := ges.getGroupExpense(ctx, spec)
+		if err != nil {
+			return err
+		}
+
+		fee := mapper.OtherFeeRequestToEntity(request)
+
+		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(fee.Amount)
+		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
+			return err
+		}
+
+		insertedFee, err := ges.otherFeeRepository.Insert(ctx, fee)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.OtherFeeToResponse(insertedFee, profileID)
+
+		return nil
+	})
+
+	if err != nil {
+		return dto.OtherFeeResponse{}, err
+	}
+
+	return response, nil
+}
+
 func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(ctx context.Context, groupExpense entity.GroupExpense) ([]entity.OtherFee, error) {
 	var splitErr error
 

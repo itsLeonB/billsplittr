@@ -62,6 +62,8 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 	groupExpenseRoutes.PATCH(fmt.Sprintf("/:%s/confirmed", appconstant.ContextGroupExpenseID), handlers.GroupExpense.HandleConfirmDraft())
 	groupExpenseRoutes.GET("/fee-calculation-methods", handlers.GroupExpense.HandleGetFeeCalculationMethods())
 	groupExpenseRoutes.PUT(fmt.Sprintf("/:%s/fees/:%s", appconstant.ContextGroupExpenseID, appconstant.ContextOtherFeeID), handlers.GroupExpense.HandleUpdateFee())
+	groupExpenseRoutes.POST(fmt.Sprintf("/:%s/items", appconstant.ContextGroupExpenseID), handlers.GroupExpense.HandleAddItem())
+	groupExpenseRoutes.POST(fmt.Sprintf("/:%s/fees", appconstant.ContextGroupExpenseID), handlers.GroupExpense.HandleAddFee())
 }
 
 func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {

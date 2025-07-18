@@ -226,3 +226,61 @@ func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.NewExpenseItemRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+
+		response, err := geh.groupExpenseService.AddItem(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusCreated,
+			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+		)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.NewOtherFeeRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+
+		response, err := geh.groupExpenseService.AddFee(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusCreated,
+			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+		)
+	}
+}

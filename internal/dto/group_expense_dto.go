@@ -20,12 +20,14 @@ type NewGroupExpenseRequest struct {
 }
 
 type NewExpenseItemRequest struct {
-	Name     string          `json:"name" binding:"required,min=3"`
-	Amount   decimal.Decimal `json:"amount" binding:"required"`
-	Quantity int             `json:"quantity" binding:"required,min=1"`
+	GroupExpenseID uuid.UUID       `json:"-"`
+	Name           string          `json:"name" binding:"required,min=3"`
+	Amount         decimal.Decimal `json:"amount" binding:"required"`
+	Quantity       int             `json:"quantity" binding:"required,min=1"`
 }
 
 type NewOtherFeeRequest struct {
+	GroupExpenseID    uuid.UUID                        `json:"-"`
 	Name              string                           `json:"name" binding:"required,min=3"`
 	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
 	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`
@@ -90,7 +92,6 @@ type OtherFeeResponse struct {
 	Name              string                           `json:"name"`
 	Amount            decimal.Decimal                  `json:"amount"`
 	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod"`
-	Rate              decimal.Decimal                  `json:"rate,omitzero"`
 	CreatedAt         time.Time                        `json:"createdAt"`
 	UpdatedAt         time.Time                        `json:"updatedAt"`
 	DeletedAt         time.Time                        `json:"deletedAt,omitzero"`

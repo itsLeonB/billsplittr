@@ -16,8 +16,8 @@ func GroupExpenseRequestToEntity(request dto.NewGroupExpenseRequest) entity.Grou
 		TotalAmount:      request.TotalAmount,
 		Subtotal:         request.Subtotal,
 		Description:      request.Description,
-		Items:            ezutil.MapSlice(request.Items, expenseItemRequestToEntity),
-		OtherFees:        ezutil.MapSlice(request.OtherFees, otherFeeRequestToEntity),
+		Items:            ezutil.MapSlice(request.Items, ExpenseItemRequestToEntity),
+		OtherFees:        ezutil.MapSlice(request.OtherFees, OtherFeeRequestToEntity),
 		CreatorProfileID: request.CreatedByProfileID,
 	}
 }
@@ -119,16 +119,18 @@ func itemParticipantToResponse(itemParticipant entity.ItemParticipant, userProfi
 	}
 }
 
-func expenseItemRequestToEntity(request dto.NewExpenseItemRequest) entity.ExpenseItem {
+func ExpenseItemRequestToEntity(request dto.NewExpenseItemRequest) entity.ExpenseItem {
 	return entity.ExpenseItem{
-		Name:     request.Name,
-		Amount:   request.Amount,
-		Quantity: request.Quantity,
+		GroupExpenseID: request.GroupExpenseID,
+		Name:           request.Name,
+		Amount:         request.Amount,
+		Quantity:       request.Quantity,
 	}
 }
 
-func otherFeeRequestToEntity(request dto.NewOtherFeeRequest) entity.OtherFee {
+func OtherFeeRequestToEntity(request dto.NewOtherFeeRequest) entity.OtherFee {
 	return entity.OtherFee{
+		GroupExpenseID:    request.GroupExpenseID,
 		Name:              request.Name,
 		Amount:            request.Amount,
 		CalculationMethod: request.CalculationMethod,
