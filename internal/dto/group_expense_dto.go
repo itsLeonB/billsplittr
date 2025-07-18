@@ -11,6 +11,7 @@ import (
 type NewGroupExpenseRequest struct {
 	PayerProfileID     uuid.UUID               `json:"payerProfileId"`
 	TotalAmount        decimal.Decimal         `json:"totalAmount" binding:"required"`
+	Subtotal           decimal.Decimal         `json:"subtotal" binding:"required"`
 	Description        string                  `json:"description"`
 	Items              []NewExpenseItemRequest `json:"items" binding:"required,min=1,dive"`
 	OtherFees          []NewOtherFeeRequest    `json:"otherFees" binding:"dive"`
@@ -25,6 +26,14 @@ type NewExpenseItemRequest struct {
 }
 
 type NewOtherFeeRequest struct {
+	Name              string                           `json:"name" binding:"required,min=3"`
+	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
+	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`
+}
+
+type UpdateOtherFeeRequest struct {
+	ID                uuid.UUID                        `json:"-"`
+	GroupExpenseID    uuid.UUID                        `json:"-"`
 	Name              string                           `json:"name" binding:"required,min=3"`
 	Amount            decimal.Decimal                  `json:"amount" binding:"required"`
 	CalculationMethod appconstant.FeeCalculationMethod `json:"calculationMethod" binding:"required"`

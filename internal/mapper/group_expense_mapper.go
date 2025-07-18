@@ -14,6 +14,7 @@ func GroupExpenseRequestToEntity(request dto.NewGroupExpenseRequest) entity.Grou
 	return entity.GroupExpense{
 		PayerProfileID:   request.PayerProfileID,
 		TotalAmount:      request.TotalAmount,
+		Subtotal:         request.Subtotal,
 		Description:      request.Description,
 		Items:            ezutil.MapSlice(request.Items, expenseItemRequestToEntity),
 		OtherFees:        ezutil.MapSlice(request.OtherFees, otherFeeRequestToEntity),
@@ -71,17 +72,16 @@ func ExpenseItemToResponse(item entity.ExpenseItem, userProfileID uuid.UUID) dto
 
 func getOtherFeeSimpleMapper(userProfileID uuid.UUID) func(entity.OtherFee) dto.OtherFeeResponse {
 	return func(fee entity.OtherFee) dto.OtherFeeResponse {
-		return otherFeeToResponse(fee, userProfileID)
+		return OtherFeeToResponse(fee, userProfileID)
 	}
 }
 
-func otherFeeToResponse(fee entity.OtherFee, userProfileID uuid.UUID) dto.OtherFeeResponse {
+func OtherFeeToResponse(fee entity.OtherFee, userProfileID uuid.UUID) dto.OtherFeeResponse {
 	return dto.OtherFeeResponse{
 		ID:                fee.ID,
 		Name:              fee.Name,
 		Amount:            fee.Amount,
 		CalculationMethod: fee.CalculationMethod,
-		Rate:              fee.Rate.Decimal,
 		CreatedAt:         fee.CreatedAt,
 		UpdatedAt:         fee.UpdatedAt,
 		DeletedAt:         fee.DeletedAt.Time,
@@ -187,4 +187,11 @@ func GroupExpenseToDebtTransactions(groupExpense entity.GroupExpense, transferMe
 	}
 
 	return debtTransactions
+}
+
+func PatchOtherFeeWithRequest(otherFee entity.OtherFee, request dto.UpdateOtherFeeRequest) entity.OtherFee {
+	otherFee.Name = request.Name
+	otherFee.Amount = request.Amount
+	otherFee.CalculationMethod = request.CalculationMethod
+	return otherFee
 }

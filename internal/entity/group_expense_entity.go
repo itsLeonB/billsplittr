@@ -10,6 +10,7 @@ type GroupExpense struct {
 	BaseEntity
 	PayerProfileID        uuid.UUID
 	TotalAmount           decimal.Decimal
+	Subtotal              decimal.Decimal
 	Description           string
 	Items                 []ExpenseItem `gorm:"foreignKey:GroupExpenseID"`
 	OtherFees             []OtherFee    `gorm:"foreignKey:GroupExpenseID"`
@@ -60,7 +61,6 @@ type OtherFee struct {
 	Name              string
 	Amount            decimal.Decimal
 	CalculationMethod appconstant.FeeCalculationMethod
-	Rate              decimal.NullDecimal
 	Participants      []FeeParticipant `gorm:"foreignKey:OtherFeeID"`
 }
 

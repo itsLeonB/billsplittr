@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS group_expenses
+ADD COLUMN IF NOT EXISTS subtotal NUMERIC(20, 2);

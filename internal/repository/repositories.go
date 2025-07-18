@@ -47,3 +47,8 @@ type ExpenseItemRepository interface {
 type ExpenseParticipantRepository interface {
 	ezutil.CRUDRepository[entity.ExpenseParticipant]
 }
+
+type OtherFeeRepository interface {
+	ezutil.CRUDRepository[entity.OtherFee]
+	SyncParticipants(ctx context.Context, feeID uuid.UUID, participants []entity.FeeParticipant) error
+}

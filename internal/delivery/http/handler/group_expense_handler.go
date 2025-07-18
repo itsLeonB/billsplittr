@@ -190,3 +190,39 @@ func (geh *GroupExpenseHandler) HandleGetFeeCalculationMethods() gin.HandlerFunc
 		)
 	}
 }
+
+func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		otherFeeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request, err := ezutil.BindRequest[dto.UpdateOtherFeeRequest](ctx, binding.JSON)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		request.GroupExpenseID = groupExpenseID
+		request.ID = otherFeeID
+
+		response, err := geh.groupExpenseService.UpdateFee(ctx, request)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(
+			http.StatusOK,
+			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+		)
+	}
+}

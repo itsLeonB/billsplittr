@@ -16,5 +16,6 @@ CREATE TABLE IF NOT EXISTS group_expense_other_fee_participants (
     deleted_at TIMESTAMPTZ
 );
 
-ALTER TABLE group_expense_other_fees
-ADD COLUMN IF NOT EXISTS rate NUMERIC(20, 4);
+ALTER TABLE IF EXISTS group_expense_other_fee_participants
+ADD CONSTRAINT unique_fee_participant
+UNIQUE (other_fee_id, profile_id);

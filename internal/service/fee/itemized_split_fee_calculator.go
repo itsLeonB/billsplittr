@@ -35,10 +35,6 @@ func (fc *itemizedSplitFeeCalculator) Validate(fee entity.OtherFee, groupExpense
 		return eris.New("amount cannot be zero")
 	}
 
-	if !fee.Rate.Valid || fee.Rate.Decimal.IsZero() {
-		return eris.New("rate cannot be zero/null")
-	}
-
 	if len(groupExpense.Participants) < 1 {
 		return eris.New("must have participants")
 	}
@@ -49,12 +45,13 @@ func (fc *itemizedSplitFeeCalculator) Validate(fee entity.OtherFee, groupExpense
 func (fc *itemizedSplitFeeCalculator) Split(fee entity.OtherFee, groupExpense entity.GroupExpense) []entity.FeeParticipant {
 	participantsCount := len(groupExpense.Participants)
 	feeParticipants := make([]entity.FeeParticipant, participantsCount)
+	rate := fee.Amount.Div(groupExpense.Subtotal)
 
 	for i, expenseParticipant := range groupExpense.Participants {
 		feeParticipants[i] = entity.FeeParticipant{
 			OtherFeeID:  fee.ID,
 			ProfileID:   expenseParticipant.ParticipantProfileID,
-			ShareAmount: expenseParticipant.ShareAmount.Mul(fee.Rate.Decimal),
+			ShareAmount: expenseParticipant.ShareAmount.Mul(rate),
 		}
 	}
 

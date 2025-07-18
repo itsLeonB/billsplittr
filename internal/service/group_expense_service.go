@@ -27,6 +27,7 @@ type groupExpenseServiceImpl struct {
 	expenseParticipantRepository repository.ExpenseParticipantRepository
 	debtService                  DebtService
 	feeCalculatorRegistry        map[appconstant.FeeCalculationMethod]fee.FeeCalculator
+	otherFeeRepository           repository.OtherFeeRepository
 }
 
 func NewGroupExpenseService(
@@ -37,6 +38,7 @@ func NewGroupExpenseService(
 	expenseItemRepository repository.ExpenseItemRepository,
 	groupExpenseParticipantRepository repository.ExpenseParticipantRepository,
 	debtService DebtService,
+	otherFeeRepository repository.OtherFeeRepository,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
 		transactor,
@@ -47,6 +49,7 @@ func NewGroupExpenseService(
 		groupExpenseParticipantRepository,
 		debtService,
 		fee.NewFeeCalculatorRegistry(),
+		otherFeeRepository,
 	}
 }
 
@@ -265,7 +268,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 		}
 
 		groupExpense.Participants = groupExpenseParticipants
-		updatedOtherFees, err := ges.calculateOtherFeeSplits(groupExpense)
+		updatedOtherFees, err := ges.calculateOtherFeeSplits(ctx, groupExpense)
 		if err != nil {
 			return err
 		}
@@ -293,7 +296,6 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 		groupExpense.ParticipantsConfirmed = isAllAnonymous
 		// TODO: explore cleaner way
 		groupExpense.Participants = nil // Prevent GORM updating child, already synced above
-		groupExpense.OtherFees = updatedOtherFees
 
 		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
 		if err != nil {
@@ -331,7 +333,55 @@ func (ges *groupExpenseServiceImpl) GetFeeCalculationMethods() []dto.FeeCalculat
 	return feeCalculationMethodInfos
 }
 
-func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(groupExpense entity.GroupExpense) ([]entity.OtherFee, error) {
+func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error) {
+	var response dto.OtherFeeResponse
+
+	profileID, err := util.GetProfileID(ctx)
+	if err != nil {
+		return dto.OtherFeeResponse{}, err
+	}
+
+	if request.Amount.Cmp(decimal.Zero) <= 0 {
+		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError("amount must be more than 0")
+	}
+
+	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		spec := ezutil.Specification[entity.OtherFee]{}
+		spec.Model.ID = request.ID
+		spec.Model.GroupExpenseID = request.GroupExpenseID
+		spec.ForUpdate = true
+
+		otherFee, err := ges.otherFeeRepository.FindFirst(ctx, spec)
+		if err != nil {
+			return err
+		}
+		if otherFee.IsZero() {
+			return ezutil.NotFoundError(fmt.Sprintf("other fee with ID: %s is not found", request.ID))
+		}
+		if otherFee.IsDeleted() {
+			return ezutil.UnprocessableEntityError(fmt.Sprintf("other fee with ID: %s is deleted", request.ID))
+		}
+
+		patchedFee := mapper.PatchOtherFeeWithRequest(otherFee, request)
+
+		updatedFee, err := ges.otherFeeRepository.Update(ctx, patchedFee)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.OtherFeeToResponse(updatedFee, profileID)
+
+		return nil
+	})
+
+	if err != nil {
+		return dto.OtherFeeResponse{}, err
+	}
+
+	return response, nil
+}
+
+func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(ctx context.Context, groupExpense entity.GroupExpense) ([]entity.OtherFee, error) {
 	var splitErr error
 
 	mapperFunc := func(fee entity.OtherFee) entity.OtherFee {
@@ -347,6 +397,11 @@ func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(groupExpense entity.
 		}
 
 		fee.Participants = feeCalculator.Split(fee, groupExpense)
+
+		if err := ges.otherFeeRepository.SyncParticipants(ctx, fee.ID, fee.Participants); err != nil {
+			splitErr = err
+			return entity.OtherFee{}
+		}
 
 		return fee
 	}
@@ -388,14 +443,18 @@ func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context,
 		return ezutil.UnprocessableEntityError(appconstant.ErrAmountZero)
 	}
 
-	calculatedTotal := decimal.Zero
+	calculatedFeeTotal := decimal.Zero
+	calculatedSubtotal := decimal.Zero
 	for _, item := range request.Items {
-		calculatedTotal = calculatedTotal.Add(item.Amount.Mul(decimal.NewFromInt(int64(item.Quantity))))
+		calculatedSubtotal = calculatedSubtotal.Add(item.Amount.Mul(decimal.NewFromInt(int64(item.Quantity))))
 	}
 	for _, fee := range request.OtherFees {
-		calculatedTotal = calculatedTotal.Add(fee.Amount)
+		calculatedFeeTotal = calculatedFeeTotal.Add(fee.Amount)
 	}
-	if calculatedTotal.Cmp(request.TotalAmount) != 0 {
+	if calculatedFeeTotal.Add(calculatedSubtotal).Cmp(request.TotalAmount) != 0 {
+		return ezutil.UnprocessableEntityError(appconstant.ErrAmountMismatched)
+	}
+	if calculatedSubtotal.Cmp(request.Subtotal) != 0 {
 		return ezutil.UnprocessableEntityError(appconstant.ErrAmountMismatched)
 	}
 
