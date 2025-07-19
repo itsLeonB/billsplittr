@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
-	github.com/itsLeonB/ezutil v1.1.1-alpha
+	github.com/itsLeonB/ezutil v1.1.1
 	github.com/joho/godotenv v1.5.1
 	github.com/rotisserie/eris v0.5.4
 	github.com/shopspring/decimal v1.4.0
