@@ -13,6 +13,7 @@ type Services struct {
 	Debt           service.DebtService
 	TransferMethod service.TransferMethodService
 	GroupExpense   service.GroupExpenseService
+	ExpenseBill    service.ExpenseBillService
 }
 
 func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Services {
@@ -55,12 +56,17 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 	groupExpenseService := service.NewGroupExpenseService(
 		repositories.Transactor,
 		repositories.GroupExpense,
-		userService,
 		friendshipService,
 		repositories.ExpenseItem,
 		repositories.ExpenseParticipant,
 		debtService,
 		repositories.OtherFee,
+	)
+
+	expenseBillService := service.NewExpenseBillService(
+		friendshipService,
+		repositories.Image,
+		repositories.ExpenseBill,
 	)
 
 	return &Services{
@@ -71,5 +77,6 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		Debt:           debtService,
 		TransferMethod: transferMethodService,
 		GroupExpense:   groupExpenseService,
+		ExpenseBill:    expenseBillService,
 	}
 }

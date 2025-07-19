@@ -51,3 +51,7 @@ type GroupExpenseService interface {
 	RemoveItem(ctx context.Context, request dto.DeleteExpenseItemRequest) error
 	RemoveFee(ctx context.Context, request dto.DeleteOtherFeeRequest) error
 }
+
+type ExpenseBillService interface {
+	Upload(ctx context.Context, request dto.NewExpenseBillRequest) error
+}

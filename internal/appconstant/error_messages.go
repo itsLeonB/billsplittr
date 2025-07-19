@@ -29,6 +29,10 @@ const (
 	ErrAmountZero       = "amount must be greater than zero"
 
 	ErrNotFriends = "you are not friends with this user, please add them as a friend first"
+
+	ErrProcessFile = "error processing file upload"
+
+	ErrNonPositiveAmount = "amount must be positive (>0)"
 )
 
 func ErrGroupExpenseNotFound(id uuid.UUID) string {
