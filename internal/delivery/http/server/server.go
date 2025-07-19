@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/delivery/http/route"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/itsLeonB/ezutil"
@@ -56,8 +57,11 @@ func DefaultConfigs() ezutil.Config {
 		URL:            "http://localhost:8000",
 	}
 
+	googleConfig := config.Google{}
+
 	return ezutil.Config{
-		App:  &appConfig,
-		Auth: &authConfig,
+		App:     &appConfig,
+		Auth:    &authConfig,
+		Generic: &googleConfig,
 	}
 }

@@ -84,3 +84,15 @@ type FeeParticipant struct {
 func (fp FeeParticipant) TableName() string {
 	return "group_expense_other_fee_participants"
 }
+
+type ExpenseBill struct {
+	BaseEntity
+	PayerProfileID   uuid.UUID
+	ImageName        string
+	GroupExpenseID   uuid.NullUUID
+	CreatorProfileID uuid.UUID
+}
+
+func (eb ExpenseBill) TableName() string {
+	return "group_expense_bills"
+}

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,17 +12,21 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
+	"github.com/rotisserie/eris"
 )
 
 type GroupExpenseHandler struct {
 	groupExpenseService service.GroupExpenseService
+	expenseBillService  service.ExpenseBillService
 }
 
 func NewGroupExpenseHandler(
 	groupExpenseService service.GroupExpenseService,
+	expenseBillService service.ExpenseBillService,
 ) *GroupExpenseHandler {
 	return &GroupExpenseHandler{
 		groupExpenseService,
+		expenseBillService,
 	}
 }
 
@@ -338,5 +343,51 @@ func (geh *GroupExpenseHandler) HandleRemoveFee() gin.HandlerFunc {
 		}
 
 		ctx.JSON(http.StatusNoContent, nil)
+	}
+}
+
+func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userProfileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		payerProfileIDStr := ctx.PostForm("payerProfileId")
+		payerProfileID, err := ezutil.Parse[uuid.UUID](payerProfileIDStr)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		fileHeader, err := ctx.FormFile("bill")
+		if err != nil {
+			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
+			return
+		}
+		file, err := fileHeader.Open()
+		if err != nil {
+			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
+			return
+		}
+		blob, err := io.ReadAll(file)
+		if err != nil {
+			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
+			return
+		}
+
+		request := dto.NewExpenseBillRequest{
+			PayerProfileID:   payerProfileID,
+			ImageFile:        blob,
+			CreatorProfileID: userProfileID,
+		}
+
+		if err = geh.expenseBillService.Upload(ctx, request); err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusCreated, ezutil.NewResponse("bill uploaded"))
 	}
 }

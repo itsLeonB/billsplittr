@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
@@ -51,4 +52,14 @@ type ExpenseParticipantRepository interface {
 type OtherFeeRepository interface {
 	ezutil.CRUDRepository[entity.OtherFee]
 	SyncParticipants(ctx context.Context, feeID uuid.UUID, participants []entity.FeeParticipant) error
+}
+
+// ImageRepository defines the behavior for image storage.
+type ImageRepository interface {
+	Upload(ctx context.Context, blob []byte) (string, error)
+	GenerateSignedURL(ctx context.Context, objectName string, duration time.Duration) (string, error)
+}
+
+type ExpenseBillRepository interface {
+	ezutil.CRUDRepository[entity.ExpenseBill]
 }

@@ -21,7 +21,6 @@ import (
 type groupExpenseServiceImpl struct {
 	transactor                   ezutil.Transactor
 	groupExpenseRepository       repository.GroupExpenseRepository
-	userService                  UserService
 	friendshipService            FriendshipService
 	expenseItemRepository        repository.ExpenseItemRepository
 	expenseParticipantRepository repository.ExpenseParticipantRepository
@@ -33,7 +32,6 @@ type groupExpenseServiceImpl struct {
 func NewGroupExpenseService(
 	transactor ezutil.Transactor,
 	groupExpenseRepository repository.GroupExpenseRepository,
-	userService UserService,
 	friendshipService FriendshipService,
 	expenseItemRepository repository.ExpenseItemRepository,
 	groupExpenseParticipantRepository repository.ExpenseParticipantRepository,
@@ -43,7 +41,6 @@ func NewGroupExpenseService(
 	return &groupExpenseServiceImpl{
 		transactor,
 		groupExpenseRepository,
-		userService,
 		friendshipService,
 		expenseItemRepository,
 		groupExpenseParticipantRepository,
@@ -69,13 +66,13 @@ func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto
 }
 
 func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
-	user, err := ges.userService.GetEntityByID(ctx, userID)
+	profileID, err := util.GetProfileID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	spec := ezutil.Specification[entity.GroupExpense]{}
-	spec.Model.CreatorProfileID = user.Profile.ID
+	spec.Model.CreatorProfileID = profileID
 	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
@@ -83,7 +80,7 @@ func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uu
 		return nil, err
 	}
 
-	return ezutil.MapSlice(groupExpenses, mapper.GetGroupExpenseSimpleMapper(user.Profile.ID)), nil
+	return ezutil.MapSlice(groupExpenses, mapper.GetGroupExpenseSimpleMapper(profileID)), nil
 }
 
 func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
@@ -147,7 +144,16 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 	}
 
 	if !request.Amount.IsPositive() {
-		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be positive")
+		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
+	}
+
+	for _, participant := range request.Participants {
+		// Check if the participant is a friend of the user
+		if isFriend, err := ges.friendshipService.IsFriends(ctx, profileID, participant.ProfileID); err != nil {
+			return dto.ExpenseItemResponse{}, err
+		} else if !isFriend {
+			return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNotFriends)
+		}
 	}
 
 	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
@@ -389,7 +395,7 @@ func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.New
 	}
 
 	if !request.Amount.IsPositive() {
-		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError("amount must be positive")
+		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
 	}
 
 	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
@@ -432,7 +438,7 @@ func (ges *groupExpenseServiceImpl) AddFee(ctx context.Context, request dto.NewO
 	}
 
 	if !request.Amount.IsPositive() {
-		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError("amount must be positive")
+		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
 	}
 
 	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
@@ -640,20 +646,20 @@ func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context,
 		return ezutil.UnprocessableEntityError(appconstant.ErrAmountMismatched)
 	}
 
-	user, err := ges.userService.GetEntityByID(ctx, request.CreatedByUserID)
+	profileID, err := util.GetProfileID(ctx)
 	if err != nil {
 		return err
 	}
 
-	request.CreatedByProfileID = user.Profile.ID
+	request.CreatedByProfileID = profileID
 
 	// Default PayerProfileID to the user's profile ID if not provided
 	// This is useful when the user is creating a group expense for themselves.
 	if request.PayerProfileID == uuid.Nil {
-		request.PayerProfileID = user.Profile.ID
+		request.PayerProfileID = profileID
 	} else {
 		// Check if the payer is a friend of the user
-		isFriend, err := ges.friendshipService.IsFriends(ctx, user.Profile.ID, request.PayerProfileID)
+		isFriend, err := ges.friendshipService.IsFriends(ctx, profileID, request.PayerProfileID)
 		if err != nil {
 			return err
 		}

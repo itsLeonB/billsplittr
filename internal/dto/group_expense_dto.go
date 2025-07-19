@@ -134,3 +134,9 @@ type DeleteOtherFeeRequest struct {
 	ID             uuid.UUID
 	GroupExpenseID uuid.UUID
 }
+
+type NewExpenseBillRequest struct {
+	PayerProfileID   uuid.UUID
+	ImageFile        []byte
+	CreatorProfileID uuid.UUID
+}
