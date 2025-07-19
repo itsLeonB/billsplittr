@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,8 +57,9 @@ type OtherFeeRepository interface {
 
 // ImageRepository defines the behavior for image storage.
 type ImageRepository interface {
-	Upload(ctx context.Context, blob []byte) (string, error)
+	Upload(ctx context.Context, reader io.Reader, contentType string) (string, error)
 	GenerateSignedURL(ctx context.Context, objectName string, duration time.Duration) (string, error)
+	Delete(ctx context.Context, objectName string) error
 }
 
 type ExpenseBillRepository interface {

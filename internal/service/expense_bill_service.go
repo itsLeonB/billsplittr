@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -43,7 +44,13 @@ func (ebs *expenseBillServiceImpl) Upload(ctx context.Context, request dto.NewEx
 		}
 	}
 
-	filename, err := ebs.imageRepository.Upload(ctx, request.ImageFile)
+	defer func() {
+		if err := request.ImageReader.Close(); err != nil {
+			log.Printf("error closing ImageReader: %v\n", err)
+		}
+	}()
+
+	filename, err := ebs.imageRepository.Upload(ctx, request.ImageReader, request.ContentType)
 	if err != nil {
 		return err
 	}
@@ -54,7 +61,12 @@ func (ebs *expenseBillServiceImpl) Upload(ctx context.Context, request dto.NewEx
 		CreatorProfileID: request.CreatorProfileID,
 	}
 
-	_, err = ebs.expenseBillRepository.Insert(ctx, expenseBill)
+	if _, err = ebs.expenseBillRepository.Insert(ctx, expenseBill); err != nil {
+		if err = ebs.imageRepository.Delete(ctx, filename); err != nil {
+			log.Printf("warning: failed to clean up GCS image '%s': %v", filename, err)
+		}
+		return err
+	}
 
-	return err
+	return nil
 }

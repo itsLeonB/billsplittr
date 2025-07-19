@@ -7,4 +7,6 @@ const (
 
 	MsgRegisterSuccess = "success registering, please login"
 	MsgLoginSuccess    = "success login"
+
+	MsgBillUploaded = "bill uploaded"
 )

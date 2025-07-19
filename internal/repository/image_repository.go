@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -45,15 +47,16 @@ func NewImageRepository(bucketName string, serviceAccountKey string) ImageReposi
 }
 
 // Upload uploads an image blob to GCS and returns the object name.
-func (gr *gcsRepository) Upload(ctx context.Context, blob []byte) (string, error) {
-	objectName := fmt.Sprintf("uploads/bill_%s.jpg", uuid.New().String())
+func (gr *gcsRepository) Upload(ctx context.Context, reader io.Reader, contentType string) (string, error) {
+	ext := strings.Split(contentType, "/")[1]
+	objectName := fmt.Sprintf("uploads/bill_%s.%s", uuid.New().String(), ext)
 
 	wc := gr.client.Bucket(gr.bucketName).Object(objectName).NewWriter(ctx)
-	wc.ContentType = "image/jpeg"
+	wc.ContentType = contentType
 	wc.CacheControl = "no-cache"
 
-	if _, err := wc.Write(blob); err != nil {
-		return "", eris.Wrap(err, "failed to write blob to GCS")
+	if _, err := io.Copy(wc, reader); err != nil {
+		return "", eris.Wrap(err, "failed to stream file to GCS")
 	}
 
 	if err := wc.Close(); err != nil {
@@ -77,4 +80,12 @@ func (gr *gcsRepository) GenerateSignedURL(ctx context.Context, objectName strin
 	}
 
 	return url, nil
+}
+
+func (gr *gcsRepository) Delete(ctx context.Context, objectName string) error {
+	err := gr.client.Bucket(gr.bucketName).Object(objectName).Delete(ctx)
+	if err != nil {
+		return eris.Wrap(err, "failed to delete image from GCS")
+	}
+	return nil
 }

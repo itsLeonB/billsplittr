@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -366,12 +365,14 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
 			return
 		}
-		file, err := fileHeader.Open()
-		if err != nil {
-			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
+
+		contentType, ok := util.IsImageType(fileHeader)
+		if !ok {
+			_ = ctx.Error(ezutil.BadRequestError("file is not an image"))
 			return
 		}
-		blob, err := io.ReadAll(file)
+
+		file, err := fileHeader.Open()
 		if err != nil {
 			_ = ctx.Error(eris.Wrap(err, appconstant.ErrProcessFile))
 			return
@@ -379,8 +380,9 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 
 		request := dto.NewExpenseBillRequest{
 			PayerProfileID:   payerProfileID,
-			ImageFile:        blob,
 			CreatorProfileID: userProfileID,
+			ImageReader:      file,
+			ContentType:      contentType,
 		}
 
 		if err = geh.expenseBillService.Upload(ctx, request); err != nil {
@@ -388,6 +390,6 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 			return
 		}
 
-		ctx.JSON(http.StatusCreated, ezutil.NewResponse("bill uploaded"))
+		ctx.JSON(http.StatusCreated, ezutil.NewResponse(appconstant.MsgBillUploaded))
 	}
 }

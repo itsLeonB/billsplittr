@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -137,6 +138,7 @@ type DeleteOtherFeeRequest struct {
 
 type NewExpenseBillRequest struct {
 	PayerProfileID   uuid.UUID
-	ImageFile        []byte
 	CreatorProfileID uuid.UUID
+	ImageReader      io.ReadCloser
+	ContentType      string
 }
