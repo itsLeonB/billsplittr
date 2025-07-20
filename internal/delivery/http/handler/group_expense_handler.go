@@ -353,11 +353,13 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 			return
 		}
 
-		payerProfileIDStr := ctx.PostForm("payerProfileId")
-		payerProfileID, err := ezutil.Parse[uuid.UUID](payerProfileIDStr)
-		if err != nil {
-			_ = ctx.Error(err)
-			return
+		payerProfileID := uuid.Nil
+		if payerProfileIDStr := ctx.PostForm("payerProfileId"); payerProfileIDStr != "" {
+			payerProfileID, err = ezutil.Parse[uuid.UUID](payerProfileIDStr)
+			if err != nil {
+				_ = ctx.Error(err)
+				return
+			}
 		}
 
 		fileHeader, err := ctx.FormFile("bill")
