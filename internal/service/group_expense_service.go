@@ -148,6 +148,9 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 	}
 
 	for _, participant := range request.Participants {
+		if participant.ProfileID == profileID {
+			continue // skip if participant is current user
+		}
 		// Check if the participant is a friend of the user
 		if isFriend, err := ges.friendshipService.IsFriends(ctx, profileID, participant.ProfileID); err != nil {
 			return dto.ExpenseItemResponse{}, err
