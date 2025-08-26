@@ -37,7 +37,7 @@ func (ebs *expenseBillServiceImpl) Upload(ctx context.Context, request dto.NewEx
 		request.PayerProfileID = request.CreatorProfileID
 	} else {
 		// Check if the payer is a friend of the user
-		if isFriend, err := ebs.friendshipService.IsFriends(ctx, request.CreatorProfileID, request.PayerProfileID); err != nil {
+		if isFriend, _, err := ebs.friendshipService.IsFriends(ctx, request.CreatorProfileID, request.PayerProfileID); err != nil {
 			return err
 		} else if !isFriend {
 			return ezutil.UnprocessableEntityError(appconstant.ErrNotFriends)

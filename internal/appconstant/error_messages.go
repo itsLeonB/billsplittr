@@ -1,11 +1,5 @@
 package appconstant
 
-import (
-	"fmt"
-
-	"github.com/google/uuid"
-)
-
 const (
 	ErrDataSelect = "error retrieving data"
 	ErrDataInsert = "error inserting new data"
@@ -33,12 +27,6 @@ const (
 	ErrProcessFile = "error processing file upload"
 
 	ErrNonPositiveAmount = "amount must be positive (>0)"
+
+	ErrServiceClient = "service client communication failure"
 )
-
-func ErrGroupExpenseNotFound(id uuid.UUID) string {
-	return fmt.Sprintf("group expense with ID: %s is not found", id.String())
-}
-
-func ErrGroupExpenseDeleted(id uuid.UUID) string {
-	return fmt.Sprintf("group expense with ID: %s is deleted", id.String())
-}

@@ -3,6 +3,7 @@ package entity
 import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
+	"github.com/itsLeonB/ezutil"
 	"github.com/shopspring/decimal"
 )
 
@@ -17,13 +18,28 @@ type GroupExpense struct {
 	Confirmed             bool
 	ParticipantsConfirmed bool
 	CreatorProfileID      uuid.UUID
-	PayerProfile          UserProfile          `gorm:"foreignKey:PayerProfileID"`
-	CreatorProfile        UserProfile          `gorm:"foreignKey:CreatorProfileID"`
 	Participants          []ExpenseParticipant `gorm:"foreignKey:GroupExpenseID"`
 }
 
 func (ge GroupExpense) SimpleName() string {
 	return "group expense"
+}
+
+func (ge GroupExpense) ProfileIDs() []uuid.UUID {
+	profileIDs := make([]uuid.UUID, 0)
+	profileIDs = append(profileIDs, ge.CreatorProfileID)
+	profileIDs = append(profileIDs, ge.PayerProfileID)
+	for _, item := range ge.Items {
+		profileIDs = append(profileIDs, item.ProfileIDs()...)
+	}
+	for _, fee := range ge.OtherFees {
+		profileIDs = append(profileIDs, fee.ProfileIDs()...)
+	}
+	for _, participant := range ge.Participants {
+		profileIDs = append(profileIDs, participant.ParticipantProfileID)
+	}
+
+	return profileIDs
 }
 
 type ExpenseItem struct {
@@ -43,12 +59,15 @@ func (ei ExpenseItem) SimpleName() string {
 	return "expense item"
 }
 
+func (ei ExpenseItem) ProfileIDs() []uuid.UUID {
+	return ezutil.MapSlice(ei.Participants, func(ip ItemParticipant) uuid.UUID { return ip.ProfileID })
+}
+
 type ItemParticipant struct {
 	BaseEntity
 	ExpenseItemID uuid.UUID
 	ProfileID     uuid.UUID
 	Share         decimal.Decimal
-	Profile       UserProfile `gorm:"foreignKey:ProfileID"`
 }
 
 func (ip ItemParticipant) TableName() string {
@@ -62,6 +81,10 @@ type OtherFee struct {
 	Amount            decimal.Decimal
 	CalculationMethod appconstant.FeeCalculationMethod
 	Participants      []FeeParticipant `gorm:"foreignKey:OtherFeeID"`
+}
+
+func (of OtherFee) ProfileIDs() []uuid.UUID {
+	return ezutil.MapSlice(of.Participants, func(fp FeeParticipant) uuid.UUID { return fp.ProfileID })
 }
 
 func (of OtherFee) TableName() string {
@@ -78,7 +101,6 @@ type FeeParticipant struct {
 	OtherFeeID  uuid.UUID
 	ProfileID   uuid.UUID
 	ShareAmount decimal.Decimal
-	Profile     UserProfile `gorm:"foreignKey:ProfileID"`
 }
 
 func (fp FeeParticipant) TableName() string {

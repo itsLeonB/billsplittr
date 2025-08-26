@@ -37,13 +37,13 @@ func (geh *GroupExpenseHandler) HandleCreateDraft() gin.HandlerFunc {
 			return
 		}
 
-		userID, err := util.GetUserID(ctx)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		request.CreatedByUserID = userID
+		request.CreatedByProfileID = profileID
 
 		response, err := geh.groupExpenseService.CreateDraft(ctx, request)
 		if err != nil {
@@ -60,13 +60,13 @@ func (geh *GroupExpenseHandler) HandleCreateDraft() gin.HandlerFunc {
 
 func (geh *GroupExpenseHandler) HandleGetAllCreated() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := util.GetUserID(ctx)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		groupExpenses, err := geh.groupExpenseService.GetAllCreated(ctx, userID)
+		groupExpenses, err := geh.groupExpenseService.GetAllCreated(ctx, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -87,7 +87,13 @@ func (geh *GroupExpenseHandler) HandleGetDetails() gin.HandlerFunc {
 			return
 		}
 
-		response, err := geh.groupExpenseService.GetDetails(ctx, groupExpenseID)
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := geh.groupExpenseService.GetDetails(ctx, groupExpenseID, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -114,7 +120,13 @@ func (geh *GroupExpenseHandler) HandleGetItemDetails() gin.HandlerFunc {
 			return
 		}
 
-		response, err := geh.groupExpenseService.GetItemDetails(ctx, groupExpenseID, expenseItemID)
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := geh.groupExpenseService.GetItemDetails(ctx, groupExpenseID, expenseItemID, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -141,6 +153,12 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 			return
 		}
 
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
 		request, err := ezutil.BindRequest[dto.UpdateExpenseItemRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
@@ -150,7 +168,7 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 		request.GroupExpenseID = groupExpenseID
 		request.ID = expenseItemID
 
-		response, err := geh.groupExpenseService.UpdateItem(ctx, request)
+		response, err := geh.groupExpenseService.UpdateItem(ctx, profileID, request)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -171,7 +189,13 @@ func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
 			return
 		}
 
-		response, err := geh.groupExpenseService.ConfirmDraft(ctx, groupExpenseID)
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
+		response, err := geh.groupExpenseService.ConfirmDraft(ctx, groupExpenseID, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -209,6 +233,12 @@ func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 			return
 		}
 
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
 		request, err := ezutil.BindRequest[dto.UpdateOtherFeeRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
@@ -218,7 +248,7 @@ func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 		request.GroupExpenseID = groupExpenseID
 		request.ID = otherFeeID
 
-		response, err := geh.groupExpenseService.UpdateFee(ctx, request)
+		response, err := geh.groupExpenseService.UpdateFee(ctx, profileID, request)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -239,6 +269,12 @@ func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
 			return
 		}
 
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
 		request, err := ezutil.BindRequest[dto.NewExpenseItemRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
@@ -247,7 +283,7 @@ func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
 
 		request.GroupExpenseID = groupExpenseID
 
-		response, err := geh.groupExpenseService.AddItem(ctx, request)
+		response, err := geh.groupExpenseService.AddItem(ctx, profileID, request)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -268,6 +304,12 @@ func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 			return
 		}
 
+		profileID, err := util.GetProfileID(ctx)
+		if err != nil {
+			_ = ctx.Error(err)
+			return
+		}
+
 		request, err := ezutil.BindRequest[dto.NewOtherFeeRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
@@ -276,7 +318,7 @@ func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 
 		request.GroupExpenseID = groupExpenseID
 
-		response, err := geh.groupExpenseService.AddFee(ctx, request)
+		response, err := geh.groupExpenseService.AddFee(ctx, profileID, request)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -347,7 +389,7 @@ func (geh *GroupExpenseHandler) HandleRemoveFee() gin.HandlerFunc {
 
 func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userProfileID, err := util.GetProfileID(ctx)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -382,7 +424,7 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 
 		request := dto.NewExpenseBillRequest{
 			PayerProfileID:   payerProfileID,
-			CreatorProfileID: userProfileID,
+			CreatorProfileID: profileID,
 			ImageReader:      file,
 			ContentType:      contentType,
 		}

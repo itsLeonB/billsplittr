@@ -15,7 +15,7 @@ func ProvideHandlers(services *Services) *Handlers {
 	return &Handlers{
 		Auth:           handler.NewAuthHandler(services.Auth),
 		Friendship:     handler.NewFriendshipHandler(services.Friendship),
-		Profile:        handler.NewProfileHandler(services.User),
+		Profile:        handler.NewProfileHandler(services.Profile),
 		TransferMethod: handler.NewTransferMethodHandler(services.TransferMethod),
 		Debt:           handler.NewDebtHandler(services.Debt),
 		GroupExpense:   handler.NewGroupExpenseHandler(services.GroupExpense, services.ExpenseBill),
