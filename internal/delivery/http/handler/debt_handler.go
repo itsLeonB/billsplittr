@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
+	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil"
 )
 
@@ -22,7 +22,7 @@ func NewDebtHandler(debtService service.DebtService) *DebtHandler {
 
 func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -34,7 +34,7 @@ func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 			return
 		}
 
-		request.UserID = userID
+		request.UserProfileID = profileID
 
 		response, err := dh.debtService.RecordNewTransaction(ctx, request)
 		if err != nil {
@@ -51,13 +51,13 @@ func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 
 func (dh *DebtHandler) HandleGetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		response, err := dh.debtService.GetTransactions(ctx, userID)
+		response, err := dh.debtService.GetTransactions(ctx, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

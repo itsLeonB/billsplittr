@@ -19,14 +19,14 @@ import (
 )
 
 type groupExpenseServiceImpl struct {
-	transactor                   ezutil.Transactor
-	groupExpenseRepository       repository.GroupExpenseRepository
-	friendshipService            FriendshipService
-	expenseItemRepository        repository.ExpenseItemRepository
-	expenseParticipantRepository repository.ExpenseParticipantRepository
-	debtService                  DebtService
-	feeCalculatorRegistry        map[appconstant.FeeCalculationMethod]fee.FeeCalculator
-	otherFeeRepository           repository.OtherFeeRepository
+	transactor             ezutil.Transactor
+	groupExpenseRepository repository.GroupExpenseRepository
+	friendshipService      FriendshipService
+	expenseItemRepository  repository.ExpenseItemRepository
+	debtService            DebtService
+	feeCalculatorRegistry  map[appconstant.FeeCalculationMethod]fee.FeeCalculator
+	otherFeeRepository     repository.OtherFeeRepository
+	profileService         ProfileService
 }
 
 func NewGroupExpenseService(
@@ -34,19 +34,19 @@ func NewGroupExpenseService(
 	groupExpenseRepository repository.GroupExpenseRepository,
 	friendshipService FriendshipService,
 	expenseItemRepository repository.ExpenseItemRepository,
-	groupExpenseParticipantRepository repository.ExpenseParticipantRepository,
 	debtService DebtService,
 	otherFeeRepository repository.OtherFeeRepository,
+	profileService ProfileService,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
 		transactor,
 		groupExpenseRepository,
 		friendshipService,
 		expenseItemRepository,
-		groupExpenseParticipantRepository,
 		debtService,
 		fee.NewFeeCalculatorRegistry(),
 		otherFeeRepository,
+		profileService,
 	}
 }
 
@@ -62,44 +62,52 @@ func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	return mapper.GroupExpenseToResponse(insertedGroupExpense, uuid.Nil), nil
-}
-
-func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, userID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
-	profileID, err := util.GetProfileID(ctx)
+	namesByProfileIDs, err := ges.getGroupExpenseProfileNames(ctx, insertedGroupExpense)
 	if err != nil {
-		return nil, err
+		return dto.GroupExpenseResponse{}, err
 	}
 
+	return mapper.GroupExpenseToResponse(insertedGroupExpense, request.CreatedByProfileID, namesByProfileIDs), nil
+}
+
+func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
 	spec := ezutil.Specification[entity.GroupExpense]{}
 	spec.Model.CreatorProfileID = profileID
-	spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile"}
+	spec.PreloadRelations = []string{"Items", "OtherFees"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
 	if err != nil {
 		return nil, err
 	}
 
-	return ezutil.MapSlice(groupExpenses, mapper.GetGroupExpenseSimpleMapper(profileID)), nil
-}
-
-func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
-	profileID, err := util.GetProfileID(ctx)
-	if err != nil {
-		return dto.GroupExpenseResponse{}, err
+	profileIDs := make([]uuid.UUID, 0)
+	for _, groupExpense := range groupExpenses {
+		profileIDs = append(profileIDs, groupExpense.ProfileIDs()...)
 	}
 
+	namesByProfileIDs := make(map[uuid.UUID]string, len(profileIDs))
+	if len(profileIDs) > 0 {
+		namesByProfileIDs, err = ges.profileService.GetNames(ctx, profileIDs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	mapFunc := func(groupExpense entity.GroupExpense) dto.GroupExpenseResponse {
+		return mapper.GroupExpenseToResponse(groupExpense, profileID, namesByProfileIDs)
+	}
+
+	return ezutil.MapSlice(groupExpenses, mapFunc), nil
+}
+
+func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID, profileID uuid.UUID) (dto.GroupExpenseResponse, error) {
 	spec := ezutil.Specification[entity.GroupExpense]{}
 	spec.Model.ID = id
 	spec.PreloadRelations = []string{
 		"Items",
 		"OtherFees",
-		"PayerProfile",
-		"CreatorProfile",
 		"Items.Participants",
-		"Items.Participants.Profile",
 		"Participants",
-		"Participants.Profile",
 	}
 
 	groupExpense, err := ges.getGroupExpense(ctx, spec)
@@ -107,19 +115,19 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		return dto.GroupExpenseResponse{}, err
 	}
 
-	return mapper.GroupExpenseToResponse(groupExpense, profileID), nil
-}
-
-func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error) {
-	profileID, err := util.GetProfileID(ctx)
+	namesByProfileIDs, err := ges.getGroupExpenseProfileNames(ctx, groupExpense)
 	if err != nil {
-		return dto.ExpenseItemResponse{}, err
+		return dto.GroupExpenseResponse{}, err
 	}
 
+	return mapper.GroupExpenseToResponse(groupExpense, profileID, namesByProfileIDs), nil
+}
+
+func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExpenseID, expenseItemID, profileID uuid.UUID) (dto.ExpenseItemResponse, error) {
 	spec := ezutil.Specification[entity.ExpenseItem]{}
 	spec.Model.ID = expenseItemID
 	spec.Model.GroupExpenseID = groupExpenseID
-	spec.PreloadRelations = []string{"Participants", "Participants.Profile"}
+	spec.PreloadRelations = []string{"Participants"}
 
 	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
 	if err != nil {
@@ -132,16 +140,16 @@ func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExp
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 	}
 
-	return mapper.ExpenseItemToResponse(expenseItem, profileID), nil
-}
-
-func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error) {
-	var response dto.ExpenseItemResponse
-
-	profileID, err := util.GetProfileID(ctx)
+	namesByProfileIDs, err := ges.profileService.GetNames(ctx, expenseItem.ProfileIDs())
 	if err != nil {
 		return dto.ExpenseItemResponse{}, err
 	}
+
+	return mapper.ExpenseItemToResponse(expenseItem, profileID, namesByProfileIDs), nil
+}
+
+func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, profileID uuid.UUID, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error) {
+	var response dto.ExpenseItemResponse
 
 	if !request.Amount.IsPositive() {
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
@@ -152,14 +160,14 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 			continue // skip if participant is current user
 		}
 		// Check if the participant is a friend of the user
-		if isFriend, err := ges.friendshipService.IsFriends(ctx, profileID, participant.ProfileID); err != nil {
+		if isFriend, _, err := ges.friendshipService.IsFriends(ctx, profileID, participant.ProfileID); err != nil {
 			return dto.ExpenseItemResponse{}, err
 		} else if !isFriend {
 			return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNotFriends)
 		}
 	}
 
-	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		expenseItem, err := ges.getExpenseItemByIDForUpdate(ctx, request.ID, request.GroupExpenseID)
 		if err != nil {
 			return err
@@ -181,8 +189,8 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 			return err
 		}
 
-		oldAmount := expenseItem.Amount.Mul(decimal.NewFromInt(int64(expenseItem.Quantity)))
-		newAmount := updatedExpenseItem.Amount.Mul(decimal.NewFromInt(int64(updatedExpenseItem.Quantity)))
+		oldAmount := expenseItem.TotalAmount()
+		newAmount := updatedExpenseItem.TotalAmount()
 
 		if oldAmount.Cmp(newAmount) != 0 {
 			groupExpense.TotalAmount = groupExpense.TotalAmount.
@@ -199,7 +207,14 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 			return err
 		}
 
-		response = mapper.ExpenseItemToResponse(updatedExpenseItem, profileID)
+		updatedExpenseItem.Participants = updatedParticipants
+		profileIDs := updatedExpenseItem.ProfileIDs()
+		namesByProfileIDs, err := ges.profileService.GetNames(ctx, profileIDs)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.ExpenseItemToResponse(updatedExpenseItem, profileID, namesByProfileIDs)
 
 		return nil
 	})
@@ -211,18 +226,13 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, request dto.
 	return response, nil
 }
 
-func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error) {
+func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error) {
 	var response dto.GroupExpenseResponse
 
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		userProfileID, err := util.GetProfileID(ctx)
-		if err != nil {
-			return err
-		}
-
 		spec := ezutil.Specification[entity.GroupExpense]{}
 		spec.Model.ID = id
-		spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile", "Items.Participants", "Items.Participants.Profile"}
+		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants"}
 		spec.ForUpdate = true
 
 		groupExpense, err := ges.getGroupExpense(ctx, spec)
@@ -234,6 +244,12 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 			return ezutil.UnprocessableEntityError("already confirmed")
 		}
 
+		profileIDs := groupExpense.ProfileIDs()
+		profilesByID, err := ges.profileService.GetByIDs(ctx, profileIDs)
+		if err != nil {
+			return err
+		}
+
 		isAllAnonymous := true
 		participantsByProfileID := make(map[uuid.UUID]*entity.ExpenseParticipant)
 		for _, item := range groupExpense.Items {
@@ -241,7 +257,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 				return ezutil.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
 			}
 			for _, participant := range item.Participants {
-				amountToAdd := item.Amount.Mul(participant.Share).Mul(decimal.NewFromInt(int64(item.Quantity)))
+				amountToAdd := item.TotalAmount().Mul(participant.Share)
 				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
 					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
 				} else {
@@ -249,7 +265,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 						ParticipantProfileID: participant.ProfileID,
 						ShareAmount:          amountToAdd,
 					}
-					if participant.Profile.IsAnonymous() || participant.ProfileID == userProfileID {
+					if profilesByID[participant.ProfileID].IsAnonymous || participant.ProfileID == profileID {
 						expenseParticipant.Confirmed = true
 					} else {
 						isAllAnonymous = false
@@ -309,7 +325,12 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id uuid.UU
 			}
 		}
 
-		response = mapper.GroupExpenseToResponse(updatedGroupExpense, userProfileID)
+		namesByProfileID, err := ges.getGroupExpenseProfileNames(ctx, updatedGroupExpense)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.GroupExpenseToResponse(updatedGroupExpense, profileID, namesByProfileID)
 
 		return nil
 	})
@@ -330,19 +351,14 @@ func (ges *groupExpenseServiceImpl) GetFeeCalculationMethods() []dto.FeeCalculat
 	return feeCalculationMethodInfos
 }
 
-func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error) {
+func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, profileID uuid.UUID, request dto.UpdateOtherFeeRequest) (dto.OtherFeeResponse, error) {
 	var response dto.OtherFeeResponse
-
-	profileID, err := util.GetProfileID(ctx)
-	if err != nil {
-		return dto.OtherFeeResponse{}, err
-	}
 
 	if request.Amount.Cmp(decimal.Zero) <= 0 {
 		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError("amount must be more than 0")
 	}
 
-	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		groupExpense, err := ges.getUnconfirmedGroupExpenseForUpdate(ctx, request.GroupExpenseID)
 		if err != nil {
 			return err
@@ -377,7 +393,13 @@ func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, request dto.U
 			}
 		}
 
-		response = mapper.OtherFeeToResponse(updatedFee, profileID)
+		profileIDs := updatedFee.ProfileIDs()
+		namesByProfileIDs, err := ges.profileService.GetNames(ctx, profileIDs)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.OtherFeeToResponse(updatedFee, profileID, namesByProfileIDs)
 
 		return nil
 	})
@@ -389,19 +411,14 @@ func (ges *groupExpenseServiceImpl) UpdateFee(ctx context.Context, request dto.U
 	return response, nil
 }
 
-func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error) {
+func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, profileID uuid.UUID, request dto.NewExpenseItemRequest) (dto.ExpenseItemResponse, error) {
 	var response dto.ExpenseItemResponse
-
-	profileID, err := util.GetProfileID(ctx)
-	if err != nil {
-		return dto.ExpenseItemResponse{}, err
-	}
 
 	if !request.Amount.IsPositive() {
 		return dto.ExpenseItemResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
 	}
 
-	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		groupExpense, err := ges.getUnconfirmedGroupExpenseForUpdate(ctx, request.GroupExpenseID)
 		if err != nil {
 			return err
@@ -409,8 +426,9 @@ func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.New
 
 		expenseItem := mapper.ExpenseItemRequestToEntity(request)
 
-		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(expenseItem.Amount)
-		groupExpense.Subtotal = groupExpense.Subtotal.Add(expenseItem.Amount)
+		itemTotalAmount := expenseItem.TotalAmount()
+		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(itemTotalAmount)
+		groupExpense.Subtotal = groupExpense.Subtotal.Add(itemTotalAmount)
 		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 			return err
 		}
@@ -420,7 +438,13 @@ func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.New
 			return err
 		}
 
-		response = mapper.ExpenseItemToResponse(insertedItem, profileID)
+		profileIDs := insertedItem.ProfileIDs()
+		namesByProfileID, err := ges.profileService.GetNames(ctx, profileIDs)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.ExpenseItemToResponse(insertedItem, profileID, namesByProfileID)
 
 		return nil
 	})
@@ -432,19 +456,14 @@ func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, request dto.New
 	return response, nil
 }
 
-func (ges *groupExpenseServiceImpl) AddFee(ctx context.Context, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error) {
+func (ges *groupExpenseServiceImpl) AddFee(ctx context.Context, profileID uuid.UUID, request dto.NewOtherFeeRequest) (dto.OtherFeeResponse, error) {
 	var response dto.OtherFeeResponse
-
-	profileID, err := util.GetProfileID(ctx)
-	if err != nil {
-		return dto.OtherFeeResponse{}, err
-	}
 
 	if !request.Amount.IsPositive() {
 		return dto.OtherFeeResponse{}, ezutil.UnprocessableEntityError(appconstant.ErrNonPositiveAmount)
 	}
 
-	err = ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		groupExpense, err := ges.getUnconfirmedGroupExpenseForUpdate(ctx, request.GroupExpenseID)
 		if err != nil {
 			return err
@@ -462,7 +481,13 @@ func (ges *groupExpenseServiceImpl) AddFee(ctx context.Context, request dto.NewO
 			return err
 		}
 
-		response = mapper.OtherFeeToResponse(insertedFee, profileID)
+		profileIDs := insertedFee.ProfileIDs()
+		namesByProfileID, err := ges.profileService.GetNames(ctx, profileIDs)
+		if err != nil {
+			return err
+		}
+
+		response = mapper.OtherFeeToResponse(insertedFee, profileID, namesByProfileID)
 
 		return nil
 	})
@@ -490,7 +515,7 @@ func (ges *groupExpenseServiceImpl) RemoveItem(ctx context.Context, request dto.
 			return err
 		}
 
-		itemAmount := expenseItem.Amount.Mul(decimal.NewFromInt(int64(expenseItem.Quantity)))
+		itemAmount := expenseItem.TotalAmount()
 		groupExpense.TotalAmount = groupExpense.TotalAmount.Sub(itemAmount)
 		groupExpense.Subtotal = groupExpense.Subtotal.Sub(itemAmount)
 
@@ -535,6 +560,15 @@ func (ges *groupExpenseServiceImpl) RemoveFee(ctx context.Context, request dto.D
 
 		return nil
 	})
+}
+
+func (ges *groupExpenseServiceImpl) getGroupExpenseProfileNames(ctx context.Context, groupExpense entity.GroupExpense) (map[uuid.UUID]string, error) {
+	namesByProfileIDs, err := ges.profileService.GetNames(ctx, groupExpense.ProfileIDs())
+	if err != nil {
+		return nil, err
+	}
+
+	return namesByProfileIDs, nil
 }
 
 func (ges *groupExpenseServiceImpl) getExpenseItemByIDForUpdate(ctx context.Context, expenseItemID, groupExpenseID uuid.UUID) (entity.ExpenseItem, error) {
@@ -649,20 +683,13 @@ func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context,
 		return ezutil.UnprocessableEntityError(appconstant.ErrAmountMismatched)
 	}
 
-	profileID, err := util.GetProfileID(ctx)
-	if err != nil {
-		return err
-	}
-
-	request.CreatedByProfileID = profileID
-
 	// Default PayerProfileID to the user's profile ID if not provided
 	// This is useful when the user is creating a group expense for themselves.
 	if request.PayerProfileID == uuid.Nil {
-		request.PayerProfileID = profileID
+		request.PayerProfileID = request.CreatedByProfileID
 	} else {
 		// Check if the payer is a friend of the user
-		isFriend, err := ges.friendshipService.IsFriends(ctx, profileID, request.PayerProfileID)
+		isFriend, _, err := ges.friendshipService.IsFriends(ctx, request.CreatedByProfileID, request.PayerProfileID)
 		if err != nil {
 			return err
 		}

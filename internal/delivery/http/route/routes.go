@@ -5,16 +5,15 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil"
-	"github.com/rotisserie/eris"
 )
 
 func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.Handlers, services *provider.Services) {
-	tokenCheckFunc := newTokenCheckFunc(services.JWT, services.User)
+	// tokenCheckFunc := newTokenCheckFunc(services.JWT, services.User)
+	tokenCheckFunc := authTokenCheckFunc(services.Auth)
 	authMiddleware := ezutil.NewAuthMiddleware("Bearer", tokenCheckFunc)
 	errorMiddleware := ezutil.NewErrorMiddleware()
 
@@ -69,36 +68,8 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 	groupExpenseRoutes.POST("/bills", handlers.GroupExpense.HandleUploadBill())
 }
 
-func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {
+func authTokenCheckFunc(authSvc service.AuthService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {
 	return func(ctx *gin.Context, token string) (bool, map[string]any, error) {
-		claims, err := jwtService.VerifyToken(token)
-		if err != nil {
-			return false, nil, err
-		}
-
-		tokenUserId, exists := claims.Data[appconstant.ContextUserID]
-		if !exists {
-			return false, nil, eris.New("missing user ID from token")
-		}
-		stringUserID, ok := tokenUserId.(string)
-		if !ok {
-			return false, nil, eris.New("error asserting userID, is not a string")
-		}
-		userID, err := ezutil.Parse[uuid.UUID](stringUserID)
-		if err != nil {
-			return false, nil, err
-		}
-
-		user, err := userService.GetEntityByID(ctx, userID)
-		if err != nil {
-			return false, nil, err
-		}
-
-		authData := map[string]any{
-			appconstant.ContextUserID:    userID,
-			appconstant.ContextProfileID: user.Profile.ID,
-		}
-
-		return true, authData, nil
+		return authSvc.VerifyToken(ctx, token)
 	}
 }

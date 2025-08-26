@@ -27,7 +27,7 @@ func NewFriendshipHandler(
 
 func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -39,7 +39,7 @@ func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 			return
 		}
 
-		request.UserID = userID
+		request.ProfileID = profileID
 
 		response, err := fh.friendshipService.CreateAnonymous(ctx, request)
 		if err != nil {
@@ -56,13 +56,13 @@ func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 
 func (fh *FriendshipHandler) HandleGetAll() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		response, err := fh.friendshipService.GetAll(ctx, userID)
+		response, err := fh.friendshipService.GetAll(ctx, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -77,7 +77,7 @@ func (fh *FriendshipHandler) HandleGetAll() gin.HandlerFunc {
 
 func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, err := util.GetUserID(ctx)
+		profileID, err := util.GetProfileID(ctx)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -89,7 +89,7 @@ func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
 			return
 		}
 
-		response, err := fh.friendshipService.GetDetails(ctx, userID, friendshipID)
+		response, err := fh.friendshipService.GetDetails(ctx, profileID, friendshipID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

@@ -9,7 +9,6 @@ import (
 )
 
 type NewDebtTransactionRequest struct {
-	UserID           uuid.UUID
 	UserProfileID    uuid.UUID
 	FriendProfileID  uuid.UUID          `json:"friendProfileId" binding:"required"`
 	Action           appconstant.Action `json:"action" binding:"oneof=LEND BORROW RECEIVE RETURN"`

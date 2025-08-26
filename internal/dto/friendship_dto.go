@@ -9,8 +9,8 @@ import (
 )
 
 type NewAnonymousFriendshipRequest struct {
-	UserID uuid.UUID
-	Name   string `json:"name" binding:"required,min=3"`
+	ProfileID uuid.UUID `json:"-" binding:"-"`
+	Name      string    `json:"name" binding:"required,min=3"`
 }
 
 type FriendshipResponse struct {

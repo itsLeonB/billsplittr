@@ -11,26 +11,26 @@ import (
 )
 
 type ProfileHandler struct {
-	userService service.UserService
+	profileService service.ProfileService
 }
 
 func NewProfileHandler(
-	userService service.UserService,
+	profileService service.ProfileService,
 ) *ProfileHandler {
 	return &ProfileHandler{
-		userService,
+		profileService,
 	}
 }
 
 func (ph *ProfileHandler) HandleProfile() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		parsedUserID, err := ezutil.GetFromContext[uuid.UUID](ctx, appconstant.ContextUserID)
+		profileID, err := ezutil.GetAndParseFromContext[uuid.UUID](ctx, appconstant.ContextProfileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		response, err := ph.userService.GetProfile(ctx, parsedUserID)
+		response, err := ph.profileService.GetByID(ctx, profileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

@@ -1,14 +1,21 @@
 package provider
 
 import (
+	"os"
+
+	"github.com/itsLeonB/billsplittr/internal/logging"
 	"github.com/itsLeonB/billsplittr/internal/service"
+	"github.com/itsLeonB/cocoon-protos/gen/go/auth/v1"
+	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
+	"github.com/itsLeonB/cocoon-protos/gen/go/profile/v1"
 	"github.com/itsLeonB/ezutil"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Services struct {
 	Auth           service.AuthService
-	User           service.UserService
-	JWT            ezutil.JWTService
+	Profile        service.ProfileService
 	Friendship     service.FriendshipService
 	Debt           service.DebtService
 	TransferMethod service.TransferMethodService
@@ -17,38 +24,35 @@ type Services struct {
 }
 
 func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Services {
-	hashService := ezutil.NewHashService(10)
-	jwtService := ezutil.NewJwtService(configs.Auth)
+	cocoonHost := os.Getenv("COCOON_HOST")
 
-	authService := service.NewAuthService(
-		hashService,
-		jwtService,
-		repositories.User,
-		repositories.Transactor,
-		repositories.UserProfile,
+	conn, err := grpc.NewClient(
+		cocoonHost,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
+	if err != nil {
+		logging.Logger.Fatalf("error connecting to grpc client: %v", err)
+	}
 
-	userService := service.NewUserService(
-		repositories.Transactor,
-		repositories.User,
-		repositories.UserProfile,
-	)
+	authClient := auth.NewAuthServiceClient(conn)
+	profileClient := profile.NewProfileServiceClient(conn)
+	friendshipClient := friendship.NewFriendshipServiceClient(conn)
+
+	authService := service.NewAuthService(authClient)
+
+	profileService := service.NewProfileService(profileClient)
 
 	friendshipService := service.NewFriendshipService(
-		repositories.Transactor,
-		repositories.UserProfile,
-		repositories.Friendship,
-		userService,
 		repositories.DebtTransaction,
+		friendshipClient,
 	)
 
 	debtService := service.NewDebtService(
 		repositories.Transactor,
-		repositories.Friendship,
-		userService,
 		repositories.DebtTransaction,
 		repositories.TransferMethod,
 		repositories.GroupExpense,
+		friendshipService,
 	)
 
 	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
@@ -58,9 +62,9 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 		repositories.GroupExpense,
 		friendshipService,
 		repositories.ExpenseItem,
-		repositories.ExpenseParticipant,
 		debtService,
 		repositories.OtherFee,
+		profileService,
 	)
 
 	expenseBillService := service.NewExpenseBillService(
@@ -71,8 +75,7 @@ func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Servic
 
 	return &Services{
 		Auth:           authService,
-		User:           userService,
-		JWT:            jwtService,
+		Profile:        profileService,
 		Friendship:     friendshipService,
 		Debt:           debtService,
 		TransferMethod: transferMethodService,

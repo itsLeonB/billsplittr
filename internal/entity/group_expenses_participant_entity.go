@@ -12,7 +12,6 @@ type ExpenseParticipant struct {
 	ShareAmount          decimal.Decimal
 	Description          string
 	Confirmed            bool
-	Profile              UserProfile `gorm:"foreignKey:ParticipantProfileID"`
 }
 
 func (ep ExpenseParticipant) TableName() string {

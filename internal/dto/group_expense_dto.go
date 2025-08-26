@@ -16,7 +16,6 @@ type NewGroupExpenseRequest struct {
 	Description        string                  `json:"description"`
 	Items              []NewExpenseItemRequest `json:"items" binding:"required,min=1,dive"`
 	OtherFees          []NewOtherFeeRequest    `json:"otherFees" binding:"dive"`
-	CreatedByUserID    uuid.UUID               `json:"-"`
 	CreatedByProfileID uuid.UUID               `json:"-"`
 }
 
