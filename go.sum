@@ -102,8 +102,8 @@ github.com/googleapis/enterprise-certificate-proxy v0.3.6 h1:GW/XbdyBFQ8Qe+YAmFU
 github.com/googleapis/enterprise-certificate-proxy v0.3.6/go.mod h1:MkHOF77EYAE7qfSuSS9PU6g4Nt4e11cnsDUowfwewLA=
 github.com/googleapis/gax-go/v2 v2.14.2 h1:eBLnkZ9635krYIPD+ag1USrOAI0Nr0QYF3+/3GqO0k0=
 github.com/googleapis/gax-go/v2 v2.14.2/go.mod h1:ON64QhlJkhVtSqp4v1uaK92VyZ2gmvDQsweuyLV+8+w=
-github.com/itsLeonB/cocoon-protos v1.0.0-alpha h1:vTS+zNGoIK/W6TO2aEOkldEX9iIPNnqpCIR4ULf1NEQ=
-github.com/itsLeonB/cocoon-protos v1.0.0-alpha/go.mod h1:m3r/5cvVq47/JJsU9zHMiyvDxz4w+nzPbiS2shq47Uo=
+github.com/itsLeonB/cocoon-protos v1.0.0 h1:r4RMqDBT2bYUxVdS1ocnYk6XVnW0gwqK2Uc029J2uhU=
+github.com/itsLeonB/cocoon-protos v1.0.0/go.mod h1:m3r/5cvVq47/JJsU9zHMiyvDxz4w+nzPbiS2shq47Uo=
 github.com/itsLeonB/ezutil v1.2.0 h1:JDW2zyGIY3r8s9RkkjTJ1EcsCfXNTk8JyNieG15Xd3Q=
 github.com/itsLeonB/ezutil v1.2.0/go.mod h1:cng4/NOjfb0wSi+pw0DIq1la+is2fynjvBHuBSGTB4w=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
