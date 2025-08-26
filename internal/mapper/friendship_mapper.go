@@ -7,6 +7,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
 	"github.com/itsLeonB/ezutil"
+	"github.com/rotisserie/eris"
 )
 
 func MapToFriendDetailsResponse(
@@ -14,6 +15,10 @@ func MapToFriendDetailsResponse(
 	friendDetails *friendship.GetDetailsResponse,
 	debtTransactions []entity.DebtTransaction,
 ) (dto.FriendDetailsResponse, error) {
+	if friendDetails == nil {
+		return dto.FriendDetailsResponse{}, eris.New("friendDetails is nil")
+	}
+
 	id, err := ezutil.Parse[uuid.UUID](friendDetails.GetId())
 	if err != nil {
 		return dto.FriendDetailsResponse{}, err
@@ -29,10 +34,10 @@ func MapToFriendDetailsResponse(
 			ID:        id,
 			ProfileID: profileID,
 			Name:      friendDetails.GetName(),
-			Type:      appconstant.FriendshipType(friendDetails.GetType().String()),
-			CreatedAt: friendDetails.GetCreatedAt().AsTime(),
-			UpdatedAt: friendDetails.GetUpdatedAt().AsTime(),
-			DeletedAt: friendDetails.GetDeletedAt().AsTime(),
+			Type:      FromProtoFriendshipType(friendDetails.Type),
+			CreatedAt: FromProtoTime(friendDetails.GetCreatedAt()),
+			UpdatedAt: FromProtoTime(friendDetails.GetUpdatedAt()),
+			DeletedAt: FromProtoTime(friendDetails.GetDeletedAt()),
 		},
 		Balance:      MapToFriendBalanceSummary(userProfileID, debtTransactions),
 		Transactions: ezutil.MapSlice(debtTransactions, GetDebtTransactionSimpleMapper(userProfileID)),
@@ -40,6 +45,10 @@ func MapToFriendDetailsResponse(
 }
 
 func FromFriendshipResponseProto(response *friendship.FriendshipResponse) (dto.FriendshipResponse, error) {
+	if response == nil {
+		return dto.FriendshipResponse{}, eris.New("proto is nil")
+	}
+
 	id, err := ezutil.Parse[uuid.UUID](response.GetId())
 	if err != nil {
 		return dto.FriendshipResponse{}, err
@@ -52,11 +61,22 @@ func FromFriendshipResponseProto(response *friendship.FriendshipResponse) (dto.F
 
 	return dto.FriendshipResponse{
 		ID:          id,
-		Type:        appconstant.FriendshipType(response.GetType().String()),
+		Type:        FromProtoFriendshipType(response.GetType()),
 		ProfileID:   profileID,
 		ProfileName: response.GetProfileName(),
-		CreatedAt:   response.GetCreatedAt().AsTime(),
-		UpdatedAt:   response.GetUpdatedAt().AsTime(),
-		DeletedAt:   response.GetDeletedAt().AsTime(),
+		CreatedAt:   FromProtoTime(response.GetCreatedAt()),
+		UpdatedAt:   FromProtoTime(response.GetUpdatedAt()),
+		DeletedAt:   FromProtoTime(response.GetDeletedAt()),
 	}, nil
+}
+
+func FromProtoFriendshipType(ft friendship.FriendshipType) appconstant.FriendshipType {
+	switch ft {
+	case friendship.FriendshipType_FRIENDSHIP_TYPE_REAL:
+		return appconstant.Real
+	case friendship.FriendshipType_FRIENDSHIP_TYPE_ANON:
+		return appconstant.Anonymous
+	default:
+		return ""
+	}
 }
