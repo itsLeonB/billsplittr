@@ -8,7 +8,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/cocoon-protos/gen/go/friendship"
+	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 )
@@ -32,7 +32,7 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 	ctx context.Context,
 	request dto.NewAnonymousFriendshipRequest,
 ) (dto.FriendshipResponse, error) {
-	req := &friendship.NewAnonymousFriendshipRequest{
+	req := &friendship.CreateAnonymousRequest{
 		ProfileId: request.ProfileID.String(),
 		Name:      request.Name,
 	}
@@ -42,7 +42,7 @@ func (fs *friendshipServiceImpl) CreateAnonymous(
 		return dto.FriendshipResponse{}, eris.Wrap(err, appconstant.ErrServiceClient)
 	}
 
-	return mapper.FromFriendshipResponseProto(response)
+	return mapper.FromFriendshipResponseProto(response.GetFriendship())
 }
 
 func (fs *friendshipServiceImpl) GetAll(ctx context.Context, profileID uuid.UUID) ([]dto.FriendshipResponse, error) {

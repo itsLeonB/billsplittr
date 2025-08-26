@@ -5,9 +5,9 @@ import (
 
 	"github.com/itsLeonB/billsplittr/internal/logging"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/cocoon-protos/gen/go/auth"
-	"github.com/itsLeonB/cocoon-protos/gen/go/friendship"
-	"github.com/itsLeonB/cocoon-protos/gen/go/profile"
+	"github.com/itsLeonB/cocoon-protos/gen/go/auth/v1"
+	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
+	"github.com/itsLeonB/cocoon-protos/gen/go/profile/v1"
 	"github.com/itsLeonB/ezutil"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

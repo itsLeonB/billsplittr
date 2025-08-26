@@ -5,7 +5,7 @@ import (
 
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
-	"github.com/itsLeonB/cocoon-protos/gen/go/auth"
+	"github.com/itsLeonB/cocoon-protos/gen/go/auth/v1"
 	"github.com/rotisserie/eris"
 )
 

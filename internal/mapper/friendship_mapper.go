@@ -5,13 +5,13 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/cocoon-protos/gen/go/friendship"
+	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
 	"github.com/itsLeonB/ezutil"
 )
 
 func MapToFriendDetailsResponse(
 	userProfileID uuid.UUID,
-	friendDetails *friendship.FriendDetails,
+	friendDetails *friendship.GetDetailsResponse,
 	debtTransactions []entity.DebtTransaction,
 ) (dto.FriendDetailsResponse, error) {
 	id, err := ezutil.Parse[uuid.UUID](friendDetails.GetId())

@@ -8,7 +8,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/util"
-	"github.com/itsLeonB/cocoon-protos/gen/go/profile"
+	"github.com/itsLeonB/cocoon-protos/gen/go/profile/v1"
 	"github.com/itsLeonB/ezutil"
 	"github.com/rotisserie/eris"
 )
@@ -22,12 +22,12 @@ func NewProfileService(svcClient profile.ProfileServiceClient) ProfileService {
 }
 
 func (ps *profileServiceGrpc) GetByID(ctx context.Context, id uuid.UUID) (dto.ProfileResponse, error) {
-	response, err := ps.svcClient.Get(ctx, &profile.ProfileRequest{ProfileId: id.String()})
+	response, err := ps.svcClient.Get(ctx, &profile.GetRequest{ProfileId: id.String()})
 	if err != nil {
 		return dto.ProfileResponse{}, eris.Wrap(err, appconstant.ErrServiceClient)
 	}
 
-	return mapper.FromProfileProto(response)
+	return mapper.FromProfileProto(response.GetProfile())
 }
 
 func (ps *profileServiceGrpc) GetNames(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]string, error) {
