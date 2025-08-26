@@ -9,6 +9,10 @@ import (
 )
 
 func FromProfileProto(res *profile.ProfileResponse) (dto.ProfileResponse, error) {
+	if res == nil {
+		return dto.ProfileResponse{}, eris.New("proto is nil")
+	}
+
 	id, err := ezutil.Parse[uuid.UUID](res.GetId())
 	if err != nil {
 		return dto.ProfileResponse{}, err
