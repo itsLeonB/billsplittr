@@ -59,6 +59,10 @@ func (ei ExpenseItem) SimpleName() string {
 	return "expense item"
 }
 
+func (ei ExpenseItem) TotalAmount() decimal.Decimal {
+	return ei.Amount.Mul(decimal.NewFromInt(int64(ei.Quantity)))
+}
+
 func (ei ExpenseItem) ProfileIDs() []uuid.UUID {
 	return ezutil.MapSlice(ei.Participants, func(ip ItemParticipant) uuid.UUID { return ip.ProfileID })
 }

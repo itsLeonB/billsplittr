@@ -73,37 +73,3 @@ func authTokenCheckFunc(authSvc service.AuthService) func(ctx *gin.Context, toke
 		return authSvc.VerifyToken(ctx, token)
 	}
 }
-
-// func newTokenCheckFunc(jwtService ezutil.JWTService, userService service.UserService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {
-// 	return func(ctx *gin.Context, token string) (bool, map[string]any, error) {
-// 		claims, err := jwtService.VerifyToken(token)
-// 		if err != nil {
-// 			return false, nil, err
-// 		}
-
-// 		tokenUserId, exists := claims.Data[appconstant.ContextUserID]
-// 		if !exists {
-// 			return false, nil, eris.New("missing user ID from token")
-// 		}
-// 		stringUserID, ok := tokenUserId.(string)
-// 		if !ok {
-// 			return false, nil, eris.New("error asserting userID, is not a string")
-// 		}
-// 		userID, err := ezutil.Parse[uuid.UUID](stringUserID)
-// 		if err != nil {
-// 			return false, nil, err
-// 		}
-
-// 		user, err := userService.GetEntityByID(ctx, userID)
-// 		if err != nil {
-// 			return false, nil, err
-// 		}
-
-// 		authData := map[string]any{
-// 			appconstant.ContextUserID:    userID,
-// 			appconstant.ContextProfileID: user.Profile.ID,
-// 		}
-
-// 		return true, authData, nil
-// 	}
-// }

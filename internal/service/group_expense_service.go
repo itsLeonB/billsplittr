@@ -189,8 +189,8 @@ func (ges *groupExpenseServiceImpl) UpdateItem(ctx context.Context, profileID uu
 			return err
 		}
 
-		oldAmount := expenseItem.Amount.Mul(decimal.NewFromInt(int64(expenseItem.Quantity)))
-		newAmount := updatedExpenseItem.Amount.Mul(decimal.NewFromInt(int64(updatedExpenseItem.Quantity)))
+		oldAmount := expenseItem.TotalAmount()
+		newAmount := updatedExpenseItem.TotalAmount()
 
 		if oldAmount.Cmp(newAmount) != 0 {
 			groupExpense.TotalAmount = groupExpense.TotalAmount.
@@ -232,7 +232,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := ezutil.Specification[entity.GroupExpense]{}
 		spec.Model.ID = id
-		spec.PreloadRelations = []string{"Items", "OtherFees", "PayerProfile", "CreatorProfile", "Items.Participants", "Items.Participants.Profile"}
+		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants"}
 		spec.ForUpdate = true
 
 		groupExpense, err := ges.getGroupExpense(ctx, spec)
@@ -257,7 +257,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 				return ezutil.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
 			}
 			for _, participant := range item.Participants {
-				amountToAdd := item.Amount.Mul(participant.Share).Mul(decimal.NewFromInt(int64(item.Quantity)))
+				amountToAdd := item.TotalAmount().Mul(participant.Share)
 				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
 					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
 				} else {
@@ -426,8 +426,9 @@ func (ges *groupExpenseServiceImpl) AddItem(ctx context.Context, profileID uuid.
 
 		expenseItem := mapper.ExpenseItemRequestToEntity(request)
 
-		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(expenseItem.Amount)
-		groupExpense.Subtotal = groupExpense.Subtotal.Add(expenseItem.Amount)
+		itemTotalAmount := expenseItem.TotalAmount()
+		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(itemTotalAmount)
+		groupExpense.Subtotal = groupExpense.Subtotal.Add(itemTotalAmount)
 		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 			return err
 		}
@@ -514,7 +515,7 @@ func (ges *groupExpenseServiceImpl) RemoveItem(ctx context.Context, request dto.
 			return err
 		}
 
-		itemAmount := expenseItem.Amount.Mul(decimal.NewFromInt(int64(expenseItem.Quantity)))
+		itemAmount := expenseItem.TotalAmount()
 		groupExpense.TotalAmount = groupExpense.TotalAmount.Sub(itemAmount)
 		groupExpense.Subtotal = groupExpense.Subtotal.Sub(itemAmount)
 
