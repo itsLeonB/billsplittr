@@ -7,7 +7,8 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
+	crud "github.com/itsLeonB/go-crud"
 )
 
 type transferMethodServiceImpl struct {
@@ -19,7 +20,7 @@ func NewTransferMethodService(transferMethodRepository repository.TransferMethod
 }
 
 func (tms *transferMethodServiceImpl) GetAll(ctx context.Context) ([]dto.TransferMethodResponse, error) {
-	transferMethods, err := tms.transferMethodRepository.FindAll(ctx, ezutil.Specification[entity.TransferMethod]{})
+	transferMethods, err := tms.transferMethodRepository.FindAll(ctx, crud.Specification[entity.TransferMethod]{})
 	if err != nil {
 		return nil, err
 	}

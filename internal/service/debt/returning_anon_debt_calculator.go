@@ -7,7 +7,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/helper"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ungerr"
 )
 
 type returningAnonDebtCalculator struct {
@@ -61,7 +61,7 @@ func (dc *returningAnonDebtCalculator) Validate(newTransaction entity.DebtTransa
 	toReturnLeftAmount := userAmount.Sub(friendAmount)
 
 	if toReturnLeftAmount.Compare(newTransaction.Amount) < 0 {
-		return ezutil.ValidationError(fmt.Sprintf(
+		return ungerr.ValidationError(fmt.Sprintf(
 			"cannot return debt, amount in user: %s, amount in friend: %s",
 			userAmount,
 			friendAmount,

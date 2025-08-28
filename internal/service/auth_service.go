@@ -6,7 +6,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/cocoon-protos/gen/go/auth/v1"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -61,7 +61,7 @@ func (as *authServiceGrpc) VerifyToken(ctx context.Context, token string) (bool,
 	})
 	if err != nil {
 		if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
-			return false, nil, ezutil.UnauthorizedError("unauthorized")
+			return false, nil, ungerr.UnauthorizedError("unauthorized")
 		}
 		return false, nil, eris.Wrap(err, appconstant.ErrServiceClient)
 	}

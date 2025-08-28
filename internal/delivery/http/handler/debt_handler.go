@@ -9,7 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/billsplittr/internal/util"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ginkgo"
 )
 
 type DebtHandler struct {
@@ -28,7 +28,7 @@ func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.NewDebtTransactionRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.NewDebtTransactionRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -44,7 +44,7 @@ func (dh *DebtHandler) HandleCreate() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgInsertData).WithData(response),
 		)
 	}
 }
@@ -65,7 +65,7 @@ func (dh *DebtHandler) HandleGetAll() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ginkgo"
 )
 
 type TransferMethodHandler struct {
@@ -27,7 +27,7 @@ func (tmh *TransferMethodHandler) HandleGetAll() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }

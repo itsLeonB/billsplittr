@@ -9,7 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/cocoon-protos/gen/go/profile/v1"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
 	"github.com/rotisserie/eris"
 )
 

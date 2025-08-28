@@ -8,7 +8,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ginkgo"
 )
 
 type AuthHandler struct {
@@ -25,7 +25,7 @@ func NewAuthHandler(
 
 func (ah *AuthHandler) HandleRegister() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		request, err := ezutil.BindRequest[dto.RegisterRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.RegisterRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -39,14 +39,14 @@ func (ah *AuthHandler) HandleRegister() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgRegisterSuccess),
+			ginkgo.NewResponse(appconstant.MsgRegisterSuccess),
 		)
 	}
 }
 
 func (ah *AuthHandler) HandleLogin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		request, err := ezutil.BindRequest[dto.LoginRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.LoginRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -60,7 +60,7 @@ func (ah *AuthHandler) HandleLogin() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgLoginSuccess).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgLoginSuccess).WithData(response),
 		)
 	}
 }

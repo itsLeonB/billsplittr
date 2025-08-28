@@ -6,19 +6,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/ezutil"
+	crud "github.com/itsLeonB/go-crud"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
 )
 
 type debtTransactionRepositoryGorm struct {
-	ezutil.CRUDRepository[entity.DebtTransaction]
+	crud.CRUDRepository[entity.DebtTransaction]
 	db *gorm.DB
 }
 
 func NewDebtTransactionRepository(db *gorm.DB) DebtTransactionRepository {
 	return &debtTransactionRepositoryGorm{
-		ezutil.NewCRUDRepository[entity.DebtTransaction](db),
+		crud.NewCRUDRepository[entity.DebtTransaction](db),
 		db,
 	}
 }
@@ -59,7 +59,7 @@ func (dtr *debtTransactionRepositoryGorm) FindAllByUserProfileID(ctx context.Con
 		Where("lender_profile_id = ?", userProfileID).
 		Or("borrower_profile_id = ?", userProfileID).
 		Preload("TransferMethod").
-		Scopes(ezutil.DefaultOrder()).
+		Scopes(crud.DefaultOrder()).
 		Find(&transactions).
 		Error
 

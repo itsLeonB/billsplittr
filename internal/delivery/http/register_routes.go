@@ -1,36 +1,23 @@
-package route
+package http
 
 import (
 	"fmt"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
+	"github.com/itsLeonB/billsplittr/internal/config"
+	"github.com/itsLeonB/billsplittr/internal/delivery/http/handler"
 	"github.com/itsLeonB/billsplittr/internal/provider"
-	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
 )
 
-func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.Handlers, services *provider.Services) {
-	// tokenCheckFunc := newTokenCheckFunc(services.JWT, services.User)
-	tokenCheckFunc := authTokenCheckFunc(services.Auth)
-	authMiddleware := ezutil.NewAuthMiddleware("Bearer", tokenCheckFunc)
-	errorMiddleware := ezutil.NewErrorMiddleware()
+func registerRoutes(router *gin.Engine, configs config.Config, logger ezutil.Logger, services *provider.Services) {
+	handlers := handler.ProvideHandlers(services)
+	middlewares := provideMiddlewares(configs.App, logger, services.Auth)
 
-	corsConfig := cors.Config{
-		AllowOrigins:     configs.App.ClientUrls,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Origin", "Cache-Control"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}
+	router.Use(middlewares.logger, middlewares.cors)
 
-	corsMiddleware := ezutil.NewCorsMiddleware(&corsConfig)
-
-	// Apply CORS middleware to the entire router first
-	router.Use(corsMiddleware)
-
-	apiRoutes := router.Group("/api", errorMiddleware)
+	apiRoutes := router.Group("/api", middlewares.err)
 
 	v1 := apiRoutes.Group("/v1")
 
@@ -38,7 +25,7 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 	authRoutes.POST("/register", handlers.Auth.HandleRegister())
 	authRoutes.POST("/login", handlers.Auth.HandleLogin())
 
-	protectedRoutes := v1.Group("/", authMiddleware)
+	protectedRoutes := v1.Group("/", middlewares.auth)
 
 	protectedRoutes.GET("/profile", handlers.Profile.HandleProfile())
 
@@ -66,10 +53,4 @@ func SetupRoutes(router *gin.Engine, configs *ezutil.Config, handlers *provider.
 	groupExpenseRoutes.DELETE(fmt.Sprintf("/:%s/items/:%s", appconstant.ContextGroupExpenseID, appconstant.ContextExpenseItemID), handlers.GroupExpense.HandleRemoveItem())
 	groupExpenseRoutes.DELETE(fmt.Sprintf("/:%s/fees/:%s", appconstant.ContextGroupExpenseID, appconstant.ContextOtherFeeID), handlers.GroupExpense.HandleRemoveFee())
 	groupExpenseRoutes.POST("/bills", handlers.GroupExpense.HandleUploadBill())
-}
-
-func authTokenCheckFunc(authSvc service.AuthService) func(ctx *gin.Context, token string) (bool, map[string]any, error) {
-	return func(ctx *gin.Context, token string) (bool, map[string]any, error) {
-		return authSvc.VerifyToken(ctx, token)
-	}
 }

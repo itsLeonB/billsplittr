@@ -10,7 +10,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/billsplittr/internal/util"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ginkgo"
 )
 
 type FriendshipHandler struct {
@@ -33,7 +33,7 @@ func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.NewAnonymousFriendshipRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.NewAnonymousFriendshipRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -49,7 +49,7 @@ func (fh *FriendshipHandler) HandleCreateAnonymousFriendship() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgInsertData).WithData(response),
 		)
 	}
 }
@@ -70,7 +70,7 @@ func (fh *FriendshipHandler) HandleGetAll() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }
@@ -83,7 +83,7 @@ func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
 			return
 		}
 
-		friendshipID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextFriendshipID)
+		friendshipID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextFriendshipID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -97,7 +97,7 @@ func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }

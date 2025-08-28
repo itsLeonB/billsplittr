@@ -9,7 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ungerr"
 )
 
 type expenseBillServiceImpl struct {
@@ -40,7 +40,7 @@ func (ebs *expenseBillServiceImpl) Upload(ctx context.Context, request dto.NewEx
 		if isFriend, _, err := ebs.friendshipService.IsFriends(ctx, request.CreatorProfileID, request.PayerProfileID); err != nil {
 			return err
 		} else if !isFriend {
-			return ezutil.UnprocessableEntityError(appconstant.ErrNotFriends)
+			return ungerr.UnprocessableEntityError(appconstant.ErrNotFriends)
 		}
 	}
 
