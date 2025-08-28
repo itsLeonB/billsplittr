@@ -13,17 +13,17 @@ import (
 func Setup(configs config.Config) *ginkgo.HttpServer {
 	providers := provider.All(configs)
 
-	gin.SetMode(configs.App.Env)
+	gin.SetMode(configs.Env)
 	r := gin.New()
 	registerRoutes(r, configs, providers.Logger, providers.Services)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", configs.App.Port),
 		Handler:           r,
-		ReadTimeout:       configs.App.Timeout,
-		ReadHeaderTimeout: configs.App.Timeout,
-		WriteTimeout:      configs.App.Timeout,
-		IdleTimeout:       configs.App.Timeout,
+		ReadTimeout:       configs.Timeout,
+		ReadHeaderTimeout: configs.Timeout,
+		WriteTimeout:      configs.Timeout,
+		IdleTimeout:       configs.Timeout,
 	}
 
 	shutdownFunc := func() error {
