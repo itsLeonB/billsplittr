@@ -21,6 +21,10 @@ type Repositories struct {
 }
 
 func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google) *Repositories {
+	if gormDB == nil {
+		panic("gormDB cannot be nil")
+	}
+
 	return &Repositories{
 		Transactor:         crud.NewTransactor(gormDB),
 		DebtTransaction:    repository.NewDebtTransactionRepository(gormDB),

@@ -15,6 +15,13 @@ type Services struct {
 }
 
 func ProvideServices(repositories *Repositories, clients *Clients) *Services {
+	if repositories == nil {
+		panic("repositories cannot be nil")
+	}
+	if clients == nil {
+		panic("clients cannot be nil")
+	}
+
 	authService := service.NewAuthService(clients.Auth)
 
 	profileService := service.NewProfileService(clients.Profile)
