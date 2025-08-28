@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ginkgo"
 )
 
 type ProfileHandler struct {
@@ -24,7 +24,7 @@ func NewProfileHandler(
 
 func (ph *ProfileHandler) HandleProfile() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		profileID, err := ezutil.GetAndParseFromContext[uuid.UUID](ctx, appconstant.ContextProfileID)
+		profileID, err := ginkgo.GetAndParseFromContext[uuid.UUID](ctx, appconstant.ContextProfileID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -38,7 +38,7 @@ func (ph *ProfileHandler) HandleProfile() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }

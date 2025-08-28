@@ -7,7 +7,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/helper"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ungerr"
 )
 
 type receivingAnonDebtCalculator struct {
@@ -61,7 +61,7 @@ func (dc *receivingAnonDebtCalculator) Validate(newTransaction entity.DebtTransa
 	toReceiveLeftAmount := friendAmount.Sub(userAmount)
 
 	if toReceiveLeftAmount.Compare(newTransaction.Amount) < 0 {
-		return ezutil.ValidationError(fmt.Sprintf(
+		return ungerr.ValidationError(fmt.Sprintf(
 			"cannot receive debt, amount in user: %s, amount in friend: %s",
 			userAmount,
 			friendAmount,

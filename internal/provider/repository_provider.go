@@ -1,16 +1,15 @@
 package provider
 
 import (
-	"log"
-
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/ezutil"
+	crud "github.com/itsLeonB/go-crud"
+	"gorm.io/gorm"
 )
 
 type Repositories struct {
-	Transactor         ezutil.Transactor
+	Transactor         crud.Transactor
 	DebtTransaction    repository.DebtTransactionRepository
 	TransferMethod     repository.TransferMethodRepository
 	GroupExpense       repository.GroupExpenseRepository
@@ -21,21 +20,20 @@ type Repositories struct {
 	Image              repository.ImageRepository
 }
 
-func ProvideRepositories(configs *ezutil.Config) *Repositories {
-	googleConfig, ok := configs.Generic.(*config.Google)
-	if !ok {
-		log.Fatalf("error asserting generic config to google config")
+func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google) *Repositories {
+	if gormDB == nil {
+		panic("gormDB cannot be nil")
 	}
 
 	return &Repositories{
-		Transactor:         ezutil.NewTransactor(configs.GORM),
-		DebtTransaction:    repository.NewDebtTransactionRepository(configs.GORM),
-		TransferMethod:     ezutil.NewCRUDRepository[entity.TransferMethod](configs.GORM),
-		GroupExpense:       repository.NewGroupExpenseRepository(configs.GORM),
-		ExpenseItem:        repository.NewExpenseItemRepository(configs.GORM),
-		ExpenseParticipant: ezutil.NewCRUDRepository[entity.ExpenseParticipant](configs.GORM),
-		OtherFee:           repository.NewOtherFeeRepository(configs.GORM),
-		ExpenseBill:        ezutil.NewCRUDRepository[entity.ExpenseBill](configs.GORM),
+		Transactor:         crud.NewTransactor(gormDB),
+		DebtTransaction:    repository.NewDebtTransactionRepository(gormDB),
+		TransferMethod:     crud.NewCRUDRepository[entity.TransferMethod](gormDB),
+		GroupExpense:       repository.NewGroupExpenseRepository(gormDB),
+		ExpenseItem:        repository.NewExpenseItemRepository(gormDB),
+		ExpenseParticipant: crud.NewCRUDRepository[entity.ExpenseParticipant](gormDB),
+		OtherFee:           repository.NewOtherFeeRepository(gormDB),
+		ExpenseBill:        crud.NewCRUDRepository[entity.ExpenseBill](gormDB),
 		Image:              repository.NewImageRepository("billsplittr-bills", googleConfig.ServiceAccount),
 	}
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/billsplittr/internal/util"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/ginkgo"
+	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 )
 
@@ -31,7 +33,7 @@ func NewGroupExpenseHandler(
 
 func (geh *GroupExpenseHandler) HandleCreateDraft() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		request, err := ezutil.BindRequest[dto.NewGroupExpenseRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.NewGroupExpenseRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -53,7 +55,7 @@ func (geh *GroupExpenseHandler) HandleCreateDraft() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgInsertData).WithData(response),
 		)
 	}
 }
@@ -74,14 +76,14 @@ func (geh *GroupExpenseHandler) HandleGetAllCreated() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(groupExpenses),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(groupExpenses),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleGetDetails() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -101,20 +103,20 @@ func (geh *GroupExpenseHandler) HandleGetDetails() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleGetItemDetails() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		expenseItemID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -134,20 +136,20 @@ func (geh *GroupExpenseHandler) HandleGetItemDetails() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		expenseItemID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -159,7 +161,7 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.UpdateExpenseItemRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.UpdateExpenseItemRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -176,14 +178,14 @@ func (geh *GroupExpenseHandler) HandleUpdateItem() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgUpdateData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -203,7 +205,7 @@ func (geh *GroupExpenseHandler) HandleConfirmDraft() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgUpdateData).WithData(response),
 		)
 	}
 }
@@ -214,20 +216,20 @@ func (geh *GroupExpenseHandler) HandleGetFeeCalculationMethods() gin.HandlerFunc
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgGetData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgGetData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		otherFeeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		otherFeeID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -239,7 +241,7 @@ func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.UpdateOtherFeeRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.UpdateOtherFeeRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -256,14 +258,14 @@ func (geh *GroupExpenseHandler) HandleUpdateFee() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusOK,
-			ezutil.NewResponse(appconstant.MsgUpdateData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgUpdateData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -275,7 +277,7 @@ func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.NewExpenseItemRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.NewExpenseItemRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -291,14 +293,14 @@ func (geh *GroupExpenseHandler) HandleAddItem() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgInsertData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -310,7 +312,7 @@ func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 			return
 		}
 
-		request, err := ezutil.BindRequest[dto.NewOtherFeeRequest](ctx, binding.JSON)
+		request, err := ginkgo.BindRequest[dto.NewOtherFeeRequest](ctx, binding.JSON)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -326,20 +328,20 @@ func (geh *GroupExpenseHandler) HandleAddFee() gin.HandlerFunc {
 
 		ctx.JSON(
 			http.StatusCreated,
-			ezutil.NewResponse(appconstant.MsgInsertData).WithData(response),
+			ginkgo.NewResponse(appconstant.MsgInsertData).WithData(response),
 		)
 	}
 }
 
 func (geh *GroupExpenseHandler) HandleRemoveItem() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		expenseItemID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
+		expenseItemID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextExpenseItemID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -361,13 +363,13 @@ func (geh *GroupExpenseHandler) HandleRemoveItem() gin.HandlerFunc {
 
 func (geh *GroupExpenseHandler) HandleRemoveFee() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		groupExpenseID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
+		groupExpenseID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextGroupExpenseID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
 		}
 
-		feeID, err := ezutil.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
+		feeID, err := ginkgo.GetRequiredPathParam[uuid.UUID](ctx, appconstant.ContextOtherFeeID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return
@@ -412,7 +414,7 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 
 		contentType, ok := util.IsImageType(fileHeader)
 		if !ok {
-			_ = ctx.Error(ezutil.BadRequestError("file is not an image"))
+			_ = ctx.Error(ungerr.BadRequestError("file is not an image"))
 			return
 		}
 
@@ -434,6 +436,6 @@ func (geh *GroupExpenseHandler) HandleUploadBill() gin.HandlerFunc {
 			return
 		}
 
-		ctx.JSON(http.StatusCreated, ezutil.NewResponse(appconstant.MsgBillUploaded))
+		ctx.JSON(http.StatusCreated, ginkgo.NewResponse(appconstant.MsgBillUploaded))
 	}
 }

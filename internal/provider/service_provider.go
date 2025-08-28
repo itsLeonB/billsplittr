@@ -1,16 +1,7 @@
 package provider
 
 import (
-	"os"
-
-	"github.com/itsLeonB/billsplittr/internal/logging"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/cocoon-protos/gen/go/auth/v1"
-	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
-	"github.com/itsLeonB/cocoon-protos/gen/go/profile/v1"
-	"github.com/itsLeonB/ezutil"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Services struct {
@@ -23,28 +14,21 @@ type Services struct {
 	ExpenseBill    service.ExpenseBillService
 }
 
-func ProvideServices(configs *ezutil.Config, repositories *Repositories) *Services {
-	cocoonHost := os.Getenv("COCOON_HOST")
-
-	conn, err := grpc.NewClient(
-		cocoonHost,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		logging.Logger.Fatalf("error connecting to grpc client: %v", err)
+func ProvideServices(repositories *Repositories, clients *Clients) *Services {
+	if repositories == nil {
+		panic("repositories cannot be nil")
+	}
+	if clients == nil {
+		panic("clients cannot be nil")
 	}
 
-	authClient := auth.NewAuthServiceClient(conn)
-	profileClient := profile.NewProfileServiceClient(conn)
-	friendshipClient := friendship.NewFriendshipServiceClient(conn)
+	authService := service.NewAuthService(clients.Auth)
 
-	authService := service.NewAuthService(authClient)
-
-	profileService := service.NewProfileService(profileClient)
+	profileService := service.NewProfileService(clients.Profile)
 
 	friendshipService := service.NewFriendshipService(
 		repositories.DebtTransaction,
-		friendshipClient,
+		clients.Friendship,
 	)
 
 	debtService := service.NewDebtService(

@@ -7,7 +7,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
 )
 
 func GroupExpenseRequestToEntity(request dto.NewGroupExpenseRequest) entity.GroupExpense {

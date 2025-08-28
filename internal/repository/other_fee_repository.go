@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/ezutil"
+	crud "github.com/itsLeonB/go-crud"
 	"github.com/rotisserie/eris"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -14,13 +14,13 @@ import (
 
 type otherFeeRepositoryGorm struct {
 	db *gorm.DB
-	ezutil.CRUDRepository[entity.OtherFee]
+	crud.CRUDRepository[entity.OtherFee]
 }
 
 func NewOtherFeeRepository(db *gorm.DB) OtherFeeRepository {
 	return &otherFeeRepositoryGorm{
 		db,
-		ezutil.NewCRUDRepository[entity.OtherFee](db),
+		crud.NewCRUDRepository[entity.OtherFee](db),
 	}
 }
 

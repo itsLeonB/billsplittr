@@ -7,35 +7,35 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
-	"github.com/itsLeonB/ezutil"
+	crud "github.com/itsLeonB/go-crud"
 )
 
 type DebtTransactionRepository interface {
-	ezutil.CRUDRepository[entity.DebtTransaction]
+	crud.CRUDRepository[entity.DebtTransaction]
 	FindAllByProfileID(ctx context.Context, userProfileID, friendProfileID uuid.UUID) ([]entity.DebtTransaction, error)
 	FindAllByUserProfileID(ctx context.Context, userProfileID uuid.UUID) ([]entity.DebtTransaction, error)
 }
 
 type TransferMethodRepository interface {
-	ezutil.CRUDRepository[entity.TransferMethod]
+	crud.CRUDRepository[entity.TransferMethod]
 }
 
 type GroupExpenseRepository interface {
-	ezutil.CRUDRepository[entity.GroupExpense]
+	crud.CRUDRepository[entity.GroupExpense]
 	SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error
 }
 
 type ExpenseItemRepository interface {
-	ezutil.CRUDRepository[entity.ExpenseItem]
+	crud.CRUDRepository[entity.ExpenseItem]
 	SyncParticipants(ctx context.Context, expenseItemID uuid.UUID, participants []entity.ItemParticipant) error
 }
 
 type ExpenseParticipantRepository interface {
-	ezutil.CRUDRepository[entity.ExpenseParticipant]
+	crud.CRUDRepository[entity.ExpenseParticipant]
 }
 
 type OtherFeeRepository interface {
-	ezutil.CRUDRepository[entity.OtherFee]
+	crud.CRUDRepository[entity.OtherFee]
 	SyncParticipants(ctx context.Context, feeID uuid.UUID, participants []entity.FeeParticipant) error
 }
 
@@ -47,5 +47,5 @@ type ImageRepository interface {
 }
 
 type ExpenseBillRepository interface {
-	ezutil.CRUDRepository[entity.ExpenseBill]
+	crud.CRUDRepository[entity.ExpenseBill]
 }

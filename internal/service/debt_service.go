@@ -11,13 +11,15 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/billsplittr/internal/service/debt"
-	"github.com/itsLeonB/ezutil"
+	"github.com/itsLeonB/ezutil/v2"
+	crud "github.com/itsLeonB/go-crud"
+	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
 )
 
 type debtServiceImpl struct {
-	transactor                      ezutil.Transactor
+	transactor                      crud.Transactor
 	anonymousDebtCalculatorStrategy map[appconstant.Action]debt.AnonymousDebtCalculator
 	debtTransactionRepository       repository.DebtTransactionRepository
 	transferMethodRepository        repository.TransferMethodRepository
@@ -26,7 +28,7 @@ type debtServiceImpl struct {
 }
 
 func NewDebtService(
-	transactor ezutil.Transactor,
+	transactor crud.Transactor,
 	debtTransactionRepository repository.DebtTransactionRepository,
 	transferMethodRepository repository.TransferMethodRepository,
 	groupExpenseRepository repository.GroupExpenseRepository,
@@ -104,7 +106,7 @@ func (ds *debtServiceImpl) GetTransactions(ctx context.Context, profileID uuid.U
 
 func (ds *debtServiceImpl) ProcessConfirmedGroupExpense(ctx context.Context, groupExpenseID uuid.UUID) error {
 	return ds.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		spec := ezutil.Specification[entity.GroupExpense]{}
+		spec := crud.Specification[entity.GroupExpense]{}
 		spec.Model.ID = groupExpenseID
 		spec.PreloadRelations = []string{"Participants"}
 		spec.ForUpdate = true
@@ -115,7 +117,7 @@ func (ds *debtServiceImpl) ProcessConfirmedGroupExpense(ctx context.Context, gro
 		}
 
 		if !groupExpense.ParticipantsConfirmed {
-			return ezutil.UnprocessableEntityError(fmt.Sprintf("group expense %s is not confirmed by participants", groupExpenseID))
+			return ungerr.UnprocessableEntityError(fmt.Sprintf("group expense %s is not confirmed by participants", groupExpenseID))
 		}
 
 		transferMethod, err := ds.getGroupExpenseTransferMethod(ctx)
@@ -133,7 +135,7 @@ func (ds *debtServiceImpl) ProcessConfirmedGroupExpense(ctx context.Context, gro
 
 func (ds *debtServiceImpl) Validate(ctx context.Context, req dto.NewDebtTransactionRequest) error {
 	if req.Amount.Compare(decimal.Zero) < 1 {
-		return ezutil.ValidationError("amount must be greater than 0")
+		return ungerr.ValidationError("amount must be greater than 0")
 	}
 
 	isFriends, isAnonymous, err := ds.friendshipService.IsFriends(ctx, req.UserProfileID, req.FriendProfileID)
@@ -141,10 +143,10 @@ func (ds *debtServiceImpl) Validate(ctx context.Context, req dto.NewDebtTransact
 		return err
 	}
 	if !isFriends {
-		return ezutil.UnprocessableEntityError("both profiles are not friends")
+		return ungerr.UnprocessableEntityError("both profiles are not friends")
 	}
 	if !isAnonymous {
-		return ezutil.UnprocessableEntityError("flow is forbidden for non-anonymous friendships")
+		return ungerr.UnprocessableEntityError("flow is forbidden for non-anonymous friendships")
 	}
 
 	return nil
@@ -160,7 +162,7 @@ func (ds *debtServiceImpl) selectAnonCalculator(action appconstant.Action) (debt
 }
 
 func (ds *debtServiceImpl) getTransferMethod(ctx context.Context, id uuid.UUID) (entity.TransferMethod, error) {
-	spec := ezutil.Specification[entity.TransferMethod]{}
+	spec := crud.Specification[entity.TransferMethod]{}
 	spec.Model.ID = id
 
 	transferMethod, err := ds.transferMethodRepository.FindFirst(ctx, spec)
@@ -169,18 +171,18 @@ func (ds *debtServiceImpl) getTransferMethod(ctx context.Context, id uuid.UUID) 
 	}
 
 	if transferMethod.IsZero() {
-		return entity.TransferMethod{}, ezutil.NotFoundError(fmt.Sprintf(appconstant.ErrTransferMethodNotFound, id))
+		return entity.TransferMethod{}, ungerr.NotFoundError(fmt.Sprintf(appconstant.ErrTransferMethodNotFound, id))
 	}
 
 	if transferMethod.IsDeleted() {
-		return entity.TransferMethod{}, ezutil.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrTransferMethodDeleted, id))
+		return entity.TransferMethod{}, ungerr.UnprocessableEntityError(fmt.Sprintf(appconstant.ErrTransferMethodDeleted, id))
 	}
 
 	return transferMethod, nil
 }
 
 func (ds *debtServiceImpl) getGroupExpenseTransferMethod(ctx context.Context) (entity.TransferMethod, error) {
-	spec := ezutil.Specification[entity.TransferMethod]{}
+	spec := crud.Specification[entity.TransferMethod]{}
 	spec.Model.Name = appconstant.GroupExpenseTransferMethod
 
 	transferMethod, err := ds.transferMethodRepository.FindFirst(ctx, spec)
