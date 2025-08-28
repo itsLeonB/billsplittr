@@ -26,12 +26,5 @@ func Setup(configs config.Config) *ginkgo.HttpServer {
 		IdleTimeout:       configs.Timeout,
 	}
 
-	shutdownFunc := func() error {
-		if err := providers.Clients.Shutdown(); err != nil {
-			return err
-		}
-		return providers.DBs.Shutdown()
-	}
-
-	return ginkgo.NewHttpServer(srv, configs.Timeout, providers.Logger, shutdownFunc)
+	return ginkgo.NewHttpServer(srv, configs.Timeout, providers.Logger, providers.Shutdown)
 }
