@@ -23,7 +23,7 @@ type App struct {
 }
 
 type Auth struct {
-	SecretKey     string        `split_words:"true" default:"thisissecret"`
+	SecretKey     string        `split_words:"true" required:"true"`
 	TokenDuration time.Duration `split_words:"true" default:"24h"`
 	Issuer        string        `default:"cocoon"`
 	HashCost      int           `split_words:"true" default:"10"`
