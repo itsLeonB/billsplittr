@@ -1,6 +1,7 @@
 package http
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -59,6 +60,11 @@ func newLoggerMiddleware(logger ezutil.Logger) gin.HandlerFunc {
 
 func (l *loggerMiddlewareProvider) handle() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if ctx.Request.Method == http.MethodOptions {
+			ctx.Next()
+			return
+		}
+
 		start := time.Now()
 		path := ctx.Request.URL.Path
 		method := ctx.Request.Method
