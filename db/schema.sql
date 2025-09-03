@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 8S2yT1OP8j1689gMqlNtEbMio0dIUOsWALrwU6Xv3giLY4Im9abkot5WWg7hCiI
+\restrict ShvtF5ijSC9pGiEKV0UM3cXRXw4eMo3K7CQWcxIbWVh5kQNiWQyMthotywG72yG
 
 -- Dumped from database version 17.5 (1b53132)
 -- Dumped by pg_dump version 17.6 (Ubuntu 17.6-1.pgdg24.04+1)
@@ -24,35 +24,26 @@ ALTER TABLE IF EXISTS ONLY public.group_expense_other_fees DROP CONSTRAINT IF EX
 ALTER TABLE IF EXISTS ONLY public.group_expense_other_fee_participants DROP CONSTRAINT IF EXISTS group_expense_other_fee_participants_other_fee_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_items DROP CONSTRAINT IF EXISTS group_expense_items_group_expense_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_item_participants DROP CONSTRAINT IF EXISTS group_expense_item_participants_expense_item_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.debt_transactions DROP CONSTRAINT IF EXISTS debt_transactions_transfer_method_id_fkey;
 DROP INDEX IF EXISTS public.group_expenses_payer_profile_id_idx;
 DROP INDEX IF EXISTS public.group_expenses_created_at_idx;
 DROP INDEX IF EXISTS public.group_expense_participants_participant_profile_id_idx;
 DROP INDEX IF EXISTS public.group_expense_participants_group_expense_id_idx;
 DROP INDEX IF EXISTS public.group_expense_participants_created_at_idx;
-DROP INDEX IF EXISTS public.debt_transactions_transfer_method_id_idx;
-DROP INDEX IF EXISTS public.debt_transactions_lender_profile_id_idx;
-DROP INDEX IF EXISTS public.debt_transactions_created_at_idx;
-DROP INDEX IF EXISTS public.debt_transactions_borrower_profile_id_idx;
 ALTER TABLE IF EXISTS ONLY public.group_expense_other_fee_participants DROP CONSTRAINT IF EXISTS unique_fee_participant;
 ALTER TABLE IF EXISTS ONLY public.group_expense_participants DROP CONSTRAINT IF EXISTS unique_expense_profile;
 ALTER TABLE IF EXISTS ONLY public.group_expense_item_participants DROP CONSTRAINT IF EXISTS unique_expense_item_profile;
-ALTER TABLE IF EXISTS ONLY public.transfer_methods DROP CONSTRAINT IF EXISTS transfer_methods_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expenses DROP CONSTRAINT IF EXISTS group_expenses_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_participants DROP CONSTRAINT IF EXISTS group_expense_participants_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_other_fees DROP CONSTRAINT IF EXISTS group_expense_other_fees_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_other_fee_participants DROP CONSTRAINT IF EXISTS group_expense_other_fee_participants_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_items DROP CONSTRAINT IF EXISTS group_expense_items_pkey;
 ALTER TABLE IF EXISTS ONLY public.group_expense_item_participants DROP CONSTRAINT IF EXISTS group_expense_item_participants_pkey;
-ALTER TABLE IF EXISTS ONLY public.debt_transactions DROP CONSTRAINT IF EXISTS debt_transactions_pkey;
-DROP TABLE IF EXISTS public.transfer_methods;
 DROP TABLE IF EXISTS public.group_expenses;
 DROP TABLE IF EXISTS public.group_expense_participants;
 DROP TABLE IF EXISTS public.group_expense_other_fees;
 DROP TABLE IF EXISTS public.group_expense_other_fee_participants;
 DROP TABLE IF EXISTS public.group_expense_items;
 DROP TABLE IF EXISTS public.group_expense_item_participants;
-DROP TABLE IF EXISTS public.debt_transactions;
 DROP TYPE IF EXISTS public.friendship_type;
 DROP TYPE IF EXISTS public.fee_calculation_method;
 DROP TYPE IF EXISTS public.debt_transaction_type;
@@ -102,25 +93,6 @@ CREATE TYPE public.friendship_type AS ENUM (
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
---
--- Name: debt_transactions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.debt_transactions (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    lender_profile_id uuid NOT NULL,
-    borrower_profile_id uuid NOT NULL,
-    type public.debt_transaction_type NOT NULL,
-    action public.debt_transaction_action NOT NULL,
-    amount numeric(20,2) NOT NULL,
-    transfer_method_id uuid NOT NULL,
-    description text,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    deleted_at timestamp with time zone
-);
-
 
 --
 -- Name: group_expense_item_participants; Type: TABLE; Schema: public; Owner: -
@@ -221,28 +193,6 @@ CREATE TABLE public.group_expenses (
 
 
 --
--- Name: transfer_methods; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.transfer_methods (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    name text NOT NULL,
-    display text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp with time zone
-);
-
-
---
--- Name: debt_transactions debt_transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.debt_transactions
-    ADD CONSTRAINT debt_transactions_pkey PRIMARY KEY (id);
-
-
---
 -- Name: group_expense_item_participants group_expense_item_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -291,14 +241,6 @@ ALTER TABLE ONLY public.group_expenses
 
 
 --
--- Name: transfer_methods transfer_methods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.transfer_methods
-    ADD CONSTRAINT transfer_methods_pkey PRIMARY KEY (id);
-
-
---
 -- Name: group_expense_item_participants unique_expense_item_profile; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -320,34 +262,6 @@ ALTER TABLE ONLY public.group_expense_participants
 
 ALTER TABLE ONLY public.group_expense_other_fee_participants
     ADD CONSTRAINT unique_fee_participant UNIQUE (other_fee_id, profile_id);
-
-
---
--- Name: debt_transactions_borrower_profile_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX debt_transactions_borrower_profile_id_idx ON public.debt_transactions USING btree (borrower_profile_id);
-
-
---
--- Name: debt_transactions_created_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX debt_transactions_created_at_idx ON public.debt_transactions USING btree (created_at);
-
-
---
--- Name: debt_transactions_lender_profile_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX debt_transactions_lender_profile_id_idx ON public.debt_transactions USING btree (lender_profile_id);
-
-
---
--- Name: debt_transactions_transfer_method_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX debt_transactions_transfer_method_id_idx ON public.debt_transactions USING btree (transfer_method_id);
 
 
 --
@@ -383,14 +297,6 @@ CREATE INDEX group_expenses_created_at_idx ON public.group_expenses USING btree 
 --
 
 CREATE INDEX group_expenses_payer_profile_id_idx ON public.group_expenses USING btree (payer_profile_id);
-
-
---
--- Name: debt_transactions debt_transactions_transfer_method_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.debt_transactions
-    ADD CONSTRAINT debt_transactions_transfer_method_id_fkey FOREIGN KEY (transfer_method_id) REFERENCES public.transfer_methods(id);
 
 
 --
@@ -437,5 +343,5 @@ ALTER TABLE ONLY public.group_expense_participants
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8S2yT1OP8j1689gMqlNtEbMio0dIUOsWALrwU6Xv3giLY4Im9abkot5WWg7hCiI
+\unrestrict ShvtF5ijSC9pGiEKV0UM3cXRXw4eMo3K7CQWcxIbWVh5kQNiWQyMthotywG72yG
 
