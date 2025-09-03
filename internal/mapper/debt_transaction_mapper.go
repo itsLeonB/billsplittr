@@ -41,44 +41,44 @@ func MapToFriendBalanceSummary(userProfileID uuid.UUID, debtTransactions []dto.D
 	}
 }
 
-func ToProtoTransactionAction(ta appconstant.Action) debt.TransactionAction {
+func ToProtoTransactionAction(ta appconstant.Action) (debt.TransactionAction, error) {
 	switch ta {
 	case appconstant.BorrowAction:
-		return debt.TransactionAction_TRANSACTION_ACTION_BORROW
+		return debt.TransactionAction_TRANSACTION_ACTION_BORROW, nil
 	case appconstant.LendAction:
-		return debt.TransactionAction_TRANSACTION_ACTION_LEND
+		return debt.TransactionAction_TRANSACTION_ACTION_LEND, nil
 	case appconstant.ReceiveAction:
-		return debt.TransactionAction_TRANSACTION_ACTION_RECEIVE
+		return debt.TransactionAction_TRANSACTION_ACTION_RECEIVE, nil
 	case appconstant.ReturnAction:
-		return debt.TransactionAction_TRANSACTION_ACTION_RETURN
+		return debt.TransactionAction_TRANSACTION_ACTION_RETURN, nil
 	default:
-		return debt.TransactionAction_TRANSACTION_ACTION_UNSPECIFIED
+		return debt.TransactionAction_TRANSACTION_ACTION_UNSPECIFIED, eris.Errorf("undefined TransactionAction constant: %s", ta)
 	}
 }
 
-func FromProtoTransactionAction(ta debt.TransactionAction) appconstant.Action {
+func FromProtoTransactionAction(ta debt.TransactionAction) (appconstant.Action, error) {
 	switch ta {
 	case debt.TransactionAction_TRANSACTION_ACTION_BORROW:
-		return appconstant.BorrowAction
+		return appconstant.BorrowAction, nil
 	case debt.TransactionAction_TRANSACTION_ACTION_LEND:
-		return appconstant.LendAction
+		return appconstant.LendAction, nil
 	case debt.TransactionAction_TRANSACTION_ACTION_RECEIVE:
-		return appconstant.ReceiveAction
+		return appconstant.ReceiveAction, nil
 	case debt.TransactionAction_TRANSACTION_ACTION_RETURN:
-		return appconstant.ReturnAction
+		return appconstant.ReturnAction, nil
 	default:
-		return ""
+		return "", eris.Errorf("undefined TransactionAction enum: %s", ta)
 	}
 }
 
-func FromProtoTransactionType(ta debt.TransactionType) appconstant.DebtTransactionType {
+func FromProtoTransactionType(ta debt.TransactionType) (appconstant.DebtTransactionType, error) {
 	switch ta {
 	case debt.TransactionType_TRANSACTION_TYPE_LEND:
-		return appconstant.Lend
+		return appconstant.Lend, nil
 	case debt.TransactionType_TRANSACTION_TYPE_REPAY:
-		return appconstant.Repay
+		return appconstant.Repay, nil
 	default:
-		return ""
+		return "", eris.Errorf("undefined TransactionType enum: %s", ta)
 	}
 }
 
@@ -97,11 +97,21 @@ func FromProtoDebtTransactionResponse(trx *debt.TransactionResponse) (dto.DebtTr
 		return dto.DebtTransactionResponse{}, err
 	}
 
+	trxType, err := FromProtoTransactionType(trx.GetType())
+	if err != nil {
+		return dto.DebtTransactionResponse{}, err
+	}
+
+	trxAction, err := FromProtoTransactionAction(trx.GetAction())
+	if err != nil {
+		return dto.DebtTransactionResponse{}, err
+	}
+
 	return dto.DebtTransactionResponse{
 		ID:             id,
 		ProfileID:      profileID,
-		Type:           FromProtoTransactionType(trx.GetType()),
-		Action:         FromProtoTransactionAction(trx.GetAction()),
+		Type:           trxType,
+		Action:         trxAction,
 		Amount:         ezutil.MoneyToDecimal(trx.GetAmount()),
 		TransferMethod: trx.GetTransferMethod(),
 		Description:    trx.GetDescription(),

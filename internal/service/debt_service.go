@@ -47,10 +47,15 @@ func (ds *debtServiceImpl) RecordNewTransaction(ctx context.Context, req dto.New
 		return dto.DebtTransactionResponse{}, ungerr.UnprocessableEntityError("flow is forbidden for non-anonymous friendships")
 	}
 
+	action, err := mapper.ToProtoTransactionAction(req.Action)
+	if err != nil {
+		return dto.DebtTransactionResponse{}, err
+	}
+
 	request := &debt.RecordNewTransactionRequest{
 		UserProfileId:    req.UserProfileID.String(),
 		FriendProfileId:  req.FriendProfileID.String(),
-		Action:           mapper.ToProtoTransactionAction(req.Action),
+		Action:           action,
 		Amount:           ezutil.DecimalToMoneyRounded(req.Amount, currency.IDR.String()),
 		TransferMethodId: req.TransferMethodID.String(),
 		Description:      req.Description,
