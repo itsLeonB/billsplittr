@@ -10,8 +10,6 @@ import (
 
 type Repositories struct {
 	Transactor         crud.Transactor
-	DebtTransaction    repository.DebtTransactionRepository
-	TransferMethod     repository.TransferMethodRepository
 	GroupExpense       repository.GroupExpenseRepository
 	ExpenseItem        repository.ExpenseItemRepository
 	ExpenseParticipant repository.ExpenseParticipantRepository
@@ -27,8 +25,6 @@ func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google) *Repositor
 
 	return &Repositories{
 		Transactor:         crud.NewTransactor(gormDB),
-		DebtTransaction:    repository.NewDebtTransactionRepository(gormDB),
-		TransferMethod:     crud.NewCRUDRepository[entity.TransferMethod](gormDB),
 		GroupExpense:       repository.NewGroupExpenseRepository(gormDB),
 		ExpenseItem:        repository.NewExpenseItemRepository(gormDB),
 		ExpenseParticipant: crud.NewCRUDRepository[entity.ExpenseParticipant](gormDB),

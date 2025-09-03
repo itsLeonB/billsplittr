@@ -10,16 +10,6 @@ import (
 	crud "github.com/itsLeonB/go-crud"
 )
 
-type DebtTransactionRepository interface {
-	crud.CRUDRepository[entity.DebtTransaction]
-	FindAllByProfileID(ctx context.Context, userProfileID, friendProfileID uuid.UUID) ([]entity.DebtTransaction, error)
-	FindAllByUserProfileID(ctx context.Context, userProfileID uuid.UUID) ([]entity.DebtTransaction, error)
-}
-
-type TransferMethodRepository interface {
-	crud.CRUDRepository[entity.TransferMethod]
-}
-
 type GroupExpenseRepository interface {
 	crud.CRUDRepository[entity.GroupExpense]
 	SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error

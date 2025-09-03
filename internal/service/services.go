@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/dto"
+	"github.com/itsLeonB/billsplittr/internal/entity"
 )
 
 type AuthService interface {
@@ -22,14 +23,18 @@ type ProfileService interface {
 type FriendshipService interface {
 	CreateAnonymous(ctx context.Context, request dto.NewAnonymousFriendshipRequest) (dto.FriendshipResponse, error)
 	GetAll(ctx context.Context, profileID uuid.UUID) ([]dto.FriendshipResponse, error)
-	GetDetails(ctx context.Context, profileID, friendshipID uuid.UUID) (dto.FriendDetailsResponse, error)
 	IsFriends(ctx context.Context, profileID1, profileID2 uuid.UUID) (bool, bool, error)
+}
+
+type FriendDetailsService interface {
+	GetDetails(ctx context.Context, profileID, friendshipID uuid.UUID) (dto.FriendDetailsResponse, error)
 }
 
 type DebtService interface {
 	RecordNewTransaction(ctx context.Context, request dto.NewDebtTransactionRequest) (dto.DebtTransactionResponse, error)
 	GetTransactions(ctx context.Context, userProfileID uuid.UUID) ([]dto.DebtTransactionResponse, error)
-	ProcessConfirmedGroupExpense(ctx context.Context, groupExpenseID uuid.UUID) error
+	ProcessConfirmedGroupExpense(ctx context.Context, groupExpense entity.GroupExpense) error
+	GetAllByProfileIDs(ctx context.Context, userProfileID, friendProfileID uuid.UUID) ([]dto.DebtTransactionResponse, error)
 }
 
 type TransferMethodService interface {

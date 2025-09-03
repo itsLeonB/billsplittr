@@ -43,10 +43,10 @@ type FriendDetails struct {
 }
 
 type FriendBalance struct {
-	TotalOwedToYou decimal.Decimal      `json:"totalOwedToYou"`
-	TotalYouOwe    decimal.Decimal      `json:"totalYouOwe"`
-	NetBalance     decimal.Decimal      `json:"netBalance"`
-	Currency       appconstant.Currency `json:"currency"`
+	TotalOwedToYou decimal.Decimal `json:"totalOwedToYou"`
+	TotalYouOwe    decimal.Decimal `json:"totalYouOwe"`
+	NetBalance     decimal.Decimal `json:"netBalance"`
+	CurrencyCode   string          `json:"currencyCode"`
 }
 
 type FriendStats struct {

@@ -16,9 +16,6 @@ const (
 	ErrFriendshipNotFound = "friendship not found"
 	ErrFriendshipDeleted  = "friendship is deleted"
 
-	ErrTransferMethodNotFound = "transfer method with ID: %s is not found"
-	ErrTransferMethodDeleted  = "transfer method with ID: %s is deleted"
-
 	ErrAmountMismatched = "amount mismatch, please check the total amount and the items/fees provided"
 	ErrAmountZero       = "amount must be greater than zero"
 

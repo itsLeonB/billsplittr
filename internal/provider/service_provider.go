@@ -8,8 +8,9 @@ type Services struct {
 	Auth           service.AuthService
 	Profile        service.ProfileService
 	Friendship     service.FriendshipService
-	Debt           service.DebtService
 	TransferMethod service.TransferMethodService
+	Debt           service.DebtService
+	FriendDetails  service.FriendDetailsService
 	GroupExpense   service.GroupExpenseService
 	ExpenseBill    service.ExpenseBillService
 }
@@ -27,19 +28,17 @@ func ProvideServices(repositories *Repositories, clients *Clients) *Services {
 	profileService := service.NewProfileService(clients.Profile)
 
 	friendshipService := service.NewFriendshipService(
-		repositories.DebtTransaction,
 		clients.Friendship,
 	)
 
+	transferMethodService := service.NewTransferMethodService(clients.TransferMethod)
+
 	debtService := service.NewDebtService(
-		repositories.Transactor,
-		repositories.DebtTransaction,
-		repositories.TransferMethod,
-		repositories.GroupExpense,
+		clients.Debt,
 		friendshipService,
 	)
 
-	transferMethodService := service.NewTransferMethodService(repositories.TransferMethod)
+	friendDetailsService := service.NewFriendDetailsService(clients.Friendship, debtService)
 
 	groupExpenseService := service.NewGroupExpenseService(
 		repositories.Transactor,
@@ -61,8 +60,9 @@ func ProvideServices(repositories *Repositories, clients *Clients) *Services {
 		Auth:           authService,
 		Profile:        profileService,
 		Friendship:     friendshipService,
-		Debt:           debtService,
 		TransferMethod: transferMethodService,
+		Debt:           debtService,
+		FriendDetails:  friendDetailsService,
 		GroupExpense:   groupExpenseService,
 		ExpenseBill:    expenseBillService,
 	}

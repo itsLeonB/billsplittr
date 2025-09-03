@@ -34,9 +34,9 @@ func FromProfileProto(res *profile.ProfileResponse) (dto.ProfileResponse, error)
 		ID:          id,
 		UserID:      userID,
 		Name:        res.GetName(),
-		CreatedAt:   FromProtoTime(res.GetCreatedAt()),
-		UpdatedAt:   FromProtoTime(res.GetUpdatedAt()),
-		DeletedAt:   FromProtoTime(res.GetDeletedAt()),
+		CreatedAt:   ezutil.FromProtoTime(res.GetCreatedAt()),
+		UpdatedAt:   ezutil.FromProtoTime(res.GetUpdatedAt()),
+		DeletedAt:   ezutil.FromProtoTime(res.GetDeletedAt()),
 		IsAnonymous: res.GetIsAnonymous(),
 	}, nil
 }

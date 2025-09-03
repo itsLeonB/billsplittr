@@ -8,25 +8,17 @@ import (
 
 type Config struct {
 	App
-	Auth
 	DB
 	Google
 	ServiceClient
 }
 
 type App struct {
-	Name       string        `default:"Cocoon"`
+	Name       string        `default:"Billsplittr"`
 	Env        string        `default:"debug"`
-	Port       string        `default:"50051"`
+	Port       string        `default:"8080"`
 	Timeout    time.Duration `default:"10s"`
 	ClientUrls []string      `split_words:"true"`
-}
-
-type Auth struct {
-	SecretKey     string        `split_words:"true" required:"true"`
-	TokenDuration time.Duration `split_words:"true" default:"24h"`
-	Issuer        string        `default:"cocoon"`
-	HashCost      int           `split_words:"true" default:"10"`
 }
 
 type Google struct {
@@ -35,14 +27,12 @@ type Google struct {
 
 type ServiceClient struct {
 	CocoonHost string `split_words:"true" required:"true"`
+	DrexHost   string `split_words:"true" required:"true"`
 }
 
 func Load() Config {
 	var app App
 	envconfig.MustProcess("APP", &app)
-
-	var auth Auth
-	envconfig.MustProcess("AUTH", &auth)
 
 	var db DB
 	envconfig.MustProcess("DB", &db)
@@ -55,7 +45,6 @@ func Load() Config {
 
 	return Config{
 		App:           app,
-		Auth:          auth,
 		DB:            db,
 		Google:        google,
 		ServiceClient: svcClient,
