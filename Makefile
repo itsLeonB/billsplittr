@@ -4,7 +4,7 @@ http:
 	go run cmd/http/main.go
 
 http-hot:
-	@echo "🚀 Starting gRPC server with hot reload..."
+	@echo "🚀 Starting HTTP server with hot reload..."
 	air --build.cmd "go build -o bin/http cmd/http/main.go" --build.bin "./bin/http"
 
 lint:
