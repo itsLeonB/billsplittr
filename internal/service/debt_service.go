@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -35,7 +36,9 @@ func (ds *debtServiceImpl) RecordNewTransaction(ctx context.Context, req dto.New
 	if req.Amount.Compare(decimal.Zero) < 1 {
 		return dto.DebtTransactionResponse{}, ungerr.ValidationError("amount must be greater than 0")
 	}
-
+	if req.UserProfileID == req.FriendProfileID {
+		return dto.DebtTransactionResponse{}, ungerr.UnprocessableEntityError("cannot do self transactions")
+	}
 	isFriends, isAnonymous, err := ds.friendshipService.IsFriends(ctx, req.UserProfileID, req.FriendProfileID)
 	if err != nil {
 		return dto.DebtTransactionResponse{}, err
@@ -83,15 +86,33 @@ func (ds *debtServiceImpl) GetTransactions(ctx context.Context, profileID uuid.U
 }
 
 func (ds *debtServiceImpl) ProcessConfirmedGroupExpense(ctx context.Context, groupExpense entity.GroupExpense) error {
+	if !groupExpense.Confirmed {
+		return ungerr.UnprocessableEntityError("group expense is not confirmed")
+	}
 	if !groupExpense.ParticipantsConfirmed {
-		return eris.New("participants are not confirmed")
+		return ungerr.UnprocessableEntityError("participants are not confirmed")
+	}
+	if len(groupExpense.Participants) < 1 {
+		return ungerr.UnprocessableEntityError("no participants to process")
 	}
 
-	mapFunc := func(participant entity.ExpenseParticipant) *debt.ExpenseParticipantData {
+	mapFunc := func(participant entity.ExpenseParticipant) (*debt.ExpenseParticipantData, error) {
+		if participant.ShareAmount.LessThanOrEqual(decimal.Zero) {
+			return nil, ungerr.UnprocessableEntityError(fmt.Sprintf(
+				"participant %s has share amount: %s",
+				participant.ParticipantProfileID,
+				participant.ShareAmount.String(),
+			))
+		}
 		return &debt.ExpenseParticipantData{
 			ProfileId:   participant.ParticipantProfileID.String(),
 			ShareAmount: ezutil.DecimalToMoneyRounded(participant.ShareAmount, currency.IDR.String()),
-		}
+		}, nil
+	}
+
+	participants, err := ezutil.MapSliceWithError(groupExpense.Participants, mapFunc)
+	if err != nil {
+		return err
 	}
 
 	request := &debt.ProcessConfirmedGroupExpenseRequest{
@@ -100,7 +121,7 @@ func (ds *debtServiceImpl) ProcessConfirmedGroupExpense(ctx context.Context, gro
 			PayerProfileId:   groupExpense.PayerProfileID.String(),
 			CreatorProfileId: groupExpense.CreatorProfileID.String(),
 			Description:      groupExpense.Description,
-			Participants:     ezutil.MapSlice(groupExpense.Participants, mapFunc),
+			Participants:     participants,
 		},
 	}
 

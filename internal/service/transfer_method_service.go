@@ -26,6 +26,9 @@ func (tms *transferMethodServiceImpl) GetAll(ctx context.Context) ([]dto.Transfe
 	}
 
 	mapFunc := func(res *transaction.TransferMethodResponse) (dto.TransferMethodResponse, error) {
+		if res == nil {
+			return dto.TransferMethodResponse{}, eris.New("nil transaction method response")
+		}
 		id, err := ezutil.Parse[uuid.UUID](res.GetId())
 		if err != nil {
 			return dto.TransferMethodResponse{}, err

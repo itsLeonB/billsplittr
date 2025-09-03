@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -9,6 +10,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
 	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 )
 
@@ -42,6 +44,12 @@ func (fds *friendDetailsServiceImpl) GetDetails(ctx context.Context, profileID, 
 		return dto.FriendDetailsResponse{}, err
 	}
 
+	// Ensure the requester is part of the friendship
+	if ezutil.CompareUUID(profileID, profileID1) != 0 && ezutil.CompareUUID(profileID, profileID2) != 0 {
+		return dto.FriendDetailsResponse{}, ungerr.ForbiddenError(fmt.Sprintf("profileID %s is not part of friendship %s", profileID, friendshipID))
+	}
+
+	// Pick the friend’s profile ID
 	friendProfileID := profileID2
 	if ezutil.CompareUUID(profileID, profileID2) == 0 {
 		friendProfileID = profileID1

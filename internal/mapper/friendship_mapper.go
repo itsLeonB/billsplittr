@@ -28,6 +28,11 @@ func MapToFriendDetailsResponse(
 		return dto.FriendDetailsResponse{}, err
 	}
 
+	txs := debtTransactions
+	if txs == nil {
+		txs = make([]dto.DebtTransactionResponse, 0)
+	}
+
 	return dto.FriendDetailsResponse{
 		Friend: dto.FriendDetails{
 			ID:        id,
@@ -38,8 +43,8 @@ func MapToFriendDetailsResponse(
 			UpdatedAt: ezutil.FromProtoTime(friendDetails.GetUpdatedAt()),
 			DeletedAt: ezutil.FromProtoTime(friendDetails.GetDeletedAt()),
 		},
-		Balance:      MapToFriendBalanceSummary(userProfileID, debtTransactions),
-		Transactions: debtTransactions,
+		Balance:      MapToFriendBalanceSummary(userProfileID, txs),
+		Transactions: txs,
 	}, nil
 }
 
