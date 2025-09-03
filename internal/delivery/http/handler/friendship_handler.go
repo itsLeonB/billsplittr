@@ -15,13 +15,16 @@ import (
 
 type FriendshipHandler struct {
 	friendshipService service.FriendshipService
+	friendDetailsSvc  service.FriendDetailsService
 }
 
 func NewFriendshipHandler(
 	friendshipService service.FriendshipService,
+	friendDetailsSvc service.FriendDetailsService,
 ) *FriendshipHandler {
 	return &FriendshipHandler{
 		friendshipService,
+		friendDetailsSvc,
 	}
 }
 
@@ -89,7 +92,7 @@ func (fh *FriendshipHandler) HandleGetDetails() gin.HandlerFunc {
 			return
 		}
 
-		response, err := fh.friendshipService.GetDetails(ctx, profileID, friendshipID)
+		response, err := fh.friendDetailsSvc.GetDetails(ctx, profileID, friendshipID)
 		if err != nil {
 			_ = ctx.Error(err)
 			return

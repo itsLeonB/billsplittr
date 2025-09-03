@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
-	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/cocoon-protos/gen/go/friendship/v1"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/rotisserie/eris"
@@ -13,7 +12,7 @@ import (
 func MapToFriendDetailsResponse(
 	userProfileID uuid.UUID,
 	friendDetails *friendship.GetDetailsResponse,
-	debtTransactions []entity.DebtTransaction,
+	debtTransactions []dto.DebtTransactionResponse,
 ) (dto.FriendDetailsResponse, error) {
 	if friendDetails == nil {
 		return dto.FriendDetailsResponse{}, eris.New("friendDetails is nil")
@@ -29,18 +28,23 @@ func MapToFriendDetailsResponse(
 		return dto.FriendDetailsResponse{}, err
 	}
 
+	txs := debtTransactions
+	if txs == nil {
+		txs = make([]dto.DebtTransactionResponse, 0)
+	}
+
 	return dto.FriendDetailsResponse{
 		Friend: dto.FriendDetails{
 			ID:        id,
 			ProfileID: profileID,
 			Name:      friendDetails.GetName(),
 			Type:      FromProtoFriendshipType(friendDetails.Type),
-			CreatedAt: FromProtoTime(friendDetails.GetCreatedAt()),
-			UpdatedAt: FromProtoTime(friendDetails.GetUpdatedAt()),
-			DeletedAt: FromProtoTime(friendDetails.GetDeletedAt()),
+			CreatedAt: ezutil.FromProtoTime(friendDetails.GetCreatedAt()),
+			UpdatedAt: ezutil.FromProtoTime(friendDetails.GetUpdatedAt()),
+			DeletedAt: ezutil.FromProtoTime(friendDetails.GetDeletedAt()),
 		},
-		Balance:      MapToFriendBalanceSummary(userProfileID, debtTransactions),
-		Transactions: ezutil.MapSlice(debtTransactions, GetDebtTransactionSimpleMapper(userProfileID)),
+		Balance:      MapToFriendBalanceSummary(userProfileID, txs),
+		Transactions: txs,
 	}, nil
 }
 
@@ -64,9 +68,9 @@ func FromFriendshipResponseProto(response *friendship.FriendshipResponse) (dto.F
 		Type:        FromProtoFriendshipType(response.GetType()),
 		ProfileID:   profileID,
 		ProfileName: response.GetProfileName(),
-		CreatedAt:   FromProtoTime(response.GetCreatedAt()),
-		UpdatedAt:   FromProtoTime(response.GetUpdatedAt()),
-		DeletedAt:   FromProtoTime(response.GetDeletedAt()),
+		CreatedAt:   ezutil.FromProtoTime(response.GetCreatedAt()),
+		UpdatedAt:   ezutil.FromProtoTime(response.GetUpdatedAt()),
+		DeletedAt:   ezutil.FromProtoTime(response.GetDeletedAt()),
 	}, nil
 }
 

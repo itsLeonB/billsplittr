@@ -12,9 +12,8 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/billsplittr/internal/service/fee"
-	"github.com/itsLeonB/billsplittr/internal/util"
 	"github.com/itsLeonB/ezutil/v2"
-	crud "github.com/itsLeonB/go-crud"
+	"github.com/itsLeonB/go-crud"
 	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
@@ -131,15 +130,9 @@ func (ges *groupExpenseServiceImpl) GetItemDetails(ctx context.Context, groupExp
 	spec.Model.GroupExpenseID = groupExpenseID
 	spec.PreloadRelations = []string{"Participants"}
 
-	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
+	expenseItem, err := ges.getExpenseItemBySpec(ctx, spec)
 	if err != nil {
 		return dto.ExpenseItemResponse{}, err
-	}
-	if expenseItem.IsZero() {
-		return dto.ExpenseItemResponse{}, ungerr.NotFoundError(util.NotFoundMessage(spec.Model))
-	}
-	if expenseItem.IsDeleted() {
-		return dto.ExpenseItemResponse{}, ungerr.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 	}
 
 	namesByProfileIDs, err := ges.profileService.GetNames(ctx, expenseItem.ProfileIDs())
@@ -317,8 +310,10 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 			return err
 		}
 
+		updatedGroupExpense.Participants = updatedGroupExpenseParticipants
+
 		if isAllAnonymous {
-			if err = ges.notifyParticipantsConfirmed(ctx, groupExpense.ID); err != nil {
+			if err = ges.notifyParticipantsConfirmed(ctx, updatedGroupExpense); err != nil {
 				return err
 			}
 		} else {
@@ -579,15 +574,9 @@ func (ges *groupExpenseServiceImpl) getExpenseItemByIDForUpdate(ctx context.Cont
 	spec.Model.GroupExpenseID = groupExpenseID
 	spec.ForUpdate = true
 
-	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
+	expenseItem, err := ges.getExpenseItemBySpec(ctx, spec)
 	if err != nil {
 		return entity.ExpenseItem{}, err
-	}
-	if expenseItem.IsZero() {
-		return entity.ExpenseItem{}, ungerr.NotFoundError(util.NotFoundMessage(spec.Model))
-	}
-	if expenseItem.IsDeleted() {
-		return entity.ExpenseItem{}, ungerr.UnprocessableEntityError(util.DeletedMessage(expenseItem))
 	}
 
 	return expenseItem, nil
@@ -623,12 +612,12 @@ func (ges *groupExpenseServiceImpl) calculateOtherFeeSplits(ctx context.Context,
 	return splitFees, splitErr
 }
 
-func (ges *groupExpenseServiceImpl) notifyParticipantsConfirmed(ctx context.Context, groupExpenseID uuid.UUID) error {
+func (ges *groupExpenseServiceImpl) notifyParticipantsConfirmed(ctx context.Context, groupExpense entity.GroupExpense) error {
 	if os.Getenv("ENABLE_ASYNC") == "true" {
 		panic("to be implemented")
 	}
 
-	return ges.debtService.ProcessConfirmedGroupExpense(ctx, groupExpenseID)
+	return ges.debtService.ProcessConfirmedGroupExpense(ctx, groupExpense)
 }
 
 func (ges *groupExpenseServiceImpl) notifyDraftConfirmed(ctx context.Context) error {
@@ -656,10 +645,10 @@ func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec cr
 		return entity.GroupExpense{}, err
 	}
 	if groupExpense.IsZero() {
-		return entity.GroupExpense{}, ungerr.NotFoundError(util.NotFoundMessage(spec.Model))
+		return entity.GroupExpense{}, ungerr.NotFoundError(fmt.Sprintf("group expense with ID %s is not found", spec.Model.ID))
 	}
 	if groupExpense.IsDeleted() {
-		return entity.GroupExpense{}, ungerr.UnprocessableEntityError(util.DeletedMessage(groupExpense))
+		return entity.GroupExpense{}, ungerr.UnprocessableEntityError(fmt.Sprintf("group expense with ID %s is deleted", spec.Model.ID))
 	}
 
 	return groupExpense, nil
@@ -701,4 +690,19 @@ func (ges *groupExpenseServiceImpl) validateAndPatchRequest(ctx context.Context,
 	}
 
 	return nil
+}
+
+func (ges *groupExpenseServiceImpl) getExpenseItemBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseItem]) (entity.ExpenseItem, error) {
+	expenseItem, err := ges.expenseItemRepository.FindFirst(ctx, spec)
+	if err != nil {
+		return entity.ExpenseItem{}, err
+	}
+	if expenseItem.IsZero() {
+		return entity.ExpenseItem{}, ungerr.NotFoundError(fmt.Sprintf("expense item with ID %s is not found", spec.Model.ID))
+	}
+	if expenseItem.IsDeleted() {
+		return entity.ExpenseItem{}, ungerr.UnprocessableEntityError(fmt.Sprintf("expense item with ID %s is deleted", spec.Model.ID))
+	}
+
+	return expenseItem, nil
 }

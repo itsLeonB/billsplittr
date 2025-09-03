@@ -1,10 +1,7 @@
 package mapper
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
-	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/ezutil/v2"
@@ -158,31 +155,6 @@ func getExpenseParticipantSimpleMapper(userProfileID uuid.UUID, namesByProfileID
 	return func(ep entity.ExpenseParticipant) dto.ExpenseParticipantResponse {
 		return ExpenseParticipantToResponse(ep, userProfileID, namesByProfileID[ep.ParticipantProfileID])
 	}
-}
-
-func GroupExpenseToDebtTransactions(groupExpense entity.GroupExpense, transferMethodID uuid.UUID) []entity.DebtTransaction {
-	action := appconstant.BorrowAction
-	if groupExpense.PayerProfileID == groupExpense.CreatorProfileID {
-		action = appconstant.LendAction
-	}
-
-	debtTransactions := make([]entity.DebtTransaction, 0, len(groupExpense.Participants))
-	for _, participant := range groupExpense.Participants {
-		if groupExpense.PayerProfileID == participant.ParticipantProfileID {
-			continue
-		}
-		debtTransactions = append(debtTransactions, entity.DebtTransaction{
-			LenderProfileID:   groupExpense.PayerProfileID,
-			BorrowerProfileID: participant.ParticipantProfileID,
-			Type:              appconstant.Lend,
-			Action:            action,
-			Amount:            participant.ShareAmount,
-			TransferMethodID:  transferMethodID,
-			Description:       fmt.Sprintf("Share for group expense: %s", groupExpense.Description),
-		})
-	}
-
-	return debtTransactions
 }
 
 func PatchOtherFeeWithRequest(otherFee entity.OtherFee, request dto.UpdateOtherFeeRequest) entity.OtherFee {
