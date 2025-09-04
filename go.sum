@@ -102,8 +102,8 @@ github.com/itsLeonB/drex-protos v0.1.0 h1:lZgzd4zyDdlQUEjkKEi+ADcHvD8IgPq1e896mU
 github.com/itsLeonB/drex-protos v0.1.0/go.mod h1:ohwSvo9aeEBQcbpn7R11QIlxTlYD822XAjRUe74oslg=
 github.com/itsLeonB/ezutil/v2 v2.1.0 h1:kzsUtToV4j2OMN3jzkSsHkFZiJY8Pron8VJVnBQRJFk=
 github.com/itsLeonB/ezutil/v2 v2.1.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
-github.com/itsLeonB/ginkgo v0.1.1 h1:JyJVVB4ii7Mr21Vk+pa6YGNJZv3CbodUtXeFJ8Dz2lA=
-github.com/itsLeonB/ginkgo v0.1.1/go.mod h1:/94UfQvZK01+eR+RVlma0kNaAqq/OD0KOxBmmpujv0M=
+github.com/itsLeonB/ginkgo v0.2.0 h1:CdaxQfUqgbwjF5lO3ijfvCX4bafpAXkwK27cYgXSzbk=
+github.com/itsLeonB/ginkgo v0.2.0/go.mod h1:sX8ZxP1InXU5mmnhtIiY7X/8QmZdxDh+pkLmFusScjI=
 github.com/itsLeonB/go-crud v0.2.0 h1:MnasTSZcRzycLo7Ho6WG2c7PRqp0dV7oLj8wA9HEFcI=
 github.com/itsLeonB/go-crud v0.2.0/go.mod h1:lFMJ/1wNLlmWLN781XYhn/aXtXSmjIbkq8CwBfVmn1g=
 github.com/itsLeonB/ungerr v0.1.0 h1:t2Ezk7xYQ859U2Tx/u+5+k/Rt7D3XXqXor6w11FeO5Y=

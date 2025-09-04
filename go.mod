@@ -11,7 +11,7 @@ require (
 	github.com/itsLeonB/cocoon-protos v1.0.0
 	github.com/itsLeonB/drex-protos v0.1.0
 	github.com/itsLeonB/ezutil/v2 v2.1.0
-	github.com/itsLeonB/ginkgo v0.1.1
+	github.com/itsLeonB/ginkgo v0.2.0
 	github.com/itsLeonB/go-crud v0.2.0
 	github.com/itsLeonB/ungerr v0.1.0
 	github.com/joho/godotenv v1.5.1
