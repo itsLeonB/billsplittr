@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"io"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
@@ -29,13 +27,15 @@ type OtherFeeRepository interface {
 	SyncParticipants(ctx context.Context, feeID uuid.UUID, participants []entity.FeeParticipant) error
 }
 
-// ImageRepository defines the behavior for image storage.
-type ImageRepository interface {
-	Upload(ctx context.Context, reader io.Reader, contentType string) (string, error)
-	GenerateSignedURL(ctx context.Context, objectName string, duration time.Duration) (string, error)
-	Delete(ctx context.Context, objectName string) error
-}
-
 type ExpenseBillRepository interface {
 	crud.CRUDRepository[entity.ExpenseBill]
+}
+
+// StorageRepository handles file storage operations
+type StorageRepository interface {
+	Upload(ctx context.Context, req *entity.StorageUploadRequest) (*entity.StorageUploadResponse, error)
+	Download(ctx context.Context, bucketName, objectKey string) ([]byte, error)
+	Delete(ctx context.Context, bucketName, objectKey string) error
+	GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration int) (string, error)
+	Close() error
 }

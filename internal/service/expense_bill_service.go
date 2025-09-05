@@ -2,71 +2,161 @@ package service
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"path/filepath"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/go-crud"
 	"github.com/itsLeonB/ungerr"
+	"github.com/rotisserie/eris"
 )
 
 type expenseBillServiceImpl struct {
-	friendshipService     FriendshipService
-	imageRepository       repository.ImageRepository
-	expenseBillRepository repository.ExpenseBillRepository
+	billRepo    repository.ExpenseBillRepository
+	storageRepo repository.StorageRepository
+	bucketName  string
+	logger      ezutil.Logger
 }
 
 func NewExpenseBillService(
-	friendshipService FriendshipService,
-	imageRepository repository.ImageRepository,
-	expenseBillRepository repository.ExpenseBillRepository,
+	billRepo repository.ExpenseBillRepository,
+	storageRepo repository.StorageRepository,
+	bucketName string,
+	logger ezutil.Logger,
 ) ExpenseBillService {
 	return &expenseBillServiceImpl{
-		friendshipService,
-		imageRepository,
-		expenseBillRepository,
+		billRepo,
+		storageRepo,
+		bucketName,
+		logger,
 	}
 }
 
-func (ebs *expenseBillServiceImpl) Upload(ctx context.Context, request dto.NewExpenseBillRequest) error {
-	// Default PayerProfileID to the user's profile ID if not provided
-	// This is useful when the user is creating a group expense for themselves.
-	if request.PayerProfileID == uuid.Nil {
-		request.PayerProfileID = request.CreatorProfileID
-	} else {
-		// Check if the payer is a friend of the user
-		if isFriend, _, err := ebs.friendshipService.IsFriends(ctx, request.CreatorProfileID, request.PayerProfileID); err != nil {
-			return err
-		} else if !isFriend {
-			return ungerr.UnprocessableEntityError(appconstant.ErrNotFriends)
-		}
+func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBillRequest) (dto.UploadBillResponse, error) {
+	// Validate request
+	if err := s.validateUploadRequest(req); err != nil {
+		return dto.UploadBillResponse{}, err
 	}
 
-	defer func() {
-		if err := request.ImageReader.Close(); err != nil {
-			log.Printf("error closing ImageReader: %v\n", err)
-		}
-	}()
+	// Generate object key
+	objectKey := s.generateObjectKey(req.CreatorProfileID, req.Filename)
 
-	filename, err := ebs.imageRepository.Upload(ctx, request.ImageReader, request.ContentType)
+	// Upload to storage
+	storageReq := &entity.StorageUploadRequest{
+		Data:        req.ImageData,
+		ContentType: req.ContentType,
+		Filename:    req.Filename,
+		BucketName:  s.bucketName,
+		ObjectKey:   objectKey,
+	}
+
+	if _, err := s.storageRepo.Upload(ctx, storageReq); err != nil {
+		return dto.UploadBillResponse{}, eris.Wrap(err, appconstant.ErrStorageUploadFailed)
+	}
+
+	// Create bill entity
+	bill := entity.ExpenseBill{
+		PayerProfileID:   req.PayerProfileID,
+		CreatorProfileID: req.CreatorProfileID,
+		ImageName:        objectKey,
+	}
+
+	// Save to database
+	savedBill, err := s.billRepo.Insert(ctx, bill)
+	if err != nil {
+		// Try to clean up uploaded file
+		_ = s.storageRepo.Delete(ctx, s.bucketName, objectKey)
+		return dto.UploadBillResponse{}, eris.Wrap(err, "failed to save bill to database")
+	}
+
+	return dto.UploadBillResponse{
+		BillID:    savedBill.ID,
+		CreatedAt: bill.CreatedAt,
+	}, nil
+}
+
+func (s *expenseBillServiceImpl) Get(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) (dto.ExpenseBillResponse, error) {
+	bill, err := s.getByID(ctx, billID, profileID)
+	if err != nil {
+		return dto.ExpenseBillResponse{}, err
+	}
+
+	return dto.ExpenseBillResponse{
+		ID:               bill.ID,
+		CreatorProfileID: bill.CreatorProfileID,
+		PayerProfileID:   bill.PayerProfileID,
+		GroupExpenseID:   bill.GroupExpenseID.UUID,
+		Filename:         bill.ImageName,
+		CreatedAt:        bill.CreatedAt,
+		UpdatedAt:        bill.UpdatedAt,
+		DeletedAt:        bill.DeletedAt.Time,
+	}, nil
+}
+
+func (s *expenseBillServiceImpl) Delete(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) error {
+	bill, err := s.getByID(ctx, billID, profileID)
 	if err != nil {
 		return err
 	}
 
-	expenseBill := entity.ExpenseBill{
-		PayerProfileID:   request.PayerProfileID,
-		ImageName:        filename,
-		CreatorProfileID: request.CreatorProfileID,
+	// Delete from storage
+	if err := s.storageRepo.Delete(ctx, s.bucketName, bill.ImageName); err != nil {
+		// Log error but don't fail the operation
+		// You might want to use a proper logger here
+		s.logger.Warnf("failed to delete file from storage: %v\n", err)
 	}
 
-	if _, err = ebs.expenseBillRepository.Insert(ctx, expenseBill); err != nil {
-		if err = ebs.imageRepository.Delete(ctx, filename); err != nil {
-			log.Printf("warning: failed to clean up GCS image '%s': %v", filename, err)
-		}
-		return err
+	// Delete from database
+	spec := entity.ExpenseBill{}
+	spec.ID = billID
+	return s.billRepo.Delete(ctx, spec)
+}
+
+func (s *expenseBillServiceImpl) getByID(ctx context.Context, id, profileID uuid.UUID) (entity.ExpenseBill, error) {
+	spec := crud.Specification[entity.ExpenseBill]{}
+	spec.Model.ID = id
+	spec.Model.CreatorProfileID = profileID
+	bill, err := s.billRepo.FindFirst(ctx, spec)
+	if err != nil {
+		return entity.ExpenseBill{}, err
+	}
+	if bill.IsZero() {
+		return entity.ExpenseBill{}, ungerr.NotFoundError(fmt.Sprintf("expense bill with ID %s is not found", id))
+	}
+	if bill.IsDeleted() {
+		return entity.ExpenseBill{}, ungerr.UnprocessableEntityError(fmt.Sprintf("expense bill with ID %s is deleted", id))
+	}
+	return bill, nil
+}
+
+func (s *expenseBillServiceImpl) validateUploadRequest(req *dto.UploadBillRequest) error {
+	if req.CreatorProfileID == uuid.Nil {
+		return ungerr.BadRequestError("creator profile ID is required")
+	}
+
+	if len(req.ImageData) == 0 {
+		return ungerr.BadRequestError("image data is required")
+	}
+
+	if len(req.ImageData) > appconstant.MaxFileSize {
+		return ungerr.BadRequestError(appconstant.ErrFileTooLarge)
+	}
+
+	if _, ok := appconstant.AllowedContentTypes[req.ContentType]; !ok {
+		return ungerr.BadRequestError(appconstant.ErrInvalidFileType)
 	}
 
 	return nil
+}
+
+func (s *expenseBillServiceImpl) generateObjectKey(creatorID uuid.UUID, filename string) string {
+	ext := filepath.Ext(filename)
+	timestamp := time.Now().Format("2006/01/02")
+	return fmt.Sprintf("bills/%s/%s/%s%s", timestamp, creatorID.String(), uuid.New(), ext)
 }
