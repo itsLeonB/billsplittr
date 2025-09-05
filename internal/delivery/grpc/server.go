@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/server"
 	"github.com/itsLeonB/billsplittr/internal/provider"
@@ -18,6 +19,7 @@ func Setup(configs config.Config) *gerpc.GrpcServer {
 			gerpc.NewLoggingInterceptor(providers.Logger),
 			gerpc.NewErrorInterceptor(providers.Logger),
 		),
+		grpc.MaxRecvMsgSize(appconstant.MaxFileSize),
 	}
 
 	return gerpc.NewGrpcServer().

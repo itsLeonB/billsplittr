@@ -55,6 +55,12 @@ func (ebs *ExpenseBillServer) UploadStream(stream expensebill.ExpenseBillService
 			if metadata == nil {
 				return ungerr.BadRequestError("metadata must be sent first")
 			}
+
+			nextSize := int64(len(imageData)) + int64(len(data.Chunk))
+			if metadata.GetFileSize() > 0 && nextSize > metadata.GetFileSize() {
+				return ungerr.BadRequestError("stream exceeds declared file size")
+			}
+
 			imageData = append(imageData, data.Chunk...)
 		}
 	}
@@ -64,7 +70,7 @@ func (ebs *ExpenseBillServer) UploadStream(stream expensebill.ExpenseBillService
 	}
 
 	// Validate file size
-	if len(imageData) != int(metadata.GetFileSize()) {
+	if int64(len(imageData)) != metadata.GetFileSize() {
 		return ungerr.BadRequestError("actual file size doesn't match expected size")
 	}
 
@@ -94,9 +100,10 @@ func (ebs *ExpenseBillServer) UploadStream(stream expensebill.ExpenseBillService
 	}
 
 	// Call service layer
-	if _, err = ebs.expenseBillSvc.Upload(stream.Context(), uploadReq); err != nil {
+	id, err := ebs.expenseBillSvc.Upload(stream.Context(), uploadReq)
+	if err != nil {
 		return err
 	}
 
-	return stream.SendAndClose(nil)
+	return stream.SendAndClose(&expensebill.UploadStreamResponse{Id: id.String()})
 }

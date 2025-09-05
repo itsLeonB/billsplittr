@@ -23,6 +23,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense) dto.GroupExpenseRe
 		ID:                    groupExpense.ID,
 		PayerProfileID:        groupExpense.PayerProfileID,
 		TotalAmount:           groupExpense.TotalAmount,
+		Subtotal:              groupExpense.Subtotal,
 		Description:           groupExpense.Description,
 		Items:                 ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
 		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, OtherFeeToResponse),

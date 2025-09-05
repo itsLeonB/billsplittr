@@ -31,7 +31,7 @@ type OtherFeeService interface {
 }
 
 type ExpenseBillService interface {
-	Upload(ctx context.Context, req *dto.UploadBillRequest) (dto.UploadBillResponse, error)
+	Upload(ctx context.Context, req *dto.UploadBillRequest) (uuid.UUID, error)
 	Get(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) (dto.ExpenseBillResponse, error)
 	Delete(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) error
 }

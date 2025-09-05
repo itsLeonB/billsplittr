@@ -16,8 +16,7 @@ type UploadBillRequest struct {
 }
 
 type UploadBillResponse struct {
-	BillID    uuid.UUID
-	CreatedAt time.Time
+	BillID uuid.UUID
 }
 
 type ExpenseBillResponse struct {

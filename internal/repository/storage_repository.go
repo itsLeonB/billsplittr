@@ -39,14 +39,17 @@ func (r *gcsStorageRepository) Upload(ctx context.Context, req *entity.StorageUp
 		"original_filename": req.Filename,
 		"uploaded_at":       time.Now().Format(time.RFC3339),
 	}
-	defer r.close(writer, "GCS writer")
 
 	// Set cache control for images
 	writer.CacheControl = "public, max-age=3600" // 1 hour cache
 
 	// Write the file data
 	if _, err := io.Copy(writer, bytes.NewReader(req.Data)); err != nil {
+		_ = writer.Close() // best-effort close on copy failure
 		return nil, eris.Wrap(err, "failed to upload file to GCS")
+	}
+	if err := writer.Close(); err != nil {
+		return nil, eris.Wrap(err, "failed to finalize upload to GCS")
 	}
 
 	// // Make the object publicly readable (optional)
@@ -101,11 +104,11 @@ func (r *gcsStorageRepository) Delete(ctx context.Context, bucketName, objectKey
 	return nil
 }
 
-func (r *gcsStorageRepository) GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration int) (string, error) {
+func (r *gcsStorageRepository) GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration time.Duration) (string, error) {
 	opts := &storage.SignedURLOptions{
 		Scheme:  storage.SigningSchemeV4,
 		Method:  "GET",
-		Expires: time.Now().Add(time.Duration(expiration) * time.Second),
+		Expires: time.Now().Add(expiration),
 	}
 
 	url, err := storage.SignedURL(bucketName, objectKey, opts)

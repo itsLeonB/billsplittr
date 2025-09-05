@@ -30,6 +30,9 @@ func NewExpenseBillService(
 	bucketName string,
 	logger ezutil.Logger,
 ) ExpenseBillService {
+	if bucketName == "" {
+		panic("bucket name cannot be empty")
+	}
 	return &expenseBillServiceImpl{
 		billRepo,
 		storageRepo,
@@ -38,10 +41,10 @@ func NewExpenseBillService(
 	}
 }
 
-func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBillRequest) (dto.UploadBillResponse, error) {
+func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBillRequest) (uuid.UUID, error) {
 	// Validate request
 	if err := s.validateUploadRequest(req); err != nil {
-		return dto.UploadBillResponse{}, err
+		return uuid.Nil, err
 	}
 
 	// Generate object key
@@ -57,7 +60,7 @@ func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBill
 	}
 
 	if _, err := s.storageRepo.Upload(ctx, storageReq); err != nil {
-		return dto.UploadBillResponse{}, eris.Wrap(err, appconstant.ErrStorageUploadFailed)
+		return uuid.Nil, eris.Wrap(err, appconstant.ErrStorageUploadFailed)
 	}
 
 	// Create bill entity
@@ -72,13 +75,10 @@ func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBill
 	if err != nil {
 		// Try to clean up uploaded file
 		_ = s.storageRepo.Delete(ctx, s.bucketName, objectKey)
-		return dto.UploadBillResponse{}, eris.Wrap(err, "failed to save bill to database")
+		return uuid.Nil, eris.Wrap(err, "failed to save bill to database")
 	}
 
-	return dto.UploadBillResponse{
-		BillID:    savedBill.ID,
-		CreatedAt: bill.CreatedAt,
-	}, nil
+	return savedBill.ID, nil
 }
 
 func (s *expenseBillServiceImpl) Get(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) (dto.ExpenseBillResponse, error) {

@@ -14,21 +14,18 @@ type NewGroupExpenseRequest struct {
 	Subtotal         decimal.Decimal `validate:"required"`
 	Description      string
 	Items            []ExpenseItemData `validate:"required,min=1,dive"`
-	OtherFees        []OtherFeeData    `validate:"required,dive"`
+	OtherFees        []OtherFeeData    `validate:"dive"`
 }
 
 type GroupExpenseResponse struct {
 	ID                    uuid.UUID
 	PayerProfileID        uuid.UUID
-	PayerName             string
-	PaidByUser            bool
 	TotalAmount           decimal.Decimal
+	Subtotal              decimal.Decimal
 	Description           string
 	Items                 []ExpenseItemResponse
 	OtherFees             []OtherFeeResponse
 	CreatorProfileID      uuid.UUID
-	CreatorName           string
-	CreatedByUser         bool
 	Confirmed             bool
 	ParticipantsConfirmed bool
 	CreatedAt             time.Time

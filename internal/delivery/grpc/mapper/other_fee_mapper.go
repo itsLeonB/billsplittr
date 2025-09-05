@@ -62,10 +62,15 @@ func ToOtherFeeResponseProto(fee dto.OtherFeeResponse) (*domain.OtherFeeResponse
 }
 
 func FromOtherFeeProto(fee *domain.OtherFee) (dto.OtherFeeData, error) {
+	if fee == nil {
+		return dto.OtherFeeData{}, eris.New("other fee input is nil")
+	}
+
 	calculationMethod, err := FromProtoFeeCalculationMethod(fee.GetCalculationMethod())
 	if err != nil {
 		return dto.OtherFeeData{}, err
 	}
+
 	return dto.OtherFeeData{
 		Name:              fee.GetName(),
 		Amount:            ezutil.MoneyToDecimal(fee.GetAmount()),

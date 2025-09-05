@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/entity"
@@ -36,6 +37,6 @@ type StorageRepository interface {
 	Upload(ctx context.Context, req *entity.StorageUploadRequest) (*entity.StorageUploadResponse, error)
 	Download(ctx context.Context, bucketName, objectKey string) ([]byte, error)
 	Delete(ctx context.Context, bucketName, objectKey string) error
-	GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration int) (string, error)
+	GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration time.Duration) (string, error)
 	Close() error
 }

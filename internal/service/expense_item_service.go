@@ -126,6 +126,10 @@ func (ges *expenseItemServiceImpl) Update(ctx context.Context, request dto.Updat
 				Sub(oldAmount).
 				Add(newAmount)
 
+			groupExpense.Subtotal = groupExpense.Subtotal.
+				Sub(oldAmount).
+				Add(newAmount)
+
 			if _, err := ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 				return err
 			}

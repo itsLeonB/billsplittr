@@ -76,8 +76,8 @@ github.com/googleapis/enterprise-certificate-proxy v0.3.6 h1:GW/XbdyBFQ8Qe+YAmFU
 github.com/googleapis/enterprise-certificate-proxy v0.3.6/go.mod h1:MkHOF77EYAE7qfSuSS9PU6g4Nt4e11cnsDUowfwewLA=
 github.com/googleapis/gax-go/v2 v2.15.0 h1:SyjDc1mGgZU5LncH8gimWo9lW1DtIfPibOG81vgd/bo=
 github.com/googleapis/gax-go/v2 v2.15.0/go.mod h1:zVVkkxAQHa1RQpg9z2AUCMnKhi0Qld9rcmyfL1OZhoc=
-github.com/itsLeonB/billsplittr-protos v0.1.0-beta h1:mh35j1gK6/l4GUVAMVtz0nPwPGGEevJ466ycPjNaTOw=
-github.com/itsLeonB/billsplittr-protos v0.1.0-beta/go.mod h1:/PsbFqFa5i9WjgovQtt+AHQf5OnWccPzzRw7Wy1JC8k=
+github.com/itsLeonB/billsplittr-protos v0.2.0-alpha h1:0y7+iuynjtd7sGGTdqQNggLosYkl2kevjMSfm4YoXG4=
+github.com/itsLeonB/billsplittr-protos v0.2.0-alpha/go.mod h1:/PsbFqFa5i9WjgovQtt+AHQf5OnWccPzzRw7Wy1JC8k=
 github.com/itsLeonB/ezutil/v2 v2.1.0 h1:kzsUtToV4j2OMN3jzkSsHkFZiJY8Pron8VJVnBQRJFk=
 github.com/itsLeonB/ezutil/v2 v2.1.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
 github.com/itsLeonB/gerpc v0.2.0 h1:U2B+jVHw/9LQKb1ZiMUbr4Igh0zDFcYof0dzzsOxQyM=

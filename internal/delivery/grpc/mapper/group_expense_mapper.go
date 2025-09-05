@@ -25,6 +25,7 @@ func ToGroupExpenseResponseProto(groupExpense dto.GroupExpenseResponse) (*domain
 		CreatorProfileId:        groupExpense.CreatorProfileID.String(),
 		PayerProfileId:          groupExpense.PayerProfileID.String(),
 		TotalAmount:             ezutil.DecimalToMoney(groupExpense.TotalAmount, currency.IDR.String()),
+		Subtotal:                ezutil.DecimalToMoney(groupExpense.Subtotal, currency.IDR.String()),
 		Description:             groupExpense.Description,
 		IsConfirmed:             groupExpense.Confirmed,
 		IsParticipantsConfirmed: groupExpense.ParticipantsConfirmed,
