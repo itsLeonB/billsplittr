@@ -31,3 +31,14 @@ func (ei ExpenseItem) TotalAmount() decimal.Decimal {
 func (ei ExpenseItem) ProfileIDs() []uuid.UUID {
 	return ezutil.MapSlice(ei.Participants, func(ip ItemParticipant) uuid.UUID { return ip.ProfileID })
 }
+
+type ItemParticipant struct {
+	crud.BaseEntity
+	ExpenseItemID uuid.UUID
+	ProfileID     uuid.UUID
+	Share         decimal.Decimal
+}
+
+func (ip ItemParticipant) TableName() string {
+	return "group_expense_item_participants"
+}

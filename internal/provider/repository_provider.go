@@ -4,6 +4,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
+	"github.com/itsLeonB/ezutil/v2"
 	crud "github.com/itsLeonB/go-crud"
 	"gorm.io/gorm"
 )
@@ -15,10 +16,10 @@ type Repositories struct {
 	ExpenseParticipant repository.ExpenseParticipantRepository
 	OtherFee           repository.OtherFeeRepository
 	ExpenseBill        repository.ExpenseBillRepository
-	Image              repository.ImageRepository
+	Storage            repository.StorageRepository
 }
 
-func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google) *Repositories {
+func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google, logger ezutil.Logger) *Repositories {
 	if gormDB == nil {
 		panic("gormDB cannot be nil")
 	}
@@ -30,6 +31,13 @@ func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google) *Repositor
 		ExpenseParticipant: crud.NewCRUDRepository[entity.ExpenseParticipant](gormDB),
 		OtherFee:           repository.NewOtherFeeRepository(gormDB),
 		ExpenseBill:        crud.NewCRUDRepository[entity.ExpenseBill](gormDB),
-		Image:              repository.NewImageRepository("billsplittr-bills", googleConfig.ServiceAccount),
+		Storage:            repository.NewGCSStorageRepository(logger, googleConfig.ServiceAccount),
 	}
+}
+
+func (r *Repositories) Shutdown() error {
+	if r.Storage != nil {
+		return r.Storage.Close()
+	}
+	return nil
 }

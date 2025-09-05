@@ -24,3 +24,14 @@ func (of OtherFee) ProfileIDs() []uuid.UUID {
 func (of OtherFee) TableName() string {
 	return "group_expense_other_fees"
 }
+
+type FeeParticipant struct {
+	crud.BaseEntity
+	OtherFeeID  uuid.UUID
+	ProfileID   uuid.UUID
+	ShareAmount decimal.Decimal
+}
+
+func (fp FeeParticipant) TableName() string {
+	return "group_expense_other_fee_participants"
+}
