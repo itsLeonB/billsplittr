@@ -8,17 +8,17 @@ import (
 )
 
 type NewExpenseItemRequest struct {
-	ProfileID       uuid.UUID `validate:"required"`
-	GroupExpenseID  uuid.UUID `validate:"required"`
-	ExpenseItemData `validate:"required,dive"`
+	ProfileID      uuid.UUID `validate:"required"`
+	GroupExpenseID uuid.UUID `validate:"required"`
+	ExpenseItemData
 }
 
 type UpdateExpenseItemRequest struct {
-	ProfileID       uuid.UUID `validate:"required"`
-	ID              uuid.UUID `validate:"required"`
-	GroupExpenseID  uuid.UUID `validate:"required"`
-	ExpenseItemData `validate:"required,dive"`
-	Participants    []ItemParticipantData `validate:"required,min=1,dive"`
+	ProfileID      uuid.UUID `validate:"required"`
+	ID             uuid.UUID `validate:"required"`
+	GroupExpenseID uuid.UUID `validate:"required"`
+	ExpenseItemData
+	Participants []ItemParticipantData `validate:"required,min=1,dive"`
 }
 
 type ExpenseItemResponse struct {

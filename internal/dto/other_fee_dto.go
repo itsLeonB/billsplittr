@@ -11,14 +11,14 @@ import (
 type NewOtherFeeRequest struct {
 	ProfileID      uuid.UUID `validate:"required"`
 	GroupExpenseID uuid.UUID `validate:"required"`
-	OtherFeeData   `validate:"required,dive"`
+	OtherFeeData
 }
 
 type UpdateOtherFeeRequest struct {
 	ProfileID      uuid.UUID `validate:"required"`
 	ID             uuid.UUID `validate:"required"`
 	GroupExpenseID uuid.UUID `validate:"required"`
-	OtherFeeData   `validate:"required,dive"`
+	OtherFeeData
 }
 
 type OtherFeeResponse struct {

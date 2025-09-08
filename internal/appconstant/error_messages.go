@@ -16,4 +16,6 @@ const (
 	ErrStorageUploadFailed = "storage upload failed"
 	ErrBillNotFound        = "bill not found"
 	ErrUnauthorized        = "unauthorized access"
+
+	ErrStructValidation = "failed to validate struct"
 )
