@@ -20,7 +20,8 @@ type gcsStorageRepository struct {
 }
 
 func NewGCSStorageRepository(logger ezutil.Logger, credentialsFile string) StorageRepository {
-	client, err := storage.NewClient(context.Background(), option.WithCredentialsFile(credentialsFile))
+
+	client, err := storage.NewClient(context.Background(), option.WithCredentialsJSON([]byte(credentialsFile)))
 	if err != nil {
 		panic(fmt.Sprintf("failed to create GCS client: %v", err))
 	}

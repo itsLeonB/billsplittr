@@ -1,7 +1,8 @@
 package mapper
 
 import (
-	"github.com/itsLeonB/billsplittr-protos/gen/go/domain/v1"
+	"github.com/itsLeonB/audit/gen/go/audit/v1"
+	"github.com/itsLeonB/billsplittr-protos/gen/go/otherfee/v1"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/ezutil/v2"
@@ -10,49 +11,49 @@ import (
 	"golang.org/x/text/currency"
 )
 
-func FromProtoFeeCalculationMethod(fcm domain.FeeCalculationMethod) (appconstant.FeeCalculationMethod, error) {
+func FromProtoFeeCalculationMethod(fcm otherfee.FeeCalculationMethod) (appconstant.FeeCalculationMethod, error) {
 	switch fcm {
-	case domain.FeeCalculationMethod_FEE_CALCULATION_METHOD_EQUAL_SPLIT:
+	case otherfee.FeeCalculationMethod_FEE_CALCULATION_METHOD_EQUAL_SPLIT:
 		return appconstant.EqualSplitFee, nil
-	case domain.FeeCalculationMethod_FEE_CALCULATION_METHOD_ITEMIZED_SPLIT:
+	case otherfee.FeeCalculationMethod_FEE_CALCULATION_METHOD_ITEMIZED_SPLIT:
 		return appconstant.ItemizedSplitFee, nil
 	default:
 		return "", eris.Errorf("unknown fee calculation method enum: %s", fcm.String())
 	}
 }
 
-func ToProtoFeeCalculationMethod(fcm appconstant.FeeCalculationMethod) (domain.FeeCalculationMethod, error) {
+func ToProtoFeeCalculationMethod(fcm appconstant.FeeCalculationMethod) (otherfee.FeeCalculationMethod, error) {
 	switch fcm {
 	case appconstant.EqualSplitFee:
-		return domain.FeeCalculationMethod_FEE_CALCULATION_METHOD_EQUAL_SPLIT, nil
+		return otherfee.FeeCalculationMethod_FEE_CALCULATION_METHOD_EQUAL_SPLIT, nil
 	case appconstant.ItemizedSplitFee:
-		return domain.FeeCalculationMethod_FEE_CALCULATION_METHOD_ITEMIZED_SPLIT, nil
+		return otherfee.FeeCalculationMethod_FEE_CALCULATION_METHOD_ITEMIZED_SPLIT, nil
 	default:
-		return domain.FeeCalculationMethod_FEE_CALCULATION_METHOD_UNSPECIFIED, eris.Errorf("unknown fee calculation method constant: %s", fcm)
+		return otherfee.FeeCalculationMethod_FEE_CALCULATION_METHOD_UNSPECIFIED, eris.Errorf("unknown fee calculation method constant: %s", fcm)
 	}
 }
 
-func toFeeParticipantResponseProto(feeParticipant dto.FeeParticipantResponse) *domain.FeeParticipantResponse {
-	return &domain.FeeParticipantResponse{
+func toFeeParticipantResponseProto(feeParticipant dto.FeeParticipantResponse) *otherfee.FeeParticipantResponse {
+	return &otherfee.FeeParticipantResponse{
 		ProfileId:   feeParticipant.ProfileID.String(),
 		ShareAmount: ezutil.DecimalToMoney(feeParticipant.ShareAmount, currency.IDR.String()),
 	}
 }
 
-func ToOtherFeeResponseProto(fee dto.OtherFeeResponse) (*domain.OtherFeeResponse, error) {
+func ToOtherFeeResponseProto(fee dto.OtherFeeResponse) (*otherfee.OtherFeeResponse, error) {
 	calculationMethod, err := ToProtoFeeCalculationMethod(fee.CalculationMethod)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.OtherFeeResponse{
+	return &otherfee.OtherFeeResponse{
 		GroupExpenseId: fee.GroupExpenseID.String(),
-		OtherFee: &domain.OtherFee{
+		OtherFee: &otherfee.OtherFee{
 			Name:              fee.Name,
 			Amount:            ezutil.DecimalToMoney(fee.Amount, currency.IDR.String()),
 			CalculationMethod: calculationMethod,
 		},
 		Participants: ezutil.MapSlice(fee.Participants, toFeeParticipantResponseProto),
-		AuditMetadata: &domain.AuditMetadata{
+		AuditMetadata: &audit.Metadata{
 			Id:        fee.ID.String(),
 			CreatedAt: gerpc.NullableTimeToProto(fee.CreatedAt),
 			UpdatedAt: gerpc.NullableTimeToProto(fee.UpdatedAt),
@@ -61,7 +62,7 @@ func ToOtherFeeResponseProto(fee dto.OtherFeeResponse) (*domain.OtherFeeResponse
 	}, nil
 }
 
-func FromOtherFeeProto(fee *domain.OtherFee) (dto.OtherFeeData, error) {
+func FromOtherFeeProto(fee *otherfee.OtherFee) (dto.OtherFeeData, error) {
 	if fee == nil {
 		return dto.OtherFeeData{}, eris.New("other fee input is nil")
 	}
@@ -78,12 +79,12 @@ func FromOtherFeeProto(fee *domain.OtherFee) (dto.OtherFeeData, error) {
 	}, nil
 }
 
-func ToCalculationMethodInfoProto(method dto.FeeCalculationMethodInfo) (*domain.FeeCalculationMethodInfo, error) {
+func ToCalculationMethodInfoProto(method dto.FeeCalculationMethodInfo) (*otherfee.FeeCalculationMethodInfo, error) {
 	enum, err := ToProtoFeeCalculationMethod(method.Method)
 	if err != nil {
 		return nil, err
 	}
-	return &domain.FeeCalculationMethodInfo{
+	return &otherfee.FeeCalculationMethodInfo{
 		Method:      enum,
 		Display:     method.Display,
 		Description: method.Description,

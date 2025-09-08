@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/itsLeonB/billsplittr-protos/gen/go/domain/v1"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/expenseitem/v1"
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/mapper"
 	"github.com/itsLeonB/billsplittr/internal/dto"
@@ -108,7 +107,7 @@ func (eis *ExpenseItemServer) Update(ctx context.Context, req *expenseitem.Updat
 		return nil, ungerr.BadRequestError("expense item data is nil")
 	}
 
-	participantMapFunc := func(participant *domain.ItemParticipant) (dto.ItemParticipantData, error) {
+	participantMapFunc := func(participant *expenseitem.ItemParticipant) (dto.ItemParticipantData, error) {
 		profileID, err := ezutil.Parse[uuid.UUID](participant.GetProfileId())
 		if err != nil {
 			return dto.ItemParticipantData{}, err
@@ -116,7 +115,7 @@ func (eis *ExpenseItemServer) Update(ctx context.Context, req *expenseitem.Updat
 
 		return dto.ItemParticipantData{
 			ProfileID: profileID,
-			Share:     decimal.NewFromFloat32(participant.GetShare()),
+			Share:     decimal.NewFromFloat(participant.GetShare()),
 		}, nil
 	}
 

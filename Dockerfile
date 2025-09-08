@@ -15,7 +15,7 @@ WORKDIR /
 
 COPY --from=build-stage /billsplittr /billsplittr
 
-EXPOSE 8080
+EXPOSE 50050
 
 USER nonroot:nonroot
 

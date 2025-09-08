@@ -6,7 +6,8 @@ require (
 	cloud.google.com/go/storage v1.55.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
-	github.com/itsLeonB/billsplittr-protos v0.2.0-alpha
+	github.com/itsLeonB/audit v0.1.0
+	github.com/itsLeonB/billsplittr-protos v0.3.0-alpha
 	github.com/itsLeonB/ezutil/v2 v2.1.0
 	github.com/itsLeonB/gerpc v0.2.0
 	github.com/itsLeonB/go-crud v0.2.0

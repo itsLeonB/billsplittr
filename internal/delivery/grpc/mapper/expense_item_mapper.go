@@ -1,30 +1,31 @@
 package mapper
 
 import (
-	"github.com/itsLeonB/billsplittr-protos/gen/go/domain/v1"
+	"github.com/itsLeonB/audit/gen/go/audit/v1"
+	"github.com/itsLeonB/billsplittr-protos/gen/go/expenseitem/v1"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/gerpc"
 	"golang.org/x/text/currency"
 )
 
-func toItemParticipantProto(itemParticipant dto.ItemParticipantData) *domain.ItemParticipant {
-	return &domain.ItemParticipant{
+func toItemParticipantProto(itemParticipant dto.ItemParticipantData) *expenseitem.ItemParticipant {
+	return &expenseitem.ItemParticipant{
 		ProfileId: itemParticipant.ProfileID.String(),
-		Share:     float32(itemParticipant.Share.InexactFloat64()),
+		Share:     itemParticipant.Share.InexactFloat64(),
 	}
 }
 
-func ToExpenseItemResponseProto(item dto.ExpenseItemResponse) *domain.ExpenseItemResponse {
-	return &domain.ExpenseItemResponse{
+func ToExpenseItemResponseProto(item dto.ExpenseItemResponse) *expenseitem.ExpenseItemResponse {
+	return &expenseitem.ExpenseItemResponse{
 		GroupExpenseId: item.GroupExpenseID.String(),
-		ExpenseItem: &domain.ExpenseItem{
+		ExpenseItem: &expenseitem.ExpenseItem{
 			Name:         item.Name,
 			Amount:       ezutil.DecimalToMoney(item.Amount, currency.IDR.String()),
 			Quantity:     int64(item.Quantity),
 			Participants: ezutil.MapSlice(item.Participants, toItemParticipantProto),
 		},
-		AuditMetadata: &domain.AuditMetadata{
+		AuditMetadata: &audit.Metadata{
 			Id:        item.ID.String(),
 			CreatedAt: gerpc.NullableTimeToProto(item.CreatedAt),
 			UpdatedAt: gerpc.NullableTimeToProto(item.UpdatedAt),
@@ -33,7 +34,7 @@ func ToExpenseItemResponseProto(item dto.ExpenseItemResponse) *domain.ExpenseIte
 	}
 }
 
-func FromExpenseItemProto(item *domain.ExpenseItem) dto.ExpenseItemData {
+func FromExpenseItemProto(item *expenseitem.ExpenseItem) dto.ExpenseItemData {
 	return dto.ExpenseItemData{
 		Name:     item.GetName(),
 		Amount:   ezutil.MoneyToDecimal(item.GetAmount()),
