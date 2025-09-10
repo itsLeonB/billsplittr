@@ -11,33 +11,31 @@ type Provider struct {
 	Logger ezutil.Logger
 	*DBs
 	*Repositories
-	*Clients
 	*Services
 }
 
 func All(configs config.Config) *Provider {
+	logger := ProvideLogger(configs.App)
 	dbs := ProvideDBs(configs.DB)
-	repos := ProvideRepositories(dbs.GormDB, configs.Google)
-	clients := ProvideClients(configs.ServiceClient)
+	repos := ProvideRepositories(dbs.GormDB, configs.Google, logger)
 
 	return &Provider{
-		Logger:       ProvideLogger(configs.App),
+		Logger:       logger,
 		DBs:          dbs,
 		Repositories: repos,
-		Clients:      clients,
-		Services:     ProvideServices(repos, clients),
+		Services:     ProvideServices(configs.Google, repos, logger),
 	}
 }
 
 func (p *Provider) Shutdown() error {
 	var err error
-	if p.Clients != nil {
-		if e := p.Clients.Shutdown(); e != nil {
+	if p.DBs != nil {
+		if e := p.DBs.Shutdown(); e != nil {
 			err = errors.Join(err, e)
 		}
 	}
-	if p.DBs != nil {
-		if e := p.DBs.Shutdown(); e != nil {
+	if p.Repositories != nil {
+		if e := p.Repositories.Shutdown(); e != nil {
 			err = errors.Join(err, e)
 		}
 	}

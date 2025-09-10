@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' \
-    -o /billsplittr ./cmd/http/main.go
+    -o /billsplittr ./cmd/grpc/main.go
 
 FROM gcr.io/distroless/static-debian12 AS build-release-stage
 
@@ -15,7 +15,7 @@ WORKDIR /
 
 COPY --from=build-stage /billsplittr /billsplittr
 
-EXPOSE 8080
+EXPOSE 50050
 
 USER nonroot:nonroot
 
