@@ -5,7 +5,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
-	crud "github.com/itsLeonB/go-crud"
+	"github.com/itsLeonB/go-crud"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +16,6 @@ type Repositories struct {
 	ExpenseParticipant repository.ExpenseParticipantRepository
 	OtherFee           repository.OtherFeeRepository
 	ExpenseBill        repository.ExpenseBillRepository
-	Storage            repository.StorageRepository
 }
 
 func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google, logger ezutil.Logger) *Repositories {
@@ -31,13 +30,9 @@ func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google, logger ezu
 		ExpenseParticipant: crud.NewCRUDRepository[entity.ExpenseParticipant](gormDB),
 		OtherFee:           repository.NewOtherFeeRepository(gormDB),
 		ExpenseBill:        crud.NewCRUDRepository[entity.ExpenseBill](gormDB),
-		Storage:            repository.NewGCSStorageRepository(logger, googleConfig.ServiceAccount),
 	}
 }
 
 func (r *Repositories) Shutdown() error {
-	if r.Storage != nil {
-		return r.Storage.Close()
-	}
 	return nil
 }
