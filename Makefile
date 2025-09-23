@@ -1,6 +1,17 @@
 TEST_DIR := ./internal/test
 
-.PHONY: help grpc grpc-hot lint test test-verbose test-coverage test-coverage-html test-clean
+.PHONY:
+	help
+	grpc
+	grpc-hot
+	lint
+	test
+	test-verbose
+	test-coverage
+	test-coverage-html
+	test-clean
+	install-pre-push-hook
+	uninstall-pre-push-hook
 
 help:
 	@echo "Makefile commands:"
