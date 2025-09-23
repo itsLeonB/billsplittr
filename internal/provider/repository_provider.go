@@ -27,9 +27,9 @@ func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google, logger ezu
 		Transactor:         crud.NewTransactor(gormDB),
 		GroupExpense:       repository.NewGroupExpenseRepository(gormDB),
 		ExpenseItem:        repository.NewExpenseItemRepository(gormDB),
-		ExpenseParticipant: crud.NewCRUDRepository[entity.ExpenseParticipant](gormDB),
+		ExpenseParticipant: crud.NewRepository[entity.ExpenseParticipant](gormDB),
 		OtherFee:           repository.NewOtherFeeRepository(gormDB),
-		ExpenseBill:        crud.NewCRUDRepository[entity.ExpenseBill](gormDB),
+		ExpenseBill:        crud.NewRepository[entity.ExpenseBill](gormDB),
 	}
 }
 

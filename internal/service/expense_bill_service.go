@@ -52,7 +52,7 @@ func (ebs *expenseBillServiceImpl) Save(ctx context.Context, req dto.NewExpenseB
 func (ebs *expenseBillServiceImpl) GetAllCreated(ctx context.Context, creatorProfileID uuid.UUID) ([]dto.ExpenseBillResponse, error) {
 	spec := crud.Specification[entity.ExpenseBill]{}
 	spec.Model.CreatorProfileID = creatorProfileID
-	spec.Model.DeletedAt = sql.NullTime{}
+	spec.DeletedFilter = crud.ExcludeDeleted
 
 	bills, err := ebs.billRepo.FindAll(ctx, spec)
 	if err != nil {
@@ -65,7 +65,7 @@ func (ebs *expenseBillServiceImpl) GetAllCreated(ctx context.Context, creatorPro
 func (ebs *expenseBillServiceImpl) Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error) {
 	spec := crud.Specification[entity.ExpenseBill]{}
 	spec.Model.ID = id
-	spec.Model.DeletedAt = sql.NullTime{}
+	spec.DeletedFilter = crud.ExcludeDeleted
 
 	bill, err := ebs.getBySpec(ctx, spec)
 	if err != nil {
@@ -80,8 +80,8 @@ func (ebs *expenseBillServiceImpl) Delete(ctx context.Context, id, profileID uui
 		spec := crud.Specification[entity.ExpenseBill]{}
 		spec.Model.ID = id
 		spec.Model.CreatorProfileID = profileID
-		spec.Model.DeletedAt = sql.NullTime{}
 		spec.ForUpdate = true
+		spec.DeletedFilter = crud.ExcludeDeleted
 
 		bill, err := ebs.getBySpec(ctx, spec)
 		if err != nil {

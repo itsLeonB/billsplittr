@@ -30,8 +30,8 @@ github.com/itsLeonB/ezutil/v2 v2.1.0 h1:kzsUtToV4j2OMN3jzkSsHkFZiJY8Pron8VJVnBQR
 github.com/itsLeonB/ezutil/v2 v2.1.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
 github.com/itsLeonB/gerpc v0.3.0-alpha h1:ehh8Od/f53uiNd8cSnbm5IiQw34/sHNnpEmnF+iZMR4=
 github.com/itsLeonB/gerpc v0.3.0-alpha/go.mod h1:gFDio3sQkLm6lGxCKhw+5oAXa2PzW8Wt6GpZvyaz/js=
-github.com/itsLeonB/go-crud v0.2.0 h1:MnasTSZcRzycLo7Ho6WG2c7PRqp0dV7oLj8wA9HEFcI=
-github.com/itsLeonB/go-crud v0.2.0/go.mod h1:lFMJ/1wNLlmWLN781XYhn/aXtXSmjIbkq8CwBfVmn1g=
+github.com/itsLeonB/go-crud v1.0.0-alpha h1:bQw6df/DJjrmjHAknB/PW9rjDGNh2QnSdGliY/AWseI=
+github.com/itsLeonB/go-crud v1.0.0-alpha/go.mod h1:lFMJ/1wNLlmWLN781XYhn/aXtXSmjIbkq8CwBfVmn1g=
 github.com/itsLeonB/ungerr v0.1.0 h1:t2Ezk7xYQ859U2Tx/u+5+k/Rt7D3XXqXor6w11FeO5Y=
 github.com/itsLeonB/ungerr v0.1.0/go.mod h1:d1ZnTmRnnkccpRlhUMQGN8+PuMk82NqiRhcDOQ5PirY=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
