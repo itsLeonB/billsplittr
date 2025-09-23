@@ -18,4 +18,6 @@ const (
 	ErrUnauthorized        = "unauthorized access"
 
 	ErrStructValidation = "failed to validate struct"
+
+	ErrNilRequest = "request is nil"
 )

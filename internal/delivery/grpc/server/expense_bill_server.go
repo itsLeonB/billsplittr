@@ -1,21 +1,21 @@
 package server
 
 import (
-	"io"
+	"context"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/expensebill/v1"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
+	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/mapper"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/ungerr"
-	"github.com/rotisserie/eris"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type ExpenseBillServer struct {
+type expenseBillServer struct {
 	expensebill.UnimplementedExpenseBillServiceServer
 	validate       *validator.Validate
 	expenseBillSvc service.ExpenseBillService
@@ -25,85 +25,110 @@ func newExpenseBillServer(
 	validate *validator.Validate,
 	expenseBillSvc service.ExpenseBillService,
 ) expensebill.ExpenseBillServiceServer {
-	return &ExpenseBillServer{
+	return &expenseBillServer{
 		validate:       validate,
 		expenseBillSvc: expenseBillSvc,
 	}
 }
 
-func (ebs *ExpenseBillServer) UploadStream(stream expensebill.ExpenseBillService_UploadStreamServer) error {
-	var metadata *expensebill.BillMetadata
-	var imageData []byte
+func (ebs *expenseBillServer) Save(ctx context.Context, req *expensebill.SaveRequest) (*expensebill.SaveResponse, error) {
+	if req == nil {
+		return nil, ungerr.BadRequestError(appconstant.ErrNilRequest)
+	}
+	bill := req.GetExpenseBill()
+	if bill == nil {
+		return nil, ungerr.BadRequestError("expense bill is nil")
+	}
 
-	for {
-		req, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
+	creatorProfileID, err := ezutil.Parse[uuid.UUID](bill.GetCreatorProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	payerProfileID := uuid.Nil
+	if bill.GetPayerProfileId() != "" {
+		payerProfileID, err = ezutil.Parse[uuid.UUID](bill.GetPayerProfileId())
 		if err != nil {
-			return eris.Wrap(err, "failed to receive stream data")
-		}
-
-		switch data := req.Data.(type) {
-		case *expensebill.UploadStreamRequest_BillMetadata:
-			if metadata != nil {
-				return status.Error(codes.InvalidArgument, "metadata already received")
-			}
-			metadata = data.BillMetadata
-
-		case *expensebill.UploadStreamRequest_Chunk:
-			if metadata == nil {
-				return ungerr.BadRequestError("metadata must be sent first")
-			}
-
-			nextSize := int64(len(imageData)) + int64(len(data.Chunk))
-			if metadata.GetFileSize() > 0 && nextSize > metadata.GetFileSize() {
-				return ungerr.BadRequestError("stream exceeds declared file size")
-			}
-
-			imageData = append(imageData, data.Chunk...)
+			return nil, err
 		}
 	}
 
-	if metadata == nil {
-		return ungerr.BadRequestError("no metadata received")
-	}
-
-	// Validate file size
-	if int64(len(imageData)) != metadata.GetFileSize() {
-		return ungerr.BadRequestError("actual file size doesn't match expected size")
-	}
-
-	// Parse UUIDs
-	payerProfileID, err := ezutil.Parse[uuid.UUID](metadata.GetPayerProfileId())
-	if err != nil {
-		return err
-	}
-
-	creatorProfileID, err := ezutil.Parse[uuid.UUID](metadata.GetCreatorProfileId())
-	if err != nil {
-		return err
-	}
-
-	// Create domain request
-	uploadReq := &dto.UploadBillRequest{
-		PayerProfileID:   payerProfileID,
+	request := dto.NewExpenseBillRequest{
 		CreatorProfileID: creatorProfileID,
-		ImageData:        imageData,
-		ContentType:      metadata.ContentType,
-		Filename:         metadata.Filename,
-		FileSize:         metadata.FileSize,
+		PayerProfileID:   payerProfileID,
+		Filename:         bill.GetObjectKey(),
 	}
 
-	if err = ebs.validate.Struct(uploadReq); err != nil {
-		return err
+	if err = ebs.validate.Struct(request); err != nil {
+		return nil, err
 	}
 
-	// Call service layer
-	id, err := ebs.expenseBillSvc.Upload(stream.Context(), uploadReq)
+	response, err := ebs.expenseBillSvc.Save(ctx, request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return stream.SendAndClose(&expensebill.UploadStreamResponse{Id: id.String()})
+	return &expensebill.SaveResponse{
+		ExpenseBill: mapper.ToExpenseBillResponseProto(response),
+	}, nil
+}
+
+func (ebs *expenseBillServer) GetAllCreated(ctx context.Context, req *expensebill.GetAllCreatedRequest) (*expensebill.GetAllCreatedResponse, error) {
+	if req == nil {
+		return nil, ungerr.BadRequestError(appconstant.ErrNilRequest)
+	}
+
+	creatorProfileID, err := ezutil.Parse[uuid.UUID](req.GetCreatorProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	responses, err := ebs.expenseBillSvc.GetAllCreated(ctx, creatorProfileID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &expensebill.GetAllCreatedResponse{
+		ExpenseBills: ezutil.MapSlice(responses, mapper.ToExpenseBillResponseProto),
+	}, nil
+}
+
+func (ebs *expenseBillServer) Get(ctx context.Context, req *expensebill.GetRequest) (*expensebill.GetResponse, error) {
+	if req == nil {
+		return nil, ungerr.BadRequestError(appconstant.ErrNilRequest)
+	}
+
+	id, err := ezutil.Parse[uuid.UUID](req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := ebs.expenseBillSvc.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &expensebill.GetResponse{
+		ExpenseBill: mapper.ToExpenseBillResponseProto(response),
+	}, nil
+}
+
+func (ebs *expenseBillServer) Delete(ctx context.Context, req *expensebill.DeleteRequest) (*emptypb.Empty, error) {
+	if req == nil {
+		return nil, ungerr.BadRequestError(appconstant.ErrNilRequest)
+	}
+
+	id, err := ezutil.Parse[uuid.UUID](req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = ebs.expenseBillSvc.Delete(ctx, id, profileID)
+
+	return nil, err
 }

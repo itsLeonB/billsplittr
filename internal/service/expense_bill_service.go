@@ -2,161 +2,113 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
 	"github.com/itsLeonB/ungerr"
-	"github.com/rotisserie/eris"
 )
 
 type expenseBillServiceImpl struct {
-	billRepo    repository.ExpenseBillRepository
-	storageRepo repository.StorageRepository
-	bucketName  string
-	logger      ezutil.Logger
+	transactor crud.Transactor
+	billRepo   repository.ExpenseBillRepository
+	logger     ezutil.Logger
 }
 
 func NewExpenseBillService(
+	transactor crud.Transactor,
 	billRepo repository.ExpenseBillRepository,
-	storageRepo repository.StorageRepository,
-	bucketName string,
 	logger ezutil.Logger,
 ) ExpenseBillService {
-	if bucketName == "" {
-		panic("bucket name cannot be empty")
-	}
 	return &expenseBillServiceImpl{
+		transactor,
 		billRepo,
-		storageRepo,
-		bucketName,
 		logger,
 	}
 }
 
-func (s *expenseBillServiceImpl) Upload(ctx context.Context, req *dto.UploadBillRequest) (uuid.UUID, error) {
-	// Validate request
-	if err := s.validateUploadRequest(req); err != nil {
-		return uuid.Nil, err
-	}
-
-	// Generate object key
-	objectKey := s.generateObjectKey(req.CreatorProfileID, req.Filename)
-
-	// Upload to storage
-	storageReq := &entity.StorageUploadRequest{
-		Data:        req.ImageData,
-		ContentType: req.ContentType,
-		Filename:    req.Filename,
-		BucketName:  s.bucketName,
-		ObjectKey:   objectKey,
-	}
-
-	if _, err := s.storageRepo.Upload(ctx, storageReq); err != nil {
-		return uuid.Nil, eris.Wrap(err, appconstant.ErrStorageUploadFailed)
-	}
-
-	// Create bill entity
-	bill := entity.ExpenseBill{
+func (ebs *expenseBillServiceImpl) Save(ctx context.Context, req dto.NewExpenseBillRequest) (dto.ExpenseBillResponse, error) {
+	newBill := entity.ExpenseBill{
 		PayerProfileID:   req.PayerProfileID,
 		CreatorProfileID: req.CreatorProfileID,
-		ImageName:        objectKey,
+		ImageName:        req.Filename,
 	}
 
-	// Save to database
-	savedBill, err := s.billRepo.Insert(ctx, bill)
-	if err != nil {
-		// Try to clean up uploaded file
-		_ = s.storageRepo.Delete(ctx, s.bucketName, objectKey)
-		return uuid.Nil, eris.Wrap(err, "failed to save bill to database")
-	}
-
-	return savedBill.ID, nil
-}
-
-func (s *expenseBillServiceImpl) Get(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) (dto.ExpenseBillResponse, error) {
-	bill, err := s.getByID(ctx, billID, profileID)
+	insertedBill, err := ebs.billRepo.Insert(ctx, newBill)
 	if err != nil {
 		return dto.ExpenseBillResponse{}, err
 	}
 
-	return dto.ExpenseBillResponse{
-		ID:               bill.ID,
-		CreatorProfileID: bill.CreatorProfileID,
-		PayerProfileID:   bill.PayerProfileID,
-		GroupExpenseID:   bill.GroupExpenseID.UUID,
-		Filename:         bill.ImageName,
-		CreatedAt:        bill.CreatedAt,
-		UpdatedAt:        bill.UpdatedAt,
-		DeletedAt:        bill.DeletedAt.Time,
-	}, nil
+	return mapper.ExpenseBillToResponse(insertedBill), nil
 }
 
-func (s *expenseBillServiceImpl) Delete(ctx context.Context, billID uuid.UUID, profileID uuid.UUID) error {
-	bill, err := s.getByID(ctx, billID, profileID)
+func (ebs *expenseBillServiceImpl) GetAllCreated(ctx context.Context, creatorProfileID uuid.UUID) ([]dto.ExpenseBillResponse, error) {
+	spec := crud.Specification[entity.ExpenseBill]{}
+	spec.Model.CreatorProfileID = creatorProfileID
+	spec.DeletedFilter = crud.ExcludeDeleted
+
+	bills, err := ebs.billRepo.FindAll(ctx, spec)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Delete from storage
-	if err := s.storageRepo.Delete(ctx, s.bucketName, bill.ImageName); err != nil {
-		// Log error but don't fail the operation
-		// You might want to use a proper logger here
-		s.logger.Warnf("failed to delete file from storage: %v\n", err)
-	}
-
-	// Delete from database
-	spec := entity.ExpenseBill{}
-	spec.ID = billID
-	return s.billRepo.Delete(ctx, spec)
+	return ezutil.MapSlice(bills, mapper.ExpenseBillToResponse), nil
 }
 
-func (s *expenseBillServiceImpl) getByID(ctx context.Context, id, profileID uuid.UUID) (entity.ExpenseBill, error) {
+func (ebs *expenseBillServiceImpl) Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error) {
 	spec := crud.Specification[entity.ExpenseBill]{}
 	spec.Model.ID = id
-	spec.Model.CreatorProfileID = profileID
+	spec.DeletedFilter = crud.ExcludeDeleted
+
+	bill, err := ebs.getBySpec(ctx, spec)
+	if err != nil {
+		return dto.ExpenseBillResponse{}, err
+	}
+
+	return mapper.ExpenseBillToResponse(bill), nil
+}
+
+func (ebs *expenseBillServiceImpl) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	return ebs.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		spec := crud.Specification[entity.ExpenseBill]{}
+		spec.Model.ID = id
+		spec.Model.CreatorProfileID = profileID
+		spec.ForUpdate = true
+		spec.DeletedFilter = crud.ExcludeDeleted
+
+		bill, err := ebs.getBySpec(ctx, spec)
+		if err != nil {
+			return err
+		}
+
+		bill.DeletedAt = sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		}
+
+		_, err = ebs.billRepo.Update(ctx, bill)
+
+		return err
+	})
+}
+
+func (s *expenseBillServiceImpl) getBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseBill]) (entity.ExpenseBill, error) {
 	bill, err := s.billRepo.FindFirst(ctx, spec)
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}
 	if bill.IsZero() {
-		return entity.ExpenseBill{}, ungerr.NotFoundError(fmt.Sprintf("expense bill with ID %s is not found", id))
+		return entity.ExpenseBill{}, ungerr.NotFoundError(fmt.Sprintf("expense bill with ID %s is not found", spec.Model.ID))
 	}
 	if bill.IsDeleted() {
-		return entity.ExpenseBill{}, ungerr.UnprocessableEntityError(fmt.Sprintf("expense bill with ID %s is deleted", id))
+		return entity.ExpenseBill{}, ungerr.UnprocessableEntityError(fmt.Sprintf("expense bill with ID %s is deleted", spec.Model.ID))
 	}
 	return bill, nil
-}
-
-func (s *expenseBillServiceImpl) validateUploadRequest(req *dto.UploadBillRequest) error {
-	if req.CreatorProfileID == uuid.Nil {
-		return ungerr.BadRequestError("creator profile ID is required")
-	}
-
-	if len(req.ImageData) == 0 {
-		return ungerr.BadRequestError("image data is required")
-	}
-
-	if len(req.ImageData) > appconstant.MaxFileSize {
-		return ungerr.BadRequestError(appconstant.ErrFileTooLarge)
-	}
-
-	if _, ok := appconstant.AllowedContentTypes[req.ContentType]; !ok {
-		return ungerr.BadRequestError(appconstant.ErrInvalidFileType)
-	}
-
-	return nil
-}
-
-func (s *expenseBillServiceImpl) generateObjectKey(creatorID uuid.UUID, filename string) string {
-	ext := filepath.Ext(filename)
-	timestamp := time.Now().Format("2006/01/02")
-	return fmt.Sprintf("bills/%s/%s/%s%s", timestamp, creatorID.String(), uuid.New(), ext)
 }

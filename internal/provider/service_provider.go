@@ -39,9 +39,8 @@ func ProvideServices(googleConfig config.Google, repositories *Repositories, log
 	)
 
 	expenseBillService := service.NewExpenseBillService(
+		repositories.Transactor,
 		repositories.ExpenseBill,
-		repositories.Storage,
-		googleConfig.BillBucketName,
 		logger,
 	)
 
