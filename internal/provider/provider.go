@@ -15,9 +15,9 @@ type Provider struct {
 }
 
 func All(configs config.Config) *Provider {
-	logger := ProvideLogger(configs.App)
-	dbs := ProvideDBs(configs.DB)
-	repos := ProvideRepositories(dbs.GormDB, configs.Google, logger)
+	logger := ProvideLogger(config.AppName, configs.Env)
+	dbs := ProvideDBs(logger, configs)
+	repos := ProvideRepositories(dbs, configs.Google, logger)
 
 	return &Provider{
 		Logger:       logger,

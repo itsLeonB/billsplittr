@@ -6,14 +6,16 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+const AppName = "Billsplittr"
+
 type Config struct {
 	App
 	DB
 	Google
+	Valkey
 }
 
 type App struct {
-	Name    string        `default:"Billsplittr"`
 	Env     string        `default:"debug"`
 	Port    string        `default:"8080"`
 	Timeout time.Duration `default:"10s"`
@@ -34,9 +36,13 @@ func Load() Config {
 	var google Google
 	envconfig.MustProcess("GOOGLE", &google)
 
+	var valkey Valkey
+	envconfig.MustProcess("VALKEY", &valkey)
+
 	return Config{
 		App:    app,
 		DB:     db,
 		Google: google,
+		Valkey: valkey,
 	}
 }

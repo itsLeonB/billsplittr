@@ -42,6 +42,7 @@ func ProvideServices(googleConfig config.Google, repositories *Repositories, log
 		repositories.Transactor,
 		repositories.ExpenseBill,
 		logger,
+		repositories.TaskQueue,
 	)
 
 	return &Services{

@@ -6,7 +6,6 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
-	"gorm.io/gorm"
 )
 
 type Repositories struct {
@@ -16,20 +15,22 @@ type Repositories struct {
 	ExpenseParticipant repository.ExpenseParticipantRepository
 	OtherFee           repository.OtherFeeRepository
 	ExpenseBill        repository.ExpenseBillRepository
+	TaskQueue          repository.TaskQueue
 }
 
-func ProvideRepositories(gormDB *gorm.DB, googleConfig config.Google, logger ezutil.Logger) *Repositories {
-	if gormDB == nil {
+func ProvideRepositories(dbs *DBs, googleConfig config.Google, logger ezutil.Logger) *Repositories {
+	if dbs.GormDB == nil {
 		panic("gormDB cannot be nil")
 	}
 
 	return &Repositories{
-		Transactor:         crud.NewTransactor(gormDB),
-		GroupExpense:       repository.NewGroupExpenseRepository(gormDB),
-		ExpenseItem:        repository.NewExpenseItemRepository(gormDB),
-		ExpenseParticipant: crud.NewRepository[entity.ExpenseParticipant](gormDB),
-		OtherFee:           repository.NewOtherFeeRepository(gormDB),
-		ExpenseBill:        crud.NewRepository[entity.ExpenseBill](gormDB),
+		Transactor:         crud.NewTransactor(dbs.GormDB),
+		GroupExpense:       repository.NewGroupExpenseRepository(dbs.GormDB),
+		ExpenseItem:        repository.NewExpenseItemRepository(dbs.GormDB),
+		ExpenseParticipant: crud.NewRepository[entity.ExpenseParticipant](dbs.GormDB),
+		OtherFee:           repository.NewOtherFeeRepository(dbs.GormDB),
+		ExpenseBill:        crud.NewRepository[entity.ExpenseBill](dbs.GormDB),
+		TaskQueue:          repository.NewTaskQueue(logger, dbs.Asynq),
 	}
 }
 

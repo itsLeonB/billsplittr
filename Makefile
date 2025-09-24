@@ -4,12 +4,15 @@ TEST_DIR := ./internal/test
 	help
 	grpc
 	grpc-hot
+	job
 	lint
 	test
 	test-verbose
 	test-coverage
 	test-coverage-html
 	test-clean
+	build-grpc
+	build-job
 	install-pre-push-hook
 	uninstall-pre-push-hook
 
@@ -23,6 +26,8 @@ help:
 	@echo "  make test-coverage           - Run all tests with coverage report"
 	@echo "  make test-coverage-html      - Run all tests and generate HTML coverage report"
 	@echo "  make test-clean              - Clean test cache and run tests"
+	@echo "  make build-grpc              - Build the grpc application binary"
+	@echo "  make build-job               - Build the job application binary"
 	@echo "  make install-pre-push-hook   - Install the pre-push git hook"
 	@echo "  make uninstall-pre-push-hook - Uninstall the pre-push git hook"
 
@@ -32,6 +37,9 @@ grpc:
 grpc-hot:
 	@echo "🚀 Starting gRPC server with hot reload..."
 	air --build.cmd "go build -o bin/grpc cmd/grpc/main.go" --build.bin "./bin/grpc"
+
+job:
+	go run cmd/job/main.go
 
 lint:
 	golangci-lint run ./...
@@ -77,6 +85,16 @@ test-clean:
 	else \
 		echo "No tests found in $(TEST_DIR), skipping."; \
 	fi
+
+build-grpc:
+	@echo "Building the grpc app..."
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/grpc cmd/grpc/main.go
+	@echo "Build success! Binary is located at bin/grpc"
+
+build-job:
+	@echo "Building the job..."
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/job cmd/job/main.go
+	@echo "Build success! Binary is located at bin/job"
 
 install-pre-push-hook:
 	@echo "Installing pre-push git hook..."

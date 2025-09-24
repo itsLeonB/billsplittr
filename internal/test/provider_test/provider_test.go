@@ -24,10 +24,9 @@ func TestProvider_ShutdownNilComponents(t *testing.T) {
 func TestAllValidConfig(t *testing.T) {
 	// Skip this test as it requires actual database connection
 	t.Skip("Skipping integration test that requires database")
-	
+
 	configs := config.Config{
 		App: config.App{
-			Name: "test-app",
 			Env:  "test",
 			Port: "8080",
 		},

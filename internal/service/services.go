@@ -35,4 +35,5 @@ type ExpenseBillService interface {
 	GetAllCreated(ctx context.Context, creatorProfileID uuid.UUID) ([]dto.ExpenseBillResponse, error)
 	Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error)
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
+	EnqueueCleanup(ctx context.Context) error
 }

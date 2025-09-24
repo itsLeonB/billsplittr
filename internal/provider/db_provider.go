@@ -1,9 +1,12 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/hibiken/asynq"
 	"github.com/itsLeonB/billsplittr/internal/config"
+	"github.com/itsLeonB/ezutil/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -11,22 +14,38 @@ import (
 type DBs struct {
 	dbConfig config.DB
 	GormDB   *gorm.DB
+	Asynq    *asynq.Client
 }
 
-func ProvideDBs(dbConfig config.DB) *DBs {
-	dbs := &DBs{dbConfig, nil}
+func ProvideDBs(logger ezutil.Logger, cfg config.Config) *DBs {
+	dbs := &DBs{
+		cfg.DB,
+		nil,
+		connectAsynq(logger, cfg.Valkey),
+	}
+
 	dbs.openGormConnection()
 
 	return dbs
 }
 
 func (d *DBs) Shutdown() error {
+	var errs error
+
 	db, err := d.GormDB.DB()
 	if err != nil {
-		return err
+		errs = errors.Join(errs, err)
+	} else {
+		if e := db.Close(); e != nil {
+			errs = errors.Join(errs, e)
+		}
 	}
 
-	return db.Close()
+	if e := d.Asynq.Close(); e != nil {
+		errs = errors.Join(errs, e)
+	}
+
+	return errs
 }
 
 func (d *DBs) getDSN() string {
@@ -72,4 +91,17 @@ func (d *DBs) openGormConnection() {
 	}
 
 	d.GormDB = db
+}
+
+func connectAsynq(logger ezutil.Logger, cfg config.Valkey) *asynq.Client {
+	if cfg.Addr == "" {
+		logger.Warn("valkey config not provided, will not connect to asynq")
+		return nil
+	}
+
+	return asynq.NewClient(asynq.RedisClientOpt{
+		Addr:     cfg.Addr,
+		Password: cfg.Password,
+		DB:       cfg.Db,
+	})
 }

@@ -12,7 +12,6 @@ import (
 func TestConfigStruct(t *testing.T) {
 	cfg := config.Config{
 		App: config.App{
-			Name:    "TestApp",
 			Env:     "test",
 			Port:    "8080",
 			Timeout: 10 * time.Second,
@@ -31,7 +30,6 @@ func TestConfigStruct(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "TestApp", cfg.App.Name)
 	assert.Equal(t, "test", cfg.Env)
 	assert.Equal(t, "8080", cfg.App.Port)
 	assert.Equal(t, 10*time.Second, cfg.Timeout)
@@ -45,7 +43,6 @@ func TestAppDefaultValues(t *testing.T) {
 	app := config.App{}
 
 	// Test that struct can be created with zero values
-	assert.Equal(t, "", app.Name)
 	assert.Equal(t, "", app.Env)
 	assert.Equal(t, "", app.Port)
 	assert.Equal(t, time.Duration(0), app.Timeout)
@@ -106,6 +103,6 @@ func TestLoadWithEnvironmentVariables(t *testing.T) {
 	assert.Equal(t, "localhost", cfg.Host)
 	assert.Equal(t, "5432", cfg.DB.Port)
 	assert.Equal(t, "testuser", cfg.User)
-	assert.Equal(t, "testpass", cfg.Password)
-	assert.Equal(t, "testdb", cfg.DB.Name)
+	assert.Equal(t, "testpass", cfg.DB.Password)
+	assert.Equal(t, "testdb", cfg.Name)
 }

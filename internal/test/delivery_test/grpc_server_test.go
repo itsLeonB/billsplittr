@@ -14,7 +14,6 @@ func TestGrpcServerSetup(t *testing.T) {
 
 	configs := config.Config{
 		App: config.App{
-			Name: "test-app",
 			Env:  "test",
 			Port: "8080",
 		},
