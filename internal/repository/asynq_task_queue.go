@@ -42,3 +42,10 @@ func (tq *asynqTaskQueue) Enqueue(ctx context.Context, task entity.Task) error {
 
 	return nil
 }
+
+func (tq *asynqTaskQueue) Ping() error {
+	if err := tq.client.Ping(); err != nil {
+		return eris.Wrap(err, "asynq client is not ready")
+	}
+	return nil
+}

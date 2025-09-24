@@ -33,4 +33,5 @@ type ExpenseBillRepository interface {
 
 type TaskQueue interface {
 	Enqueue(ctx context.Context, task entity.Task) error
+	Ping() error
 }
