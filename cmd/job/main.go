@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	j := job.CleanupOrphanedBillsJob(config.Load())
+	j := job.EnqueueCleanupOrphanedBillsJob(config.Load())
 	j.Run()
 }

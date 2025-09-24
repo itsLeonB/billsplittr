@@ -9,25 +9,20 @@ import (
 	"github.com/itsLeonB/ezutil/v2"
 )
 
-type cleanupOrphanedBillsJob struct {
+type enqueueCleanupOrphanedBillsJob struct {
 	expenseBillSvc service.ExpenseBillService
 }
 
-func CleanupOrphanedBillsJob(configs config.Config) *ezutil.Job {
-	var providers *provider.Provider
-	jobImpl := cleanupOrphanedBillsJob{}
+func EnqueueCleanupOrphanedBillsJob(configs config.Config) *ezutil.Job {
 	logger := provider.ProvideLogger("Cleanup Orphaned Bills", configs.Env)
+	providers := provider.All(configs, logger)
+	jobImpl := enqueueCleanupOrphanedBillsJob{providers.Services.ExpenseBill}
 
 	return ezutil.NewJob(logger, jobImpl.Run).
-		WithSetupFunc(func() error {
-			providers = provider.All(configs)
-			providers.Logger = logger
-			jobImpl.expenseBillSvc = providers.Services.ExpenseBill
-			return nil
-		}).
+		WithSetupFunc(providers.Ping).
 		WithCleanupFunc(providers.Shutdown)
 }
 
-func (j *cleanupOrphanedBillsJob) Run() error {
+func (j *enqueueCleanupOrphanedBillsJob) Run() error {
 	return j.expenseBillSvc.EnqueueCleanup(context.Background())
 }

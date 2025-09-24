@@ -103,10 +103,6 @@ func (ebs *expenseBillServiceImpl) Delete(ctx context.Context, id, profileID uui
 }
 
 func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
-	if err := ebs.taskQueue.Ping(); err != nil {
-		return err
-	}
-
 	spec := crud.Specification[entity.ExpenseBill]{}
 	spec.DeletedFilter = crud.ExcludeDeleted
 	bills, err := ebs.billRepo.FindAll(ctx, spec)

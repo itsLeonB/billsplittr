@@ -52,6 +52,29 @@ func (d *DBs) Shutdown() error {
 	return errs
 }
 
+func (d *DBs) Ping() error {
+	var errs error
+
+	if d.GormDB != nil {
+		sqlDB, err := d.GormDB.DB()
+		if err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			if e := sqlDB.Ping(); e != nil {
+				errs = errors.Join(errs, e)
+			}
+		}
+	}
+
+	if d.Asynq != nil {
+		if e := d.Asynq.Ping(); e != nil {
+			errs = errors.Join(errs, e)
+		}
+	}
+
+	return errs
+}
+
 func (d *DBs) getDSN() string {
 	switch d.dbConfig.Driver {
 	case "mysql":

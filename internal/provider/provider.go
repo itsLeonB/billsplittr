@@ -14,8 +14,7 @@ type Provider struct {
 	*Services
 }
 
-func All(configs config.Config) *Provider {
-	logger := ProvideLogger(config.AppName, configs.Env)
+func All(configs config.Config, logger ezutil.Logger) *Provider {
 	dbs := ProvideDBs(logger, configs)
 	repos := ProvideRepositories(dbs, logger)
 
