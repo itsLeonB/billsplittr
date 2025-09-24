@@ -17,13 +17,13 @@ type Provider struct {
 func All(configs config.Config) *Provider {
 	logger := ProvideLogger(config.AppName, configs.Env)
 	dbs := ProvideDBs(logger, configs)
-	repos := ProvideRepositories(dbs, configs.Google, logger)
+	repos := ProvideRepositories(dbs, logger)
 
 	return &Provider{
 		Logger:       logger,
 		DBs:          dbs,
 		Repositories: repos,
-		Services:     ProvideServices(configs.Google, repos, logger),
+		Services:     ProvideServices(repos, logger),
 	}
 }
 

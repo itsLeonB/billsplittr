@@ -38,10 +38,6 @@ func TestAllValidConfig(t *testing.T) {
 			Password: "test",
 			Name:     "test",
 		},
-		Google: config.Google{
-			ServiceAccount: `{"type": "service_account"}`,
-			BillBucketName: "test-bucket",
-		},
 	}
 
 	assert.NotPanics(t, func() {

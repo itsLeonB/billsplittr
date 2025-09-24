@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
@@ -18,7 +17,7 @@ type Repositories struct {
 	TaskQueue          repository.TaskQueue
 }
 
-func ProvideRepositories(dbs *DBs, googleConfig config.Google, logger ezutil.Logger) *Repositories {
+func ProvideRepositories(dbs *DBs, logger ezutil.Logger) *Repositories {
 	if dbs.GormDB == nil {
 		panic("gormDB cannot be nil")
 	}

@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
 )
@@ -13,7 +12,7 @@ type Services struct {
 	ExpenseBill  service.ExpenseBillService
 }
 
-func ProvideServices(googleConfig config.Google, repositories *Repositories, logger ezutil.Logger) *Services {
+func ProvideServices(repositories *Repositories, logger ezutil.Logger) *Services {
 	if repositories == nil {
 		panic("repositories cannot be nil")
 	}

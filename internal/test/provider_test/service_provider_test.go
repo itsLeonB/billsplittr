@@ -3,7 +3,6 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,13 +22,10 @@ func (m *mockLogger) Fatal(args ...interface{})                 {}
 func (m *mockLogger) Fatalf(format string, args ...interface{}) {}
 
 func TestProvideServicesNilRepositories(t *testing.T) {
-	googleConfig := config.Google{
-		BillBucketName: "test-bucket",
-	}
 	logger := &mockLogger{}
 
 	assert.Panics(t, func() {
-		provider.ProvideServices(googleConfig, nil, logger)
+		provider.ProvideServices(nil, logger)
 	})
 }
 
