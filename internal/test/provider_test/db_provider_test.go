@@ -74,8 +74,8 @@ func TestDBsStruct(t *testing.T) {
 func TestDBs_ShutdownNilDB(t *testing.T) {
 	dbs := &provider.DBs{}
 
-	// Should panic when trying to shutdown nil DB
-	assert.Panics(t, func() {
+	// Should not panic when trying to shutdown nil DB
+	assert.NotPanics(t, func() {
 		_ = dbs.Shutdown()
 	})
 }

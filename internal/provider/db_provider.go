@@ -32,17 +32,21 @@ func ProvideDBs(logger ezutil.Logger, cfg config.Config) *DBs {
 func (d *DBs) Shutdown() error {
 	var errs error
 
-	db, err := d.GormDB.DB()
-	if err != nil {
-		errs = errors.Join(errs, err)
-	} else {
-		if e := db.Close(); e != nil {
-			errs = errors.Join(errs, e)
+	if d.GormDB != nil {
+		db, err := d.GormDB.DB()
+		if err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			if e := db.Close(); e != nil {
+				errs = errors.Join(errs, e)
+			}
 		}
 	}
 
-	if e := d.Asynq.Close(); e != nil {
-		errs = errors.Join(errs, e)
+	if d.Asynq != nil {
+		if e := d.Asynq.Close(); e != nil {
+			errs = errors.Join(errs, e)
+		}
 	}
 
 	return errs
