@@ -8,7 +8,7 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/itsLeonB/audit v0.1.0
 	github.com/itsLeonB/billsplittr-protos v0.4.0
-	github.com/itsLeonB/ezutil/v2 v2.2.0-beta
+	github.com/itsLeonB/ezutil/v2 v2.2.0
 	github.com/itsLeonB/gerpc v0.3.0
 	github.com/itsLeonB/go-crud v1.0.0
 	github.com/itsLeonB/ungerr v0.1.0
