@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 
@@ -130,5 +131,8 @@ func connectAsynq(logger ezutil.Logger, cfg config.Valkey) *asynq.Client {
 		Addr:     cfg.Addr,
 		Password: cfg.Password,
 		DB:       cfg.Db,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	})
 }
