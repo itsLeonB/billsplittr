@@ -14,7 +14,7 @@ type enqueueCleanupOrphanedBillsJob struct {
 }
 
 func EnqueueCleanupOrphanedBillsJob(configs config.Config) *ezutil.Job {
-	logger := provider.ProvideLogger("Cleanup Orphaned Bills", configs.Env)
+	logger := provider.ProvideLogger("Enqueue Cleanup Orphaned Bills", configs.Env)
 	providers := provider.All(configs, logger)
 	jobImpl := enqueueCleanupOrphanedBillsJob{providers.Services.ExpenseBill}
 

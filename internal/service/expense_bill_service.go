@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -111,6 +112,9 @@ func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
 	}
 
 	validObjectKeys := ezutil.MapSlice(bills, func(eb entity.ExpenseBill) string { return eb.ImageName })
+
+	ebs.logger.Infof("obtained object keys from DB:\n%s", strings.Join(validObjectKeys, "\n"))
+
 	task, err := entity.NewTask(entity.OrphanedBillCleanupTask{BillObjectKeys: validObjectKeys})
 	if err != nil {
 		return err
