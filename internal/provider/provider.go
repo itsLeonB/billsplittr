@@ -14,16 +14,15 @@ type Provider struct {
 	*Services
 }
 
-func All(configs config.Config) *Provider {
-	logger := ProvideLogger(configs.App)
-	dbs := ProvideDBs(configs.DB)
-	repos := ProvideRepositories(dbs.GormDB, configs.Google, logger)
+func All(configs config.Config, logger ezutil.Logger) *Provider {
+	dbs := ProvideDBs(logger, configs)
+	repos := ProvideRepositories(dbs, logger)
 
 	return &Provider{
 		Logger:       logger,
 		DBs:          dbs,
 		Repositories: repos,
-		Services:     ProvideServices(configs.Google, repos, logger),
+		Services:     ProvideServices(repos, logger),
 	}
 }
 

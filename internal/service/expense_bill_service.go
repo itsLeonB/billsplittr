@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,17 +21,20 @@ type expenseBillServiceImpl struct {
 	transactor crud.Transactor
 	billRepo   repository.ExpenseBillRepository
 	logger     ezutil.Logger
+	taskQueue  repository.TaskQueue
 }
 
 func NewExpenseBillService(
 	transactor crud.Transactor,
 	billRepo repository.ExpenseBillRepository,
 	logger ezutil.Logger,
+	taskQueue repository.TaskQueue,
 ) ExpenseBillService {
 	return &expenseBillServiceImpl{
 		transactor,
 		billRepo,
 		logger,
+		taskQueue,
 	}
 }
 
@@ -97,6 +101,26 @@ func (ebs *expenseBillServiceImpl) Delete(ctx context.Context, id, profileID uui
 
 		return err
 	})
+}
+
+func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
+	spec := crud.Specification[entity.ExpenseBill]{}
+	spec.DeletedFilter = crud.ExcludeDeleted
+	bills, err := ebs.billRepo.FindAll(ctx, spec)
+	if err != nil {
+		return err
+	}
+
+	validObjectKeys := ezutil.MapSlice(bills, func(eb entity.ExpenseBill) string { return eb.ImageName })
+
+	ebs.logger.Infof("obtained object keys from DB:\n%s", strings.Join(validObjectKeys, "\n"))
+
+	task, err := entity.NewTask(entity.OrphanedBillCleanupTask{BillObjectKeys: validObjectKeys})
+	if err != nil {
+		return err
+	}
+
+	return ebs.taskQueue.Enqueue(ctx, task)
 }
 
 func (s *expenseBillServiceImpl) getBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseBill]) (entity.ExpenseBill, error) {

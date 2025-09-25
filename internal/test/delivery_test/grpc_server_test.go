@@ -14,7 +14,6 @@ func TestGrpcServerSetup(t *testing.T) {
 
 	configs := config.Config{
 		App: config.App{
-			Name: "test-app",
 			Env:  "test",
 			Port: "8080",
 		},
@@ -25,10 +24,6 @@ func TestGrpcServerSetup(t *testing.T) {
 			User:     "test",
 			Password: "test",
 			Name:     "test",
-		},
-		Google: config.Google{
-			ServiceAccount: `{"type": "service_account"}`,
-			BillBucketName: "test-bucket",
 		},
 	}
 

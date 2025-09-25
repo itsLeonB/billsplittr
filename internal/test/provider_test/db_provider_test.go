@@ -5,12 +5,15 @@ import (
 
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/provider"
+	"github.com/itsLeonB/ezutil/v2"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDBs_GetDSNPostgres(t *testing.T) {
 	// We can't directly test the private getDSN method, but we can test the behavior
 	// by checking if the provider panics with invalid config
+
+	logger := ezutil.NewSimpleLogger(config.AppName, true, 0)
 
 	dbConfig := config.DB{
 		Driver:   "postgres",
@@ -23,11 +26,13 @@ func TestDBs_GetDSNPostgres(t *testing.T) {
 
 	// This will panic if database connection fails, which is expected in test environment
 	assert.Panics(t, func() {
-		provider.ProvideDBs(dbConfig)
+		provider.ProvideDBs(logger, config.Config{DB: dbConfig})
 	})
 }
 
 func TestDBs_GetDSNMySQL(t *testing.T) {
+	logger := ezutil.NewSimpleLogger(config.AppName, true, 0)
+
 	dbConfig := config.DB{
 		Driver:   "mysql",
 		Host:     "localhost",
@@ -39,11 +44,13 @@ func TestDBs_GetDSNMySQL(t *testing.T) {
 
 	// This will panic because MySQL driver is commented out in the actual code
 	assert.Panics(t, func() {
-		provider.ProvideDBs(dbConfig)
+		provider.ProvideDBs(logger, config.Config{DB: dbConfig})
 	})
 }
 
 func TestDBsUnsupportedDriver(t *testing.T) {
+	logger := ezutil.NewSimpleLogger(config.AppName, true, 0)
+
 	dbConfig := config.DB{
 		Driver:   "unsupported",
 		Host:     "localhost",
@@ -54,7 +61,7 @@ func TestDBsUnsupportedDriver(t *testing.T) {
 	}
 
 	assert.Panics(t, func() {
-		provider.ProvideDBs(dbConfig)
+		provider.ProvideDBs(logger, config.Config{DB: dbConfig})
 	})
 }
 
@@ -67,8 +74,8 @@ func TestDBsStruct(t *testing.T) {
 func TestDBs_ShutdownNilDB(t *testing.T) {
 	dbs := &provider.DBs{}
 
-	// Should panic when trying to shutdown nil DB
-	assert.Panics(t, func() {
+	// Should not panic when trying to shutdown nil DB
+	assert.NotPanics(t, func() {
 		_ = dbs.Shutdown()
 	})
 }

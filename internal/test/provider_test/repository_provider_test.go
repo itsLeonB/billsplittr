@@ -3,20 +3,15 @@ package provider_test
 import (
 	"testing"
 
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestProvideRepositoriesNilDB(t *testing.T) {
-	googleConfig := config.Google{
-		ServiceAccount: "{}",
-		BillBucketName: "test-bucket",
-	}
 	logger := &mockLogger{}
 
 	assert.Panics(t, func() {
-		provider.ProvideRepositories(nil, googleConfig, logger)
+		provider.ProvideRepositories(nil, logger)
 	})
 }
 
