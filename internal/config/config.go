@@ -31,9 +31,13 @@ func Load() Config {
 	var valkey Valkey
 	envconfig.MustProcess("VALKEY", &valkey)
 
+	var storage Storage
+	envconfig.MustProcess("STORAGE", &storage)
+
 	return Config{
-		App:    app,
-		DB:     db,
-		Valkey: valkey,
+		App:     app,
+		DB:      db,
+		Valkey:  valkey,
+		Storage: storage,
 	}
 }
