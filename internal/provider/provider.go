@@ -26,7 +26,7 @@ func All(configs config.Config, logger ezutil.Logger) *Provider {
 
 func (p *Provider) Shutdown() error {
 	if p.DBs != nil {
-		return p.Shutdown()
+		return p.DBs.Shutdown()
 	}
 	return nil
 }
