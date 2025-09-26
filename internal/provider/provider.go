@@ -1,8 +1,6 @@
 package provider
 
 import (
-	"errors"
-
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/ezutil/v2"
 )
@@ -22,21 +20,13 @@ func All(configs config.Config, logger ezutil.Logger) *Provider {
 		Logger:       logger,
 		DBs:          dbs,
 		Repositories: repos,
-		Services:     ProvideServices(repos, logger),
+		Services:     ProvideServices(repos, logger, configs.Storage),
 	}
 }
 
 func (p *Provider) Shutdown() error {
-	var err error
 	if p.DBs != nil {
-		if e := p.DBs.Shutdown(); e != nil {
-			err = errors.Join(err, e)
-		}
+		return p.DBs.Shutdown()
 	}
-	if p.Repositories != nil {
-		if e := p.Repositories.Shutdown(); e != nil {
-			err = errors.Join(err, e)
-		}
-	}
-	return err
+	return nil
 }

@@ -1,13 +1,12 @@
 package provider
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 
-	"github.com/hibiken/asynq"
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/meq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -15,14 +14,14 @@ import (
 type DBs struct {
 	dbConfig config.DB
 	GormDB   *gorm.DB
-	Asynq    *asynq.Client
+	MQ       meq.DB
 }
 
 func ProvideDBs(logger ezutil.Logger, cfg config.Config) *DBs {
 	dbs := &DBs{
 		cfg.DB,
 		nil,
-		connectAsynq(logger, cfg.Valkey),
+		meq.NewAsynqDB(logger, cfg.ToRedisOpts()),
 	}
 
 	dbs.openGormConnection()
@@ -43,9 +42,8 @@ func (d *DBs) Shutdown() error {
 			}
 		}
 	}
-
-	if d.Asynq != nil {
-		if e := d.Asynq.Close(); e != nil {
+	if d.MQ != nil {
+		if e := d.MQ.Shutdown(); e != nil {
 			errs = errors.Join(errs, e)
 		}
 	}
@@ -66,9 +64,8 @@ func (d *DBs) Ping() error {
 			}
 		}
 	}
-
-	if d.Asynq != nil {
-		if e := d.Asynq.Ping(); e != nil {
+	if d.MQ != nil {
+		if e := d.MQ.Ping(); e != nil {
 			errs = errors.Join(errs, e)
 		}
 	}
@@ -119,20 +116,4 @@ func (d *DBs) openGormConnection() {
 	}
 
 	d.GormDB = db
-}
-
-func connectAsynq(logger ezutil.Logger, cfg config.Valkey) *asynq.Client {
-	if cfg.Addr == "" {
-		logger.Warn("valkey config not provided, will not connect to asynq")
-		return nil
-	}
-
-	return asynq.NewClient(asynq.RedisClientOpt{
-		Addr:     cfg.Addr,
-		Password: cfg.Password,
-		DB:       cfg.Db,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
-	})
 }

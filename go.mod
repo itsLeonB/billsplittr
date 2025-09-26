@@ -11,6 +11,7 @@ require (
 	github.com/itsLeonB/ezutil/v2 v2.2.0
 	github.com/itsLeonB/gerpc v0.3.0
 	github.com/itsLeonB/go-crud v1.0.0
+	github.com/itsLeonB/meq v0.0.0
 	github.com/itsLeonB/ungerr v0.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0

@@ -30,7 +30,3 @@ type OtherFeeRepository interface {
 type ExpenseBillRepository interface {
 	crud.Repository[entity.ExpenseBill]
 }
-
-type TaskQueue interface {
-	Enqueue(ctx context.Context, task entity.Task) error
-}

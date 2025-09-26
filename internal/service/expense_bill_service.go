@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
+	"github.com/itsLeonB/meq"
 	"github.com/itsLeonB/ungerr"
 )
 
@@ -21,20 +23,23 @@ type expenseBillServiceImpl struct {
 	transactor crud.Transactor
 	billRepo   repository.ExpenseBillRepository
 	logger     ezutil.Logger
-	taskQueue  repository.TaskQueue
+	taskQueue  meq.TaskQueue[entity.OrphanedBillCleanupTask]
+	bucketName string
 }
 
 func NewExpenseBillService(
 	transactor crud.Transactor,
 	billRepo repository.ExpenseBillRepository,
 	logger ezutil.Logger,
-	taskQueue repository.TaskQueue,
+	taskQueue meq.TaskQueue[entity.OrphanedBillCleanupTask],
+	bucketName string,
 ) ExpenseBillService {
 	return &expenseBillServiceImpl{
 		transactor,
 		billRepo,
 		logger,
 		taskQueue,
+		bucketName,
 	}
 }
 
@@ -115,12 +120,12 @@ func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
 
 	ebs.logger.Infof("obtained object keys from DB:\n%s", strings.Join(validObjectKeys, "\n"))
 
-	task, err := entity.NewTask(entity.OrphanedBillCleanupTask{BillObjectKeys: validObjectKeys})
-	if err != nil {
-		return err
+	task := entity.OrphanedBillCleanupTask{
+		BillObjectKeys: validObjectKeys,
+		BucketName:     ebs.bucketName,
 	}
 
-	return ebs.taskQueue.Enqueue(ctx, task)
+	return ebs.taskQueue.Enqueue(ctx, config.AppName, task)
 }
 
 func (s *expenseBillServiceImpl) getBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseBill]) (entity.ExpenseBill, error) {
