@@ -12,7 +12,6 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
-	time "time"
 
 	uuid "github.com/google/uuid"
 	entity "github.com/itsLeonB/billsplittr/internal/entity"
@@ -701,101 +700,4 @@ func (m *MockExpenseBillRepository) Update(ctx context.Context, model entity.Exp
 func (mr *MockExpenseBillRepositoryMockRecorder) Update(ctx, model any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockExpenseBillRepository)(nil).Update), ctx, model)
-}
-
-// MockStorageRepository is a mock of StorageRepository interface.
-type MockStorageRepository struct {
-	ctrl     *gomock.Controller
-	recorder *MockStorageRepositoryMockRecorder
-	isgomock struct{}
-}
-
-// MockStorageRepositoryMockRecorder is the mock recorder for MockStorageRepository.
-type MockStorageRepositoryMockRecorder struct {
-	mock *MockStorageRepository
-}
-
-// NewMockStorageRepository creates a new mock instance.
-func NewMockStorageRepository(ctrl *gomock.Controller) *MockStorageRepository {
-	mock := &MockStorageRepository{ctrl: ctrl}
-	mock.recorder = &MockStorageRepositoryMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStorageRepository) EXPECT() *MockStorageRepositoryMockRecorder {
-	return m.recorder
-}
-
-// Close mocks base method.
-func (m *MockStorageRepository) Close() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Close")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Close indicates an expected call of Close.
-func (mr *MockStorageRepositoryMockRecorder) Close() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockStorageRepository)(nil).Close))
-}
-
-// Delete mocks base method.
-func (m *MockStorageRepository) Delete(ctx context.Context, bucketName, objectKey string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, bucketName, objectKey)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockStorageRepositoryMockRecorder) Delete(ctx, bucketName, objectKey any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorageRepository)(nil).Delete), ctx, bucketName, objectKey)
-}
-
-// Download mocks base method.
-func (m *MockStorageRepository) Download(ctx context.Context, bucketName, objectKey string) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Download", ctx, bucketName, objectKey)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Download indicates an expected call of Download.
-func (mr *MockStorageRepositoryMockRecorder) Download(ctx, bucketName, objectKey any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Download", reflect.TypeOf((*MockStorageRepository)(nil).Download), ctx, bucketName, objectKey)
-}
-
-// GetSignedURL mocks base method.
-func (m *MockStorageRepository) GetSignedURL(ctx context.Context, bucketName, objectKey string, expiration time.Duration) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSignedURL", ctx, bucketName, objectKey, expiration)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSignedURL indicates an expected call of GetSignedURL.
-func (mr *MockStorageRepositoryMockRecorder) GetSignedURL(ctx, bucketName, objectKey, expiration any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSignedURL", reflect.TypeOf((*MockStorageRepository)(nil).GetSignedURL), ctx, bucketName, objectKey, expiration)
-}
-
-// Upload mocks base method.
-func (m *MockStorageRepository) Upload(ctx context.Context, req *entity.StorageUploadRequest) (*entity.StorageUploadResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Upload", ctx, req)
-	ret0, _ := ret[0].(*entity.StorageUploadResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Upload indicates an expected call of Upload.
-func (mr *MockStorageRepositoryMockRecorder) Upload(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upload", reflect.TypeOf((*MockStorageRepository)(nil).Upload), ctx, req)
 }

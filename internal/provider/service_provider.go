@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
 )
@@ -12,7 +13,11 @@ type Services struct {
 	ExpenseBill  service.ExpenseBillService
 }
 
-func ProvideServices(repositories *Repositories, logger ezutil.Logger) *Services {
+func ProvideServices(
+	repositories *Repositories,
+	logger ezutil.Logger,
+	storageCfg config.Storage,
+) *Services {
 	if repositories == nil {
 		panic("repositories cannot be nil")
 	}
@@ -42,6 +47,7 @@ func ProvideServices(repositories *Repositories, logger ezutil.Logger) *Services
 		repositories.ExpenseBill,
 		logger,
 		repositories.TaskQueue,
+		storageCfg.BucketNameExpenseBill,
 	)
 
 	return &Services{

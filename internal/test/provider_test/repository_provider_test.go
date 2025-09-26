@@ -21,10 +21,3 @@ func TestProvideRepositoriesValidDB(t *testing.T) {
 	// In a real scenario, you'd use an in-memory SQLite database for testing
 	t.Skip("Requires GORM DB setup")
 }
-
-func TestRepositoriesShutdown(t *testing.T) {
-	// Test shutdown with nil storage
-	repos := &provider.Repositories{}
-	err := repos.Shutdown()
-	assert.NoError(t, err)
-}

@@ -12,6 +12,7 @@ type Config struct {
 	App
 	DB
 	Valkey
+	Storage
 }
 
 type App struct {

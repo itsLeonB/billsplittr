@@ -3,6 +3,7 @@ package provider_test
 import (
 	"testing"
 
+	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +26,7 @@ func TestProvideServicesNilRepositories(t *testing.T) {
 	logger := &mockLogger{}
 
 	assert.Panics(t, func() {
-		provider.ProvideServices(nil, logger)
+		provider.ProvideServices(nil, logger, config.Storage{})
 	})
 }
 
