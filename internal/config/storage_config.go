@@ -1,5 +1,5 @@
 package config
 
 type Storage struct {
-	BucketNameExpenseBill string `required:"true"`
+	BucketNameExpenseBill string `split_words:"true" required:"true"`
 }
