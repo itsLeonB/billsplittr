@@ -14,6 +14,7 @@ type GroupExpenseService interface {
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 	ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error)
 	GetUnconfirmedGroupExpenseForUpdate(ctx context.Context, profileID, id uuid.UUID) (entity.GroupExpense, error)
+	ParseFromBillText(ctx context.Context) error
 }
 
 type ExpenseItemService interface {
@@ -36,4 +37,8 @@ type ExpenseBillService interface {
 	Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error)
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
 	EnqueueCleanup(ctx context.Context) error
+}
+
+type LLMService interface {
+	Prompt(ctx context.Context, systemMsg, userMsg string) (string, error)
 }

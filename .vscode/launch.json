@@ -6,7 +6,7 @@
             "request": "launch",
             "mode": "debug",
             "envFile": "${workspaceFolder}/.env",
-            "program": "${workspaceFolder}/cmd/grpc/main.go",
+            "program": "${workspaceFolder}/cmd/grpc",
             "cwd": "${workspaceFolder}"
         },
         {
@@ -15,7 +15,7 @@
             "request": "launch",
             "mode": "debug",
             "envFile": "${workspaceFolder}/.env",
-            "program": "${workspaceFolder}/cmd/job/main.go",
+            "program": "${workspaceFolder}/cmd/job",
             "cwd": "${workspaceFolder}"
         }
     ]

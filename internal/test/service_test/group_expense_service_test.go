@@ -23,8 +23,17 @@ func TestGroupExpenseService_CreateDraftSuccess(t *testing.T) {
 	mockTransactor := mocks.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-
-	svc := service.NewGroupExpenseService(mockTransactor, mockGroupExpenseRepo, mockOtherFeeRepo)
+	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
+	mockLLMService := mocks.NewMockLLMService(ctrl)
+	svc := service.NewGroupExpenseService(
+		mockTransactor,
+		mockGroupExpenseRepo,
+		mockOtherFeeRepo,
+		mockExpenseBillRepo,
+		mockLLMService,
+		nil,
+		nil,
+	)
 
 	creatorID := uuid.New()
 	payerID := uuid.New()
@@ -78,8 +87,17 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorZeroAmount(t *testing.T)
 	mockTransactor := mocks.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-
-	svc := service.NewGroupExpenseService(mockTransactor, mockGroupExpenseRepo, mockOtherFeeRepo)
+	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
+	mockLLMService := mocks.NewMockLLMService(ctrl)
+	svc := service.NewGroupExpenseService(
+		mockTransactor,
+		mockGroupExpenseRepo,
+		mockOtherFeeRepo,
+		mockExpenseBillRepo,
+		mockLLMService,
+		nil,
+		nil,
+	)
 
 	request := dto.NewGroupExpenseRequest{
 		TotalAmount: decimal.Zero,
@@ -100,8 +118,17 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorAmountMismatch(t *testin
 	mockTransactor := mocks.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-
-	svc := service.NewGroupExpenseService(mockTransactor, mockGroupExpenseRepo, mockOtherFeeRepo)
+	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
+	mockLLMService := mocks.NewMockLLMService(ctrl)
+	svc := service.NewGroupExpenseService(
+		mockTransactor,
+		mockGroupExpenseRepo,
+		mockOtherFeeRepo,
+		mockExpenseBillRepo,
+		mockLLMService,
+		nil,
+		nil,
+	)
 
 	request := dto.NewGroupExpenseRequest{
 		TotalAmount: decimal.NewFromFloat(100.00),
@@ -134,8 +161,17 @@ func TestGroupExpenseServiceGetAllCreated(t *testing.T) {
 	mockTransactor := mocks.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-
-	svc := service.NewGroupExpenseService(mockTransactor, mockGroupExpenseRepo, mockOtherFeeRepo)
+	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
+	mockLLMService := mocks.NewMockLLMService(ctrl)
+	svc := service.NewGroupExpenseService(
+		mockTransactor,
+		mockGroupExpenseRepo,
+		mockOtherFeeRepo,
+		mockExpenseBillRepo,
+		mockLLMService,
+		nil,
+		nil,
+	)
 
 	profileID := uuid.New()
 	expectedExpenses := []entity.GroupExpense{
@@ -164,8 +200,17 @@ func TestGroupExpenseServiceGetDetails(t *testing.T) {
 	mockTransactor := mocks.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-
-	svc := service.NewGroupExpenseService(mockTransactor, mockGroupExpenseRepo, mockOtherFeeRepo)
+	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
+	mockLLMService := mocks.NewMockLLMService(ctrl)
+	svc := service.NewGroupExpenseService(
+		mockTransactor,
+		mockGroupExpenseRepo,
+		mockOtherFeeRepo,
+		mockExpenseBillRepo,
+		mockLLMService,
+		nil,
+		nil,
+	)
 
 	expenseID := uuid.New()
 	expectedExpense := entity.GroupExpense{

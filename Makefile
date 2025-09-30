@@ -1,25 +1,26 @@
-TEST_DIR := ./internal/test
+TEST_DIR := ./internal/test/...
+COVER_PKG := ./internal/...
 
-.PHONY:
-	help
-	grpc
-	grpc-hot
-	job
-	lint
-	test
-	test-verbose
-	test-coverage
-	test-coverage-html
-	test-clean
-	build-grpc
-	build-job
-	install-pre-push-hook
-	uninstall-pre-push-hook
+.PHONY: help \
+grpc \
+grpc-hot \
+job \
+lint \
+test \
+test-verbose \
+test-coverage \
+test-coverage-html \
+test-clean \
+build-grpc \
+build-job \
+install-pre-push-hook \
+uninstall-pre-push-hook
 
 help:
 	@echo "Makefile commands:"
 	@echo "  make grpc                    - Start the gRPC server"
 	@echo "  make grpc-hot                - Start the gRPC server with hot reload (requires air)"
+	@echo "  make job                     - Start the job processor"
 	@echo "  make lint                    - Run golangci-lint on the codebase"
 	@echo "  make test                    - Run all tests"
 	@echo "  make test-verbose            - Run all tests with verbose output"
@@ -32,14 +33,14 @@ help:
 	@echo "  make uninstall-pre-push-hook - Uninstall the pre-push git hook"
 
 grpc:
-	go run cmd/grpc/main.go
+	go run ./cmd/grpc
 
 grpc-hot:
 	@echo "🚀 Starting gRPC server with hot reload..."
 	air --build.cmd "go build -o bin/grpc cmd/grpc/main.go" --build.bin "./bin/grpc"
 
 job:
-	go run cmd/job/main.go
+	go run ./cmd/job
 
 lint:
 	golangci-lint run ./...
@@ -47,7 +48,7 @@ lint:
 test:
 	@echo "Running all tests..."
 	@if [ -d $(TEST_DIR) ]; then \
-		go test $(TEST_DIR)/...; \
+		go test $(TEST_DIR); \
 	else \
 		echo "No tests found in $(TEST_DIR), skipping."; \
 	fi
@@ -55,7 +56,7 @@ test:
 test-verbose:
 	@echo "Running all tests with verbose output..."
 	@if [ -d $(TEST_DIR) ]; then \
-		go test -v $(TEST_DIR)/...; \
+		go test -v $(TEST_DIR); \
 	else \
 		echo "No tests found in $(TEST_DIR), skipping."; \
 	fi
@@ -63,7 +64,7 @@ test-verbose:
 test-coverage:
 	@echo "Running all tests with coverage report..."
 	@if [ -d $(TEST_DIR) ]; then \
-		go test -v -cover -coverprofile=coverage.out -coverpkg=./internal/... $(TEST_DIR)/...; \
+		go test -v -cover -coverprofile=coverage.out -coverpkg=$(COVER_PKG) $(TEST_DIR); \
 	else \
 		echo "No tests found in $(TEST_DIR), skipping."; \
 	fi
@@ -71,7 +72,7 @@ test-coverage:
 test-coverage-html:
 	@echo "Running all tests and generating HTML coverage report..."
 	@if [ -d $(TEST_DIR) ]; then \
-		go test -v -cover -coverprofile=coverage.out -coverpkg=./internal/... $(TEST_DIR)/... && \
+		go test -v -cover -coverprofile=coverage.out -coverpkg=$(COVER_PKG) $(TEST_DIR) && \
 		go tool cover -html=coverage.out -o coverage.html && \
 		echo "Coverage report generated: coverage.html"; \
 	else \
@@ -81,7 +82,7 @@ test-coverage-html:
 test-clean:
 	@echo "Cleaning test cache and running tests..."
 	@if [ -d $(TEST_DIR) ]; then \
-		go clean -testcache && go test -v $(TEST_DIR)/...; \
+		go clean -testcache && go test -v $(TEST_DIR); \
 	else \
 		echo "No tests found in $(TEST_DIR), skipping."; \
 	fi
