@@ -10,13 +10,13 @@ import (
 )
 
 type openAILLMService struct {
-	client *openai.Client
+	client openai.Client
 	model  string
 }
 
 func NewLLMService(cfg config.LLM) LLMService {
 	client := openai.NewClient(option.WithAPIKey(cfg.ApiKey), option.WithBaseURL(cfg.BaseUrl))
-	return &openAILLMService{&client, cfg.Model}
+	return &openAILLMService{client, cfg.Model}
 }
 
 func (llm *openAILLMService) Prompt(ctx context.Context, systemMsg, userMsg string) (string, error) {
