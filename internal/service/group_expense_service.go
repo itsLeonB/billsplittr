@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -287,6 +288,9 @@ func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context) error
 
 			request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, taskMsg.Text)
 			if err != nil {
+				if errors.Is(err, appconstant.ErrExpenseNotDetected) {
+					return nil
+				}
 				return err
 			}
 
@@ -371,7 +375,7 @@ func (ges *groupExpenseServiceImpl) getPendingForProcessingExpenseBill(ctx conte
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}
-	if expenseBill.GroupExpenseID.Valid || expenseBill.GroupExpenseID.UUID != uuid.Nil {
+	if expenseBill.GroupExpenseID.UUID != uuid.Nil {
 		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already has group expense attributed", expenseBill.GroupExpenseID.UUID.String())
 	}
 
@@ -385,7 +389,7 @@ func (ges *groupExpenseServiceImpl) parseExpenseBillTextToExpenseRequest(ctx con
 	}
 	if promptResponse == "NOT_DETECTED" {
 		ges.logger.Info("group expense not detected")
-		return dto.NewGroupExpenseRequest{}, nil
+		return dto.NewGroupExpenseRequest{}, appconstant.ErrExpenseNotDetected
 	}
 
 	var request dto.NewGroupExpenseRequest

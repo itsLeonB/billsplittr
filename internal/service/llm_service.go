@@ -25,11 +25,12 @@ func (llm *openAILLMService) Prompt(ctx context.Context, systemMsg, userMsg stri
 	}
 
 	msgs := make([]openai.ChatCompletionMessageParamUnion, 0, 2)
-	msgs = append(msgs, openai.UserMessage(userMsg))
 
 	if systemMsg != "" {
 		msgs = append(msgs, openai.SystemMessage(systemMsg))
 	}
+
+	msgs = append(msgs, openai.UserMessage(userMsg))
 
 	params := openai.ChatCompletionNewParams{
 		Model:    llm.model,
@@ -39,6 +40,10 @@ func (llm *openAILLMService) Prompt(ctx context.Context, systemMsg, userMsg stri
 	response, err := llm.client.Chat.Completions.New(ctx, params)
 	if err != nil {
 		return "", eris.Wrap(err, "error getting LLM response")
+	}
+
+	if len(response.Choices) < 1 {
+		return "", eris.New("no response from LLM")
 	}
 
 	return response.Choices[0].Message.Content, nil

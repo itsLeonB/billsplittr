@@ -12,7 +12,7 @@ func SelectJob(cfg config.Config) (*ezutil.Job, error) {
 	case appconstant.EnqueueCleanupOrphanedBillsJob:
 		return enqueueCleanupOrphanedBillsJob(cfg)
 	case appconstant.ProcessExtractedExpenseBillTextJob:
-		return processExtractedExpenseBillJob(cfg)
+		return processExtractedExpenseBillTextJob(cfg)
 	default:
 		return nil, eris.Errorf("unknown service type for job entrypoint: %s", cfg.ServiceType)
 	}

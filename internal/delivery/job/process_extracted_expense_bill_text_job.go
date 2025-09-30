@@ -9,11 +9,11 @@ import (
 	"github.com/itsLeonB/ezutil/v2"
 )
 
-type processExtractedExpenseBillJobImpl struct {
+type processExtractedExpenseBillTextJobImpl struct {
 	groupExpenseService service.GroupExpenseService
 }
 
-func processExtractedExpenseBillJob(configs config.Config) (*ezutil.Job, error) {
+func processExtractedExpenseBillTextJob(configs config.Config) (*ezutil.Job, error) {
 	logger := provider.ProvideLogger("Process Extracted Expense Bill", configs.Env)
 
 	providers, err := provider.All(configs, logger)
@@ -21,7 +21,7 @@ func processExtractedExpenseBillJob(configs config.Config) (*ezutil.Job, error) 
 		return nil, err
 	}
 
-	jobImpl := processExtractedExpenseBillJobImpl{
+	jobImpl := processExtractedExpenseBillTextJobImpl{
 		providers.Services.GroupExpense,
 	}
 
@@ -32,6 +32,6 @@ func processExtractedExpenseBillJob(configs config.Config) (*ezutil.Job, error) 
 	return job, nil
 }
 
-func (j *processExtractedExpenseBillJobImpl) Run() error {
+func (j *processExtractedExpenseBillTextJobImpl) Run() error {
 	return j.groupExpenseService.ParseFromBillText(context.Background())
 }

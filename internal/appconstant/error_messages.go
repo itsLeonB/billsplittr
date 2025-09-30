@@ -1,5 +1,7 @@
 package appconstant
 
+import "errors"
+
 const (
 	ErrDataUpdate = "error updating data"
 
@@ -21,3 +23,5 @@ const (
 
 	ErrNilRequest = "request is nil"
 )
+
+var ErrExpenseNotDetected = errors.New("NOT_DETECTED")
