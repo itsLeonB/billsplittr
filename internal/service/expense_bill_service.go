@@ -12,6 +12,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
+	"github.com/itsLeonB/billsplittr/internal/message"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
@@ -23,7 +24,7 @@ type expenseBillServiceImpl struct {
 	transactor crud.Transactor
 	billRepo   repository.ExpenseBillRepository
 	logger     ezutil.Logger
-	taskQueue  meq.TaskQueue[entity.OrphanedBillCleanupTask]
+	taskQueue  meq.TaskQueue[message.OrphanedBillCleanup]
 	bucketName string
 }
 
@@ -31,7 +32,7 @@ func NewExpenseBillService(
 	transactor crud.Transactor,
 	billRepo repository.ExpenseBillRepository,
 	logger ezutil.Logger,
-	taskQueue meq.TaskQueue[entity.OrphanedBillCleanupTask],
+	taskQueue meq.TaskQueue[message.OrphanedBillCleanup],
 	bucketName string,
 ) ExpenseBillService {
 	return &expenseBillServiceImpl{
@@ -120,7 +121,7 @@ func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
 
 	ebs.logger.Infof("obtained object keys from DB:\n%s", strings.Join(validObjectKeys, "\n"))
 
-	task := entity.OrphanedBillCleanupTask{
+	task := message.OrphanedBillCleanup{
 		BillObjectKeys: validObjectKeys,
 		BucketName:     ebs.bucketName,
 	}

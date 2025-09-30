@@ -118,6 +118,20 @@ func (mr *MockGroupExpenseServiceMockRecorder) GetUnconfirmedGroupExpenseForUpda
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnconfirmedGroupExpenseForUpdate", reflect.TypeOf((*MockGroupExpenseService)(nil).GetUnconfirmedGroupExpenseForUpdate), ctx, profileID, id)
 }
 
+// ParseFromBillText mocks base method.
+func (m *MockGroupExpenseService) ParseFromBillText(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ParseFromBillText", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ParseFromBillText indicates an expected call of ParseFromBillText.
+func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx)
+}
+
 // MockExpenseItemService is a mock of ExpenseItemService interface.
 type MockExpenseItemService struct {
 	ctrl     *gomock.Controller
@@ -281,4 +295,140 @@ func (m *MockOtherFeeService) Update(ctx context.Context, request dto.UpdateOthe
 func (mr *MockOtherFeeServiceMockRecorder) Update(ctx, request any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOtherFeeService)(nil).Update), ctx, request)
+}
+
+// MockExpenseBillService is a mock of ExpenseBillService interface.
+type MockExpenseBillService struct {
+	ctrl     *gomock.Controller
+	recorder *MockExpenseBillServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockExpenseBillServiceMockRecorder is the mock recorder for MockExpenseBillService.
+type MockExpenseBillServiceMockRecorder struct {
+	mock *MockExpenseBillService
+}
+
+// NewMockExpenseBillService creates a new mock instance.
+func NewMockExpenseBillService(ctrl *gomock.Controller) *MockExpenseBillService {
+	mock := &MockExpenseBillService{ctrl: ctrl}
+	mock.recorder = &MockExpenseBillServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockExpenseBillService) EXPECT() *MockExpenseBillServiceMockRecorder {
+	return m.recorder
+}
+
+// Delete mocks base method.
+func (m *MockExpenseBillService) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id, profileID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockExpenseBillServiceMockRecorder) Delete(ctx, id, profileID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockExpenseBillService)(nil).Delete), ctx, id, profileID)
+}
+
+// EnqueueCleanup mocks base method.
+func (m *MockExpenseBillService) EnqueueCleanup(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnqueueCleanup", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnqueueCleanup indicates an expected call of EnqueueCleanup.
+func (mr *MockExpenseBillServiceMockRecorder) EnqueueCleanup(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueCleanup", reflect.TypeOf((*MockExpenseBillService)(nil).EnqueueCleanup), ctx)
+}
+
+// Get mocks base method.
+func (m *MockExpenseBillService) Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, id)
+	ret0, _ := ret[0].(dto.ExpenseBillResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockExpenseBillServiceMockRecorder) Get(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockExpenseBillService)(nil).Get), ctx, id)
+}
+
+// GetAllCreated mocks base method.
+func (m *MockExpenseBillService) GetAllCreated(ctx context.Context, creatorProfileID uuid.UUID) ([]dto.ExpenseBillResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllCreated", ctx, creatorProfileID)
+	ret0, _ := ret[0].([]dto.ExpenseBillResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllCreated indicates an expected call of GetAllCreated.
+func (mr *MockExpenseBillServiceMockRecorder) GetAllCreated(ctx, creatorProfileID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCreated", reflect.TypeOf((*MockExpenseBillService)(nil).GetAllCreated), ctx, creatorProfileID)
+}
+
+// Save mocks base method.
+func (m *MockExpenseBillService) Save(ctx context.Context, req dto.NewExpenseBillRequest) (dto.ExpenseBillResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Save", ctx, req)
+	ret0, _ := ret[0].(dto.ExpenseBillResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Save indicates an expected call of Save.
+func (mr *MockExpenseBillServiceMockRecorder) Save(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockExpenseBillService)(nil).Save), ctx, req)
+}
+
+// MockLLMService is a mock of LLMService interface.
+type MockLLMService struct {
+	ctrl     *gomock.Controller
+	recorder *MockLLMServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockLLMServiceMockRecorder is the mock recorder for MockLLMService.
+type MockLLMServiceMockRecorder struct {
+	mock *MockLLMService
+}
+
+// NewMockLLMService creates a new mock instance.
+func NewMockLLMService(ctrl *gomock.Controller) *MockLLMService {
+	mock := &MockLLMService{ctrl: ctrl}
+	mock.recorder = &MockLLMServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockLLMService) EXPECT() *MockLLMServiceMockRecorder {
+	return m.recorder
+}
+
+// Prompt mocks base method.
+func (m *MockLLMService) Prompt(ctx context.Context, systemMsg, userMsg string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Prompt", ctx, systemMsg, userMsg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Prompt indicates an expected call of Prompt.
+func (mr *MockLLMServiceMockRecorder) Prompt(ctx, systemMsg, userMsg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Prompt", reflect.TypeOf((*MockLLMService)(nil).Prompt), ctx, systemMsg, userMsg)
 }

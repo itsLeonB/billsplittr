@@ -4,6 +4,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
+	"github.com/rotisserie/eris"
 )
 
 type Services struct {
@@ -16,16 +17,24 @@ type Services struct {
 func ProvideServices(
 	repositories *Repositories,
 	logger ezutil.Logger,
-	storageCfg config.Storage,
-) *Services {
+	cfg config.Config,
+	queues *Queues,
+) (*Services, error) {
 	if repositories == nil {
-		panic("repositories cannot be nil")
+		return nil, eris.New("repositories cannot be nil")
+	}
+	if queues == nil {
+		return nil, eris.New("queues cannot be nil")
 	}
 
 	groupExpenseService := service.NewGroupExpenseService(
 		repositories.Transactor,
 		repositories.GroupExpense,
 		repositories.OtherFee,
+		repositories.ExpenseBill,
+		service.NewLLMService(cfg.LLM),
+		queues.ExpenseBillTextExtracted,
+		logger,
 	)
 
 	expenseItemService := service.NewExpenseItemService(
@@ -46,8 +55,8 @@ func ProvideServices(
 		repositories.Transactor,
 		repositories.ExpenseBill,
 		logger,
-		repositories.TaskQueue,
-		storageCfg.BucketNameExpenseBill,
+		queues.OrphanedBillCleanup,
+		cfg.BucketNameExpenseBill,
 	)
 
 	return &Services{
@@ -55,5 +64,5 @@ func ProvideServices(
 		ExpenseItem:  expenseItemService,
 		OtherFee:     otherFeeService,
 		ExpenseBill:  expenseBillService,
-	}
+	}, nil
 }

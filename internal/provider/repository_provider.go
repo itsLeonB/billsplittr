@@ -5,7 +5,6 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
-	"github.com/itsLeonB/meq"
 )
 
 type Repositories struct {
@@ -15,7 +14,6 @@ type Repositories struct {
 	ExpenseParticipant repository.ExpenseParticipantRepository
 	OtherFee           repository.OtherFeeRepository
 	ExpenseBill        repository.ExpenseBillRepository
-	TaskQueue          meq.TaskQueue[entity.OrphanedBillCleanupTask]
 }
 
 func ProvideRepositories(dbs *DBs, logger ezutil.Logger) *Repositories {
@@ -30,6 +28,5 @@ func ProvideRepositories(dbs *DBs, logger ezutil.Logger) *Repositories {
 		ExpenseParticipant: crud.NewRepository[entity.ExpenseParticipant](dbs.GormDB),
 		OtherFee:           repository.NewOtherFeeRepository(dbs.GormDB),
 		ExpenseBill:        crud.NewRepository[entity.ExpenseBill](dbs.GormDB),
-		TaskQueue:          meq.NewTaskQueue[entity.OrphanedBillCleanupTask](logger, dbs.MQ),
 	}
 }

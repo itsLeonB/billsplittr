@@ -9,9 +9,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-func Setup(configs config.Config) *gerpc.GrpcServer {
+func Setup(configs config.Config) (*gerpc.GrpcServer, error) {
 	logger := provider.ProvideLogger(config.AppName, configs.Env)
-	providers := provider.All(configs, logger)
+
+	providers, err := provider.All(configs, logger)
+	if err != nil {
+		return nil, err
+	}
 	servers := server.ProvideServers(providers.Services)
 
 	// Middlewares/Interceptors
@@ -23,10 +27,12 @@ func Setup(configs config.Config) *gerpc.GrpcServer {
 		grpc.MaxRecvMsgSize(appconstant.MaxFileSize),
 	}
 
-	return gerpc.NewGrpcServer().
+	srv := gerpc.NewGrpcServer().
 		WithLogger(providers.Logger).
 		WithAddress(":" + configs.App.Port).
 		WithOpts(opts...).
 		WithRegisterSrvFunc(servers.Register).
 		WithShutdownFunc(providers.Shutdown)
+
+	return srv, nil
 }

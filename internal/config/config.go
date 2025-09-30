@@ -1,43 +1,52 @@
 package config
 
 import (
-	"time"
+	"errors"
 
 	"github.com/kelseyhightower/envconfig"
 )
-
-const AppName = "Billsplittr"
 
 type Config struct {
 	App
 	DB
 	Valkey
 	Storage
+	LLM
 }
 
-type App struct {
-	Env     string        `default:"debug"`
-	Port    string        `default:"8080"`
-	Timeout time.Duration `default:"10s"`
-}
+func Load() (Config, error) {
+	var err error
 
-func Load() Config {
 	var app App
-	envconfig.MustProcess("APP", &app)
+	if e := envconfig.Process("APP", &app); e != nil {
+		err = errors.Join(err, e)
+	}
 
 	var db DB
-	envconfig.MustProcess("DB", &db)
+	if e := envconfig.Process("DB", &db); e != nil {
+		err = errors.Join(err, e)
+	}
 
 	var valkey Valkey
-	envconfig.MustProcess("VALKEY", &valkey)
+	if e := envconfig.Process("VALKEY", &valkey); e != nil {
+		err = errors.Join(err, e)
+	}
 
 	var storage Storage
-	envconfig.MustProcess("STORAGE", &storage)
+	if e := envconfig.Process("STORAGE", &storage); e != nil {
+		err = errors.Join(err, e)
+	}
+
+	var llm LLM
+	if e := envconfig.Process("LLM", &llm); e != nil {
+		err = errors.Join(err, e)
+	}
 
 	return Config{
 		App:     app,
 		DB:      db,
 		Valkey:  valkey,
 		Storage: storage,
-	}
+		LLM:     llm,
+	}, err
 }

@@ -1,10 +1,10 @@
-package entity
+package message
 
-type OrphanedBillCleanupTask struct {
+type OrphanedBillCleanup struct {
 	BillObjectKeys []string `json:"billObjectKeys"`
 	BucketName     string   `json:"bucketName"`
 }
 
-func (obc OrphanedBillCleanupTask) Type() string {
+func (OrphanedBillCleanup) Type() string {
 	return "orphaned-bill-cleanup"
 }
