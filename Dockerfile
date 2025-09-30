@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' \
-    -o /billsplittr ./cmd/grpc/main.go
+    -o /billsplittr ./cmd/grpc
 
 FROM gcr.io/distroless/static-debian12 AS build-release-stage
 

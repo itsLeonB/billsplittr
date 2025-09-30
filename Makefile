@@ -89,12 +89,12 @@ test-clean:
 
 build-grpc:
 	@echo "Building the grpc app..."
-	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/grpc cmd/grpc/main.go
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/grpc ./cmd/grpc
 	@echo "Build success! Binary is located at bin/grpc"
 
 build-job:
 	@echo "Building the job..."
-	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/job cmd/job/main.go
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/job ./cmd/job
 	@echo "Build success! Binary is located at bin/job"
 
 install-pre-push-hook:
