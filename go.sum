@@ -41,8 +41,8 @@ github.com/itsLeonB/ezutil/v2 v2.2.0 h1:bV8KqXvWM2WmMuHhScJifxRdzS3+ZQ3XcIksQ2YY
 github.com/itsLeonB/ezutil/v2 v2.2.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
 github.com/itsLeonB/gerpc v0.3.0 h1:2tpoJJaikMpsmJ507zzvhEN0A7PAm6aqI1z18EKL45c=
 github.com/itsLeonB/gerpc v0.3.0/go.mod h1:gFDio3sQkLm6lGxCKhw+5oAXa2PzW8Wt6GpZvyaz/js=
-github.com/itsLeonB/go-crud v1.0.0 h1:bd0y/4rfEShkFqmsysizw9glq5LBpdyaNldp/IQvquI=
-github.com/itsLeonB/go-crud v1.0.0/go.mod h1:lFMJ/1wNLlmWLN781XYhn/aXtXSmjIbkq8CwBfVmn1g=
+github.com/itsLeonB/go-crud v1.1.0 h1:wwjAz7OyuEoshwQrC7W7/r3mkzR6UwDhcbstW8Y9LY0=
+github.com/itsLeonB/go-crud v1.1.0/go.mod h1:qfPrN9+It7J6zpKZVqjaAkPjRBcHObViJvE0wxwJlY4=
 github.com/itsLeonB/meq v0.1.1 h1:XTgwvDuuasrtICxCDKy65TbmsRhRE2tV7pYi20wmRUc=
 github.com/itsLeonB/meq v0.1.1/go.mod h1:6SGoFUDv46o5uJfHkBydXjPJyJl0P9jYLh/vZIFrQpY=
 github.com/itsLeonB/ungerr v0.1.0 h1:t2Ezk7xYQ859U2Tx/u+5+k/Rt7D3XXqXor6w11FeO5Y=

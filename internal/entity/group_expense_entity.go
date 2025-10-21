@@ -8,16 +8,15 @@ import (
 
 type GroupExpense struct {
 	crud.BaseEntity
-	PayerProfileID        uuid.UUID
-	TotalAmount           decimal.Decimal
-	Subtotal              decimal.Decimal
-	Description           string
-	Items                 []ExpenseItem `gorm:"foreignKey:GroupExpenseID"`
-	OtherFees             []OtherFee    `gorm:"foreignKey:GroupExpenseID"`
-	Confirmed             bool
-	ParticipantsConfirmed bool
-	CreatorProfileID      uuid.UUID
-	Participants          []ExpenseParticipant `gorm:"foreignKey:GroupExpenseID"`
+	PayerProfileID   uuid.UUID
+	TotalAmount      decimal.Decimal
+	Subtotal         decimal.Decimal
+	Description      string
+	Items            []ExpenseItem `gorm:"foreignKey:GroupExpenseID"`
+	OtherFees        []OtherFee    `gorm:"foreignKey:GroupExpenseID"`
+	Confirmed        bool
+	CreatorProfileID uuid.UUID
+	Participants     []ExpenseParticipant `gorm:"foreignKey:GroupExpenseID"`
 }
 
 func (ge GroupExpense) ProfileIDs() []uuid.UUID {
@@ -42,8 +41,6 @@ type ExpenseParticipant struct {
 	GroupExpenseID       uuid.UUID
 	ParticipantProfileID uuid.UUID
 	ShareAmount          decimal.Decimal
-	Description          string
-	Confirmed            bool
 }
 
 func (ep ExpenseParticipant) TableName() string {
