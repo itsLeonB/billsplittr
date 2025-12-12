@@ -267,7 +267,7 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 	if err != nil {
 		return entity.GroupExpense{}, err
 	}
-	if groupExpense.Confirmed || groupExpense.ParticipantsConfirmed {
+	if groupExpense.Confirmed {
 		return entity.GroupExpense{}, ungerr.UnprocessableEntityError("expense already confirmed")
 	}
 

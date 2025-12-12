@@ -7,8 +7,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
+	"github.com/itsLeonB/billsplittr/internal/mocks"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/billsplittr/internal/test/mocks"
+	"github.com/itsLeonB/go-crud"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -18,7 +19,7 @@ func TestOtherFeeService_Add_ValidationErrorNonPositiveAmount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -45,7 +46,7 @@ func TestOtherFeeService_Add_ValidationErrorZeroAmount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -72,7 +73,7 @@ func TestOtherFeeServiceGetCalculationMethods(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -97,7 +98,7 @@ func TestOtherFeeService_Update_ValidationErrorNonPositiveAmount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)

@@ -20,20 +20,19 @@ func GroupExpenseRequestToEntity(request dto.NewGroupExpenseRequest) entity.Grou
 
 func GroupExpenseToResponse(groupExpense entity.GroupExpense) dto.GroupExpenseResponse {
 	return dto.GroupExpenseResponse{
-		ID:                    groupExpense.ID,
-		PayerProfileID:        groupExpense.PayerProfileID,
-		TotalAmount:           groupExpense.TotalAmount,
-		Subtotal:              groupExpense.Subtotal,
-		Description:           groupExpense.Description,
-		Items:                 ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
-		OtherFees:             ezutil.MapSlice(groupExpense.OtherFees, OtherFeeToResponse),
-		CreatorProfileID:      groupExpense.CreatorProfileID,
-		Confirmed:             groupExpense.Confirmed,
-		ParticipantsConfirmed: groupExpense.ParticipantsConfirmed,
-		CreatedAt:             groupExpense.CreatedAt,
-		UpdatedAt:             groupExpense.UpdatedAt,
-		DeletedAt:             groupExpense.DeletedAt.Time,
-		Participants:          ezutil.MapSlice(groupExpense.Participants, expenseParticipantToResponse),
+		ID:               groupExpense.ID,
+		PayerProfileID:   groupExpense.PayerProfileID,
+		TotalAmount:      groupExpense.TotalAmount,
+		Subtotal:         groupExpense.Subtotal,
+		Description:      groupExpense.Description,
+		Items:            ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
+		OtherFees:        ezutil.MapSlice(groupExpense.OtherFees, OtherFeeToResponse),
+		CreatorProfileID: groupExpense.CreatorProfileID,
+		Confirmed:        groupExpense.Confirmed,
+		CreatedAt:        groupExpense.CreatedAt,
+		UpdatedAt:        groupExpense.UpdatedAt,
+		DeletedAt:        groupExpense.DeletedAt.Time,
+		Participants:     ezutil.MapSlice(groupExpense.Participants, expenseParticipantToResponse),
 	}
 }
 

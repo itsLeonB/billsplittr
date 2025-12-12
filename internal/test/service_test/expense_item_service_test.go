@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/mocks"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/billsplittr/internal/test/mocks"
 	"github.com/itsLeonB/go-crud"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestExpenseItemService_Add_ValidationErrorNonPositiveAmount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockExpenseItemRepo := mocks.NewMockExpenseItemRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -46,7 +46,7 @@ func TestExpenseItemService_Add_ValidationErrorZeroAmount(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockExpenseItemRepo := mocks.NewMockExpenseItemRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -73,7 +73,7 @@ func TestExpenseItemService_GetDetailsSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockExpenseItemRepo := mocks.NewMockExpenseItemRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)
@@ -109,7 +109,7 @@ func TestExpenseItemService_GetDetailsNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockExpenseItemRepo := mocks.NewMockExpenseItemRepository(ctrl)
 	mockGroupExpenseSvc := mocks.NewMockGroupExpenseService(ctrl)

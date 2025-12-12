@@ -16,7 +16,7 @@ import (
 func TestGroupExpenseRequestToEntity(t *testing.T) {
 	creatorID := uuid.New()
 	payerID := uuid.New()
-	
+
 	request := dto.NewGroupExpenseRequest{
 		CreatorProfileID: creatorID,
 		PayerProfileID:   payerID,
@@ -58,15 +58,14 @@ func TestGroupExpenseToResponse(t *testing.T) {
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
-		PayerProfileID:        payerID,
-		TotalAmount:           decimal.NewFromFloat(100.50),
-		Subtotal:              decimal.NewFromFloat(90.00),
-		Description:           "Test expense",
-		CreatorProfileID:      creatorID,
-		Confirmed:             true,
-		ParticipantsConfirmed: false,
-		Items:                 []entity.ExpenseItem{},
-		OtherFees:             []entity.OtherFee{},
+		PayerProfileID:   payerID,
+		TotalAmount:      decimal.NewFromFloat(100.50),
+		Subtotal:         decimal.NewFromFloat(90.00),
+		Description:      "Test expense",
+		CreatorProfileID: creatorID,
+		Confirmed:        true,
+		Items:            []entity.ExpenseItem{},
+		OtherFees:        []entity.OtherFee{},
 		Participants: []entity.ExpenseParticipant{
 			{
 				ParticipantProfileID: participantID,

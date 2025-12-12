@@ -8,8 +8,8 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/mocks"
 	"github.com/itsLeonB/billsplittr/internal/service"
-	"github.com/itsLeonB/billsplittr/internal/test/mocks"
 	"github.com/itsLeonB/go-crud"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestGroupExpenseService_CreateDraftSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
@@ -84,7 +84,7 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorZeroAmount(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
@@ -115,7 +115,7 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorAmountMismatch(t *testin
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
@@ -158,7 +158,7 @@ func TestGroupExpenseServiceGetAllCreated(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
@@ -197,7 +197,7 @@ func TestGroupExpenseServiceGetDetails(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockTransactor := mocks.NewMockTransactor(ctrl)
+	mockTransactor := crud.NewMockTransactor(ctrl)
 	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
 	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
 	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
