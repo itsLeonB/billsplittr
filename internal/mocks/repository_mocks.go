@@ -147,6 +147,21 @@ func (mr *MockGroupExpenseRepositoryMockRecorder) InsertMany(ctx, models any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMany", reflect.TypeOf((*MockGroupExpenseRepository)(nil).InsertMany), ctx, models)
 }
 
+// SaveMany mocks base method.
+func (m *MockGroupExpenseRepository) SaveMany(ctx context.Context, models []entity.GroupExpense) ([]entity.GroupExpense, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMany", ctx, models)
+	ret0, _ := ret[0].([]entity.GroupExpense)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveMany indicates an expected call of SaveMany.
+func (mr *MockGroupExpenseRepositoryMockRecorder) SaveMany(ctx, models any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMany", reflect.TypeOf((*MockGroupExpenseRepository)(nil).SaveMany), ctx, models)
+}
+
 // SyncParticipants mocks base method.
 func (m *MockGroupExpenseRepository) SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error {
 	m.ctrl.T.Helper()
@@ -301,6 +316,21 @@ func (m *MockExpenseItemRepository) InsertMany(ctx context.Context, models []ent
 func (mr *MockExpenseItemRepositoryMockRecorder) InsertMany(ctx, models any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMany", reflect.TypeOf((*MockExpenseItemRepository)(nil).InsertMany), ctx, models)
+}
+
+// SaveMany mocks base method.
+func (m *MockExpenseItemRepository) SaveMany(ctx context.Context, models []entity.ExpenseItem) ([]entity.ExpenseItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMany", ctx, models)
+	ret0, _ := ret[0].([]entity.ExpenseItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveMany indicates an expected call of SaveMany.
+func (mr *MockExpenseItemRepositoryMockRecorder) SaveMany(ctx, models any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMany", reflect.TypeOf((*MockExpenseItemRepository)(nil).SaveMany), ctx, models)
 }
 
 // SyncParticipants mocks base method.
@@ -459,6 +489,21 @@ func (mr *MockExpenseParticipantRepositoryMockRecorder) InsertMany(ctx, models a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMany", reflect.TypeOf((*MockExpenseParticipantRepository)(nil).InsertMany), ctx, models)
 }
 
+// SaveMany mocks base method.
+func (m *MockExpenseParticipantRepository) SaveMany(ctx context.Context, models []entity.ExpenseParticipant) ([]entity.ExpenseParticipant, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMany", ctx, models)
+	ret0, _ := ret[0].([]entity.ExpenseParticipant)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveMany indicates an expected call of SaveMany.
+func (mr *MockExpenseParticipantRepositoryMockRecorder) SaveMany(ctx, models any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMany", reflect.TypeOf((*MockExpenseParticipantRepository)(nil).SaveMany), ctx, models)
+}
+
 // Update mocks base method.
 func (m *MockExpenseParticipantRepository) Update(ctx context.Context, model entity.ExpenseParticipant) (entity.ExpenseParticipant, error) {
 	m.ctrl.T.Helper()
@@ -599,6 +644,21 @@ func (m *MockOtherFeeRepository) InsertMany(ctx context.Context, models []entity
 func (mr *MockOtherFeeRepositoryMockRecorder) InsertMany(ctx, models any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMany", reflect.TypeOf((*MockOtherFeeRepository)(nil).InsertMany), ctx, models)
+}
+
+// SaveMany mocks base method.
+func (m *MockOtherFeeRepository) SaveMany(ctx context.Context, models []entity.OtherFee) ([]entity.OtherFee, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMany", ctx, models)
+	ret0, _ := ret[0].([]entity.OtherFee)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveMany indicates an expected call of SaveMany.
+func (mr *MockOtherFeeRepositoryMockRecorder) SaveMany(ctx, models any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMany", reflect.TypeOf((*MockOtherFeeRepository)(nil).SaveMany), ctx, models)
 }
 
 // SyncParticipants mocks base method.
@@ -755,6 +815,21 @@ func (m *MockExpenseBillRepository) InsertMany(ctx context.Context, models []ent
 func (mr *MockExpenseBillRepositoryMockRecorder) InsertMany(ctx, models any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertMany", reflect.TypeOf((*MockExpenseBillRepository)(nil).InsertMany), ctx, models)
+}
+
+// SaveMany mocks base method.
+func (m *MockExpenseBillRepository) SaveMany(ctx context.Context, models []entity.ExpenseBill) ([]entity.ExpenseBill, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveMany", ctx, models)
+	ret0, _ := ret[0].([]entity.ExpenseBill)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveMany indicates an expected call of SaveMany.
+func (mr *MockExpenseBillRepositoryMockRecorder) SaveMany(ctx, models any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMany", reflect.TypeOf((*MockExpenseBillRepository)(nil).SaveMany), ctx, models)
 }
 
 // Update mocks base method.
