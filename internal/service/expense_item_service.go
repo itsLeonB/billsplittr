@@ -135,12 +135,14 @@ func (ges *expenseItemServiceImpl) Update(ctx context.Context, request dto.Updat
 			}
 		}
 
-		updatedParticipants := ezutil.MapSlice(request.Participants, mapper.ItemParticipantRequestToEntity)
-		if err := ges.expenseItemRepository.SyncParticipants(ctx, updatedExpenseItem.ID, updatedParticipants); err != nil {
-			return err
-		}
+		if len(request.Participants) > 0 {
+			updatedParticipants := ezutil.MapSlice(request.Participants, mapper.ItemParticipantRequestToEntity)
+			if err := ges.expenseItemRepository.SyncParticipants(ctx, updatedExpenseItem.ID, updatedParticipants); err != nil {
+				return err
+			}
 
-		updatedExpenseItem.Participants = updatedParticipants
+			updatedExpenseItem.Participants = updatedParticipants
+		}
 
 		response = mapper.ExpenseItemToResponse(updatedExpenseItem)
 

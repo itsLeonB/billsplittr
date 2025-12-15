@@ -131,7 +131,7 @@ func (ges *otherFeeServiceImpl) Update(ctx context.Context, request dto.UpdateOt
 	return response, nil
 }
 
-func (ges *otherFeeServiceImpl) Remove(ctx context.Context, id, profileID, groupExpenseID uuid.UUID) error {
+func (ges *otherFeeServiceImpl) Remove(ctx context.Context, profileID, id, groupExpenseID uuid.UUID) error {
 	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		groupExpense, err := ges.groupExpenseSvc.GetUnconfirmedGroupExpenseForUpdate(ctx, profileID, groupExpenseID)
 		if err != nil {
