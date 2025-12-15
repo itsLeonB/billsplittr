@@ -18,7 +18,7 @@ type UpdateExpenseItemRequest struct {
 	ID             uuid.UUID `validate:"required"`
 	GroupExpenseID uuid.UUID `validate:"required"`
 	ExpenseItemData
-	Participants []ItemParticipantData `validate:"required,min=1,dive"`
+	Participants []ItemParticipantData `validate:"dive"`
 }
 
 type ExpenseItemResponse struct {
