@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
@@ -58,6 +59,7 @@ func (ebs *expenseBillServiceImpl) Save(ctx context.Context, req dto.NewExpenseB
 		CreatorProfileID: req.CreatorProfileID,
 		GroupExpenseID:   expenseID,
 		ImageName:        req.Filename,
+		Status:           appconstant.PendingBill,
 	}
 
 	insertedBill, err := ebs.billRepo.Insert(ctx, newBill)

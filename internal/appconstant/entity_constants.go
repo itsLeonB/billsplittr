@@ -15,3 +15,11 @@ const (
 	ReadyExpense          ExpenseStatus = "READY"
 	ConfirmedExpense      ExpenseStatus = "CONFIRMED"
 )
+
+type BillStatus string
+
+const (
+	PendingBill BillStatus = "PENDING"
+	ParsedBill  BillStatus = "PARSED"
+	FailedBill  BillStatus = "FAILED"
+)

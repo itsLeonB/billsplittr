@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -68,6 +69,27 @@ func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto
 	}
 
 	return mapper.GroupExpenseToResponse(insertedGroupExpense), nil
+}
+
+func (ges *groupExpenseServiceImpl) UpdateDraft(ctx context.Context, expense entity.GroupExpense, request dto.NewGroupExpenseRequest) error {
+	if err := ges.validate(request); err != nil {
+		return err
+	}
+
+	mappedExpense := mapper.GroupExpenseRequestToEntity(request)
+	expense.TotalAmount = mappedExpense.TotalAmount
+	expense.ItemsTotal = mappedExpense.ItemsTotal
+	expense.FeesTotal = mappedExpense.FeesTotal
+	expense.Items = mappedExpense.Items
+	expense.OtherFees = mappedExpense.OtherFees
+	expense.Status = mappedExpense.Status
+
+	if strings.HasPrefix(expense.Description, "Untitled Expense at") {
+		expense.Description = request.Description
+	}
+
+	_, err := ges.groupExpenseRepository.Update(ctx, expense)
+	return err
 }
 
 func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
@@ -280,7 +302,9 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 }
 
 func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context) error {
-	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+	var isV2Flow bool
+	var billID uuid.UUID
+	e := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		return ges.processAndAck(ctx, func(ctx context.Context, taskMsg message.ExpenseBillTextExtracted) error {
 			expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, taskMsg.ID)
 			if err != nil {
@@ -291,32 +315,80 @@ func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context) error
 				return nil
 			}
 
-			request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, taskMsg.Text)
-			if err != nil {
-				if errors.Is(err, appconstant.ErrExpenseNotDetected) {
-					return nil
-				}
-				return err
+			if expenseBill.GroupExpenseID.Valid {
+				isV2Flow = true
+				billID = expenseBill.ID
+				return ges.parseFlowV2(ctx, taskMsg.Text, expenseBill)
+			} else {
+				return ges.parseFlowV1(ctx, taskMsg.Text, expenseBill)
 			}
-
-			request.CreatorProfileID = expenseBill.CreatorProfileID
-			request.PayerProfileID = expenseBill.PayerProfileID
-
-			groupExpense, err := ges.CreateDraft(ctx, request)
-			if err != nil {
-				return err
-			}
-
-			expenseBill.GroupExpenseID = uuid.NullUUID{
-				UUID:  groupExpense.ID,
-				Valid: true,
-			}
-
-			_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
-
-			return err
 		})
 	})
+
+	if e != nil && isV2Flow {
+		return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+			expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, billID)
+			if err != nil {
+				return err
+			}
+			expenseBill.Status = appconstant.FailedBill
+			_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
+			return err
+		})
+	}
+
+	return e
+}
+
+func (ges *groupExpenseServiceImpl) parseFlowV1(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, text)
+	if err != nil {
+		if errors.Is(err, appconstant.ErrExpenseNotDetected) {
+			return nil
+		}
+		return err
+	}
+
+	request.CreatorProfileID = expenseBill.CreatorProfileID
+	request.PayerProfileID = expenseBill.PayerProfileID
+
+	groupExpense, err := ges.CreateDraft(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	expenseBill.GroupExpenseID = uuid.NullUUID{
+		UUID:  groupExpense.ID,
+		Valid: true,
+	}
+
+	_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
+
+	return err
+}
+
+func (ges *groupExpenseServiceImpl) parseFlowV2(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, expenseBill.CreatorProfileID, expenseBill.GroupExpenseID.UUID)
+	if err != nil {
+		return err
+	}
+
+	request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, text)
+	if err != nil {
+		if errors.Is(err, appconstant.ErrExpenseNotDetected) {
+			return nil
+		}
+		return err
+	}
+
+	if err = ges.UpdateDraft(ctx, expense, request); err != nil {
+		return err
+	}
+
+	expenseBill.Status = appconstant.ParsedBill
+	_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
+
+	return err
 }
 
 func (ges *groupExpenseServiceImpl) buildSystemPrompt() string {
@@ -325,7 +397,7 @@ Extract the expense information and return ONLY a valid JSON object in the follo
 
 {
   "totalAmount": number,
-  "subtotal": number, 
+  "subtotal": number,
   "description": string,
   "items": [
     {
@@ -380,8 +452,8 @@ func (ges *groupExpenseServiceImpl) getPendingForProcessingExpenseBill(ctx conte
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}
-	if expenseBill.GroupExpenseID.UUID != uuid.Nil {
-		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already has group expense attributed", expenseBill.GroupExpenseID.UUID.String())
+	if expenseBill.Status == appconstant.PendingBill {
+		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already parsed", expenseBill.GroupExpenseID.UUID.String())
 	}
 
 	return expenseBill, nil

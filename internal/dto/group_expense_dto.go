@@ -12,10 +12,13 @@ type NewGroupExpenseRequest struct {
 	CreatorProfileID uuid.UUID       `validate:"required"`
 	PayerProfileID   uuid.UUID       `validate:"required"`
 	TotalAmount      decimal.Decimal `validate:"required"`
-	Subtotal         decimal.Decimal `validate:"required"`
-	Description      string
-	Items            []ExpenseItemData `validate:"required,min=1,dive"`
-	OtherFees        []OtherFeeData    `validate:"dive"`
+	// Deprecated: use ItemsTotal instead
+	Subtotal    decimal.Decimal `validate:"required"`
+	ItemsTotal  decimal.Decimal
+	FeesTotal   decimal.Decimal
+	Description string
+	Items       []ExpenseItemData `validate:"required,min=1,dive"`
+	OtherFees   []OtherFeeData    `validate:"dive"`
 }
 
 type NewDraftExpense struct {
