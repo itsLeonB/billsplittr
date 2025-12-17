@@ -8,8 +8,10 @@ import (
 
 type NewExpenseBillRequest struct {
 	CreatorProfileID uuid.UUID `validate:"required"`
-	PayerProfileID   uuid.UUID `validate:"required"`
-	Filename         string    `validate:"required,min=3"`
+	// Deprecated: this will be deferred to different API
+	PayerProfileID uuid.UUID `validate:"required"`
+	GroupExpenseID uuid.UUID
+	Filename       string `validate:"required,min=3"`
 }
 
 type ExpenseBillResponse struct {

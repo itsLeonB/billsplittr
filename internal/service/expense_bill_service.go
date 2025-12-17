@@ -45,9 +45,18 @@ func NewExpenseBillService(
 }
 
 func (ebs *expenseBillServiceImpl) Save(ctx context.Context, req dto.NewExpenseBillRequest) (dto.ExpenseBillResponse, error) {
+	expenseID := uuid.NullUUID{}
+	if req.GroupExpenseID != uuid.Nil {
+		expenseID = uuid.NullUUID{
+			UUID:  req.GroupExpenseID,
+			Valid: true,
+		}
+	}
+
 	newBill := entity.ExpenseBill{
 		PayerProfileID:   req.PayerProfileID,
 		CreatorProfileID: req.CreatorProfileID,
+		GroupExpenseID:   expenseID,
 		ImageName:        req.Filename,
 	}
 

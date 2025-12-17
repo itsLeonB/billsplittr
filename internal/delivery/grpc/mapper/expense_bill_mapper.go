@@ -12,6 +12,7 @@ func ToExpenseBillResponseProto(eb dto.ExpenseBillResponse) *expensebill.Expense
 		ExpenseBill: &expensebill.ExpenseBill{
 			CreatorProfileId: eb.CreatorProfileID.String(),
 			PayerProfileId:   eb.PayerProfileID.String(),
+			GroupExpenseId:   eb.GroupExpenseID.String(),
 			ObjectKey:        eb.Filename,
 		},
 		AuditMetadata: &audit.Metadata{

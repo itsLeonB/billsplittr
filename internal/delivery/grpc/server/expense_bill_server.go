@@ -53,9 +53,18 @@ func (ebs *expenseBillServer) Save(ctx context.Context, req *expensebill.SaveReq
 		}
 	}
 
+	expenseID := uuid.Nil
+	if bill.GetGroupExpenseId() != "" {
+		expenseID, err = ezutil.Parse[uuid.UUID](bill.GetGroupExpenseId())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	request := dto.NewExpenseBillRequest{
 		CreatorProfileID: creatorProfileID,
 		PayerProfileID:   payerProfileID,
+		GroupExpenseID:   expenseID,
 		Filename:         bill.GetObjectKey(),
 	}
 
