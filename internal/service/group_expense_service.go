@@ -56,7 +56,7 @@ func NewGroupExpenseService(
 }
 
 func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error) {
-	if err := ges.validate(ctx, request); err != nil {
+	if err := ges.validate(request); err != nil {
 		return dto.GroupExpenseResponse{}, err
 	}
 
@@ -210,7 +210,7 @@ func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec cr
 	return groupExpense, nil
 }
 
-func (ges *groupExpenseServiceImpl) validate(ctx context.Context, request dto.NewGroupExpenseRequest) error {
+func (ges *groupExpenseServiceImpl) validate(request dto.NewGroupExpenseRequest) error {
 	if request.TotalAmount.IsZero() {
 		return ungerr.UnprocessableEntityError(appconstant.ErrAmountZero)
 	}
@@ -272,7 +272,7 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 	if err != nil {
 		return entity.GroupExpense{}, err
 	}
-	if groupExpense.Confirmed {
+	if groupExpense.Confirmed || groupExpense.Status == appconstant.ConfirmedExpense {
 		return entity.GroupExpense{}, ungerr.UnprocessableEntityError("expense already confirmed")
 	}
 
@@ -442,4 +442,15 @@ func (ges *groupExpenseServiceImpl) CreateDraftV2(ctx context.Context, req dto.N
 	}
 
 	return mapper.GroupExpenseToResponse(insertedDraftExpense), nil
+}
+
+func (ges *groupExpenseServiceImpl) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, profileID, id)
+		if err != nil {
+			return err
+		}
+
+		return ges.groupExpenseRepository.Delete(ctx, expense)
+	})
 }

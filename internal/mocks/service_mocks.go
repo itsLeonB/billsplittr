@@ -88,6 +88,20 @@ func (mr *MockGroupExpenseServiceMockRecorder) CreateDraftV2(ctx, req any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDraftV2", reflect.TypeOf((*MockGroupExpenseService)(nil).CreateDraftV2), ctx, req)
 }
 
+// Delete mocks base method.
+func (m *MockGroupExpenseService) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id, profileID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockGroupExpenseServiceMockRecorder) Delete(ctx, id, profileID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockGroupExpenseService)(nil).Delete), ctx, id, profileID)
+}
+
 // GetAllCreated mocks base method.
 func (m *MockGroupExpenseService) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
 	m.ctrl.T.Helper()

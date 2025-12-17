@@ -10,9 +10,11 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
+	"github.com/rotisserie/eris"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type GroupExpenseServer struct {
+type groupExpenseServer struct {
 	groupexpense.UnimplementedGroupExpenseServiceServer
 	validate        *validator.Validate
 	groupExpenseSvc service.GroupExpenseService
@@ -22,13 +24,13 @@ func newGroupExpenseServer(
 	validate *validator.Validate,
 	groupExpenseSvc service.GroupExpenseService,
 ) groupexpense.GroupExpenseServiceServer {
-	return &GroupExpenseServer{
+	return &groupExpenseServer{
 		validate:        validate,
 		groupExpenseSvc: groupExpenseSvc,
 	}
 }
 
-func (ges *GroupExpenseServer) CreateDraft(ctx context.Context, req *groupexpense.CreateDraftRequest) (*groupexpense.CreateDraftResponse, error) {
+func (ges *groupExpenseServer) CreateDraft(ctx context.Context, req *groupexpense.CreateDraftRequest) (*groupexpense.CreateDraftResponse, error) {
 	creatorProfileID, err := ezutil.Parse[uuid.UUID](req.GetCreatorProfileId())
 	if err != nil {
 		return nil, err
@@ -76,7 +78,7 @@ func (ges *GroupExpenseServer) CreateDraft(ctx context.Context, req *groupexpens
 	}, nil
 }
 
-func (ges *GroupExpenseServer) GetAllCreated(ctx context.Context, req *groupexpense.GetAllCreatedRequest) (*groupexpense.GetAllCreatedResponse, error) {
+func (ges *groupExpenseServer) GetAllCreated(ctx context.Context, req *groupexpense.GetAllCreatedRequest) (*groupexpense.GetAllCreatedResponse, error) {
 	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
 	if err != nil {
 		return nil, err
@@ -97,7 +99,7 @@ func (ges *GroupExpenseServer) GetAllCreated(ctx context.Context, req *groupexpe
 	}, nil
 }
 
-func (ges *GroupExpenseServer) GetDetails(ctx context.Context, req *groupexpense.GetDetailsRequest) (*groupexpense.GetDetailsResponse, error) {
+func (ges *groupExpenseServer) GetDetails(ctx context.Context, req *groupexpense.GetDetailsRequest) (*groupexpense.GetDetailsResponse, error) {
 	id, err := ezutil.Parse[uuid.UUID](req.GetId())
 	if err != nil {
 		return nil, err
@@ -118,7 +120,7 @@ func (ges *GroupExpenseServer) GetDetails(ctx context.Context, req *groupexpense
 	}, nil
 }
 
-func (ges *GroupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpense.ConfirmDraftRequest) (*groupexpense.ConfirmDraftResponse, error) {
+func (ges *groupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpense.ConfirmDraftRequest) (*groupexpense.ConfirmDraftResponse, error) {
 	id, err := ezutil.Parse[uuid.UUID](req.GetId())
 	if err != nil {
 		return nil, err
@@ -142,4 +144,22 @@ func (ges *GroupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpen
 	return &groupexpense.ConfirmDraftResponse{
 		GroupExpense: response,
 	}, nil
+}
+
+func (ges *groupExpenseServer) Delete(ctx context.Context, req *groupexpense.DeleteRequest) (*emptypb.Empty, error) {
+	if req == nil {
+		return nil, eris.New("request is nil")
+	}
+
+	id, err := ezutil.Parse[uuid.UUID](req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, ges.groupExpenseSvc.Delete(ctx, id, profileID)
 }
