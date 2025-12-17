@@ -115,8 +115,12 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 			return err
 		}
 
-		if groupExpense.Confirmed {
+		if groupExpense.Confirmed || groupExpense.Status == appconstant.ConfirmedExpense {
 			return ungerr.UnprocessableEntityError("already confirmed")
+		}
+
+		if len(groupExpense.Items) < 1 {
+			return ungerr.UnprocessableEntityError("cannot confirm empty items")
 		}
 
 		participantsByProfileID := make(map[uuid.UUID]*entity.ExpenseParticipant)

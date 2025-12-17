@@ -39,8 +39,8 @@ github.com/itsLeonB/billsplittr-protos v0.5.1-pre2 h1:nyimbTA3yLaKwdesKvCW8FhxtH
 github.com/itsLeonB/billsplittr-protos v0.5.1-pre2/go.mod h1:Rv8fGsEY/4SKdDJudeg4ZEoXwQbwX9GYAdpsiUgmdJ4=
 github.com/itsLeonB/ezutil/v2 v2.2.0 h1:bV8KqXvWM2WmMuHhScJifxRdzS3+ZQ3XcIksQ2YYdAg=
 github.com/itsLeonB/ezutil/v2 v2.2.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
-github.com/itsLeonB/gerpc v0.3.0 h1:2tpoJJaikMpsmJ507zzvhEN0A7PAm6aqI1z18EKL45c=
-github.com/itsLeonB/gerpc v0.3.0/go.mod h1:gFDio3sQkLm6lGxCKhw+5oAXa2PzW8Wt6GpZvyaz/js=
+github.com/itsLeonB/gerpc v0.4.0-pre1 h1:nhWz9D5aki/+W/NKy+GlI5SwdO/5sLdoxqa/AlUSVz8=
+github.com/itsLeonB/gerpc v0.4.0-pre1/go.mod h1:gFDio3sQkLm6lGxCKhw+5oAXa2PzW8Wt6GpZvyaz/js=
 github.com/itsLeonB/go-crud v1.2.0 h1:R1GOfMMu+rIoKFTgnvyU3THLGu+ggkmFUZ5CGaYifqs=
 github.com/itsLeonB/go-crud v1.2.0/go.mod h1:qfPrN9+It7J6zpKZVqjaAkPjRBcHObViJvE0wxwJlY4=
 github.com/itsLeonB/meq v0.1.1 h1:XTgwvDuuasrtICxCDKy65TbmsRhRE2tV7pYi20wmRUc=

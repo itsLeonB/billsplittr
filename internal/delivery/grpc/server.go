@@ -32,7 +32,8 @@ func Setup(configs config.Config) (*gerpc.GrpcServer, error) {
 		WithAddress(":" + configs.App.Port).
 		WithOpts(opts...).
 		WithRegisterSrvFunc(servers.Register).
-		WithShutdownFunc(providers.Shutdown)
+		WithShutdownFunc(providers.Shutdown).
+		WithReflections()
 
 	return srv, nil
 }
