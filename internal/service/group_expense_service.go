@@ -429,6 +429,7 @@ func (ges *groupExpenseServiceImpl) CreateDraftV2(ctx context.Context, req dto.N
 	newDraftExpense := entity.GroupExpense{
 		CreatorProfileID: req.CreatorProfileID,
 		Description:      description,
+		Status:           appconstant.DraftExpense,
 	}
 
 	insertedDraftExpense, err := ges.groupExpenseRepository.Insert(ctx, newDraftExpense)
