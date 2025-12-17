@@ -129,8 +129,8 @@ func (ebs *expenseBillServiceImpl) EnqueueCleanup(ctx context.Context) error {
 	return ebs.taskQueue.Enqueue(ctx, config.AppName, task)
 }
 
-func (s *expenseBillServiceImpl) getBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseBill]) (entity.ExpenseBill, error) {
-	bill, err := s.billRepo.FindFirst(ctx, spec)
+func (ebs *expenseBillServiceImpl) getBySpec(ctx context.Context, spec crud.Specification[entity.ExpenseBill]) (entity.ExpenseBill, error) {
+	bill, err := ebs.billRepo.FindFirst(ctx, spec)
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}

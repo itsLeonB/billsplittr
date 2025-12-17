@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/shopspring/decimal"
 )
 
@@ -17,21 +18,34 @@ type NewGroupExpenseRequest struct {
 	OtherFees        []OtherFeeData    `validate:"dive"`
 }
 
+type NewDraftExpense struct {
+	CreatorProfileID uuid.UUID `validate:"required"`
+	Description      string
+}
+
 type GroupExpenseResponse struct {
-	ID                    uuid.UUID
-	PayerProfileID        uuid.UUID
-	TotalAmount           decimal.Decimal
-	Subtotal              decimal.Decimal
-	Description           string
-	Items                 []ExpenseItemResponse
-	OtherFees             []OtherFeeResponse
-	CreatorProfileID      uuid.UUID
-	Confirmed             bool
+	ID             uuid.UUID
+	PayerProfileID uuid.UUID
+	TotalAmount    decimal.Decimal
+	// Deprecated: use ItemsTotal instead
+	Subtotal         decimal.Decimal
+	ItemsTotal       decimal.Decimal
+	FeesTotal        decimal.Decimal
+	Description      string
+	CreatorProfileID uuid.UUID
+	// Deprecated: refer to Status instead
+	Confirmed bool
+	// Deprecated: refer to Status instead
 	ParticipantsConfirmed bool
+	Status                appconstant.ExpenseStatus
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
 	DeletedAt             time.Time
-	Participants          []ExpenseParticipantResponse
+
+	// Relationships
+	Items        []ExpenseItemResponse
+	OtherFees    []OtherFeeResponse
+	Participants []ExpenseParticipantResponse
 }
 
 type ExpenseParticipantResponse struct {

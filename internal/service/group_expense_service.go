@@ -416,3 +416,19 @@ func (ges *groupExpenseServiceImpl) processAndAck(ctx context.Context, fn func(c
 
 	return ges.queue.Delete(ctx, taskID)
 }
+
+// region V2
+
+func (ges *groupExpenseServiceImpl) CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error) {
+	newDraftExpense := entity.GroupExpense{
+		CreatorProfileID: req.CreatorProfileID,
+		Description:      req.Description,
+	}
+
+	insertedDraftExpense, err := ges.groupExpenseRepository.Insert(ctx, newDraftExpense)
+	if err != nil {
+		return dto.GroupExpenseResponse{}, err
+	}
+
+	return mapper.GroupExpenseToResponse(insertedDraftExpense), nil
+}

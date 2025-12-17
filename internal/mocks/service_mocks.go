@@ -73,6 +73,21 @@ func (mr *MockGroupExpenseServiceMockRecorder) CreateDraft(ctx, request any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDraft", reflect.TypeOf((*MockGroupExpenseService)(nil).CreateDraft), ctx, request)
 }
 
+// CreateDraftV2 mocks base method.
+func (m *MockGroupExpenseService) CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDraftV2", ctx, req)
+	ret0, _ := ret[0].(dto.GroupExpenseResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDraftV2 indicates an expected call of CreateDraftV2.
+func (mr *MockGroupExpenseServiceMockRecorder) CreateDraftV2(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDraftV2", reflect.TypeOf((*MockGroupExpenseService)(nil).CreateDraftV2), ctx, req)
+}
+
 // GetAllCreated mocks base method.
 func (m *MockGroupExpenseService) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
 	m.ctrl.T.Helper()
