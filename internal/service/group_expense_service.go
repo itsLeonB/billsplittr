@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -420,9 +421,14 @@ func (ges *groupExpenseServiceImpl) processAndAck(ctx context.Context, fn func(c
 // region V2
 
 func (ges *groupExpenseServiceImpl) CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error) {
+	description := req.Description
+	if req.Description == "" {
+		description = "Untitled Expense at " + time.Now().Format(time.DateOnly)
+	}
+
 	newDraftExpense := entity.GroupExpense{
 		CreatorProfileID: req.CreatorProfileID,
-		Description:      req.Description,
+		Description:      description,
 	}
 
 	insertedDraftExpense, err := ges.groupExpenseRepository.Insert(ctx, newDraftExpense)
