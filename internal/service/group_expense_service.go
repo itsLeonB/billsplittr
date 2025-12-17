@@ -290,6 +290,7 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 	spec.Model.ID = id
 	spec.Model.CreatorProfileID = profileID
 	spec.ForUpdate = true
+	spec.PreloadRelations = []string{"Items"}
 	groupExpense, err := ges.getGroupExpense(ctx, spec)
 	if err != nil {
 		return entity.GroupExpense{}, err

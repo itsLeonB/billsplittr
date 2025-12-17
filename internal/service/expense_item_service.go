@@ -54,6 +54,8 @@ func (ges *expenseItemServiceImpl) Add(ctx context.Context, request dto.NewExpen
 		itemTotalAmount := expenseItem.TotalAmount()
 		groupExpense.TotalAmount = groupExpense.TotalAmount.Add(itemTotalAmount)
 		groupExpense.Subtotal = groupExpense.Subtotal.Add(itemTotalAmount)
+		groupExpense.ItemsTotal = groupExpense.ItemsTotal.Add(itemTotalAmount)
+		groupExpense.Status = appconstant.DraftExpense
 		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 			return err
 		}
@@ -118,6 +120,30 @@ func (ges *expenseItemServiceImpl) Update(ctx context.Context, request dto.Updat
 			return err
 		}
 
+		if len(request.Participants) > 0 {
+			updatedParticipants := ezutil.MapSlice(request.Participants, mapper.ItemParticipantRequestToEntity)
+			if err := ges.expenseItemRepository.SyncParticipants(ctx, updatedExpenseItem.ID, updatedParticipants); err != nil {
+				return err
+			}
+
+			updatedExpenseItem.Participants = updatedParticipants
+		}
+
+		newItemSet := []entity.ExpenseItem{}
+		for _, item := range groupExpense.Items {
+			if item.ID == updatedExpenseItem.ID {
+				newItemSet = append(newItemSet, updatedExpenseItem)
+			} else {
+				newItemSet = append(newItemSet, item)
+			}
+		}
+
+		if isReadyExpense(newItemSet) {
+			groupExpense.Status = appconstant.ReadyExpense
+		} else {
+			groupExpense.Status = appconstant.DraftExpense
+		}
+
 		oldAmount := expenseItem.TotalAmount()
 		newAmount := updatedExpenseItem.TotalAmount()
 
@@ -130,18 +156,13 @@ func (ges *expenseItemServiceImpl) Update(ctx context.Context, request dto.Updat
 				Sub(oldAmount).
 				Add(newAmount)
 
+			groupExpense.ItemsTotal = groupExpense.ItemsTotal.
+				Sub(oldAmount).
+				Add(newAmount)
+
 			if _, err := ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 				return err
 			}
-		}
-
-		if len(request.Participants) > 0 {
-			updatedParticipants := ezutil.MapSlice(request.Participants, mapper.ItemParticipantRequestToEntity)
-			if err := ges.expenseItemRepository.SyncParticipants(ctx, updatedExpenseItem.ID, updatedParticipants); err != nil {
-				return err
-			}
-
-			updatedExpenseItem.Participants = updatedParticipants
 		}
 
 		response = mapper.ExpenseItemToResponse(updatedExpenseItem)
@@ -175,6 +196,12 @@ func (ges *expenseItemServiceImpl) Remove(ctx context.Context, profileID, id, gr
 		itemAmount := expenseItem.TotalAmount()
 		groupExpense.TotalAmount = groupExpense.TotalAmount.Sub(itemAmount)
 		groupExpense.Subtotal = groupExpense.Subtotal.Sub(itemAmount)
+		groupExpense.ItemsTotal = groupExpense.ItemsTotal.Sub(itemAmount)
+
+		if len(groupExpense.Items) <= 1 {
+			// Removing an item results in empty items
+			groupExpense.Status = appconstant.DraftExpense
+		}
 
 		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
 			return err
@@ -211,4 +238,16 @@ func (ges *expenseItemServiceImpl) getExpenseItemBySpec(ctx context.Context, spe
 	}
 
 	return expenseItem, nil
+}
+
+func isReadyExpense(items []entity.ExpenseItem) bool {
+	if len(items) == 0 {
+		return false
+	}
+	for _, item := range items {
+		if len(item.Participants) == 0 {
+			return false
+		}
+	}
+	return true
 }
