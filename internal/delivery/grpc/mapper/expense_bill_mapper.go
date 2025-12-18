@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"github.com/google/uuid"
 	"github.com/itsLeonB/audit/gen/go/audit/v1"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/expensebill/v1"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -10,6 +11,10 @@ import (
 )
 
 func ToExpenseBillResponseProto(eb dto.ExpenseBillResponse) (*expensebill.ExpenseBillResponse, error) {
+	if eb.ID == uuid.Nil {
+		return nil, nil
+	}
+
 	status, err := toBillStatusProto(eb.Status)
 	if err != nil {
 		return nil, err
