@@ -161,7 +161,9 @@ func (ebs *expenseBillServiceImpl) ExtractBillText(ctx context.Context, msg mess
 			if statusErr != nil {
 				return errors.Join(err, statusErr)
 			}
-			return err
+			// Don't return error here, just log the error
+			logger.Global.Errorf("failed to extract bill text: %v", err)
+			return nil
 		}
 
 		extractedText = text
