@@ -216,6 +216,7 @@ func (ges *expenseItemServiceImpl) getExpenseItemByIDForUpdate(ctx context.Conte
 	spec.Model.ID = expenseItemID
 	spec.Model.GroupExpenseID = groupExpenseID
 	spec.ForUpdate = true
+	spec.PreloadRelations = []string{"Participants"}
 
 	expenseItem, err := ges.getExpenseItemBySpec(ctx, spec)
 	if err != nil {
