@@ -9,7 +9,7 @@ import (
 type NewExpenseBillRequest struct {
 	CreatorProfileID uuid.UUID `validate:"required"`
 	// Deprecated: this will be deferred to different API
-	PayerProfileID uuid.UUID `validate:"required"`
+	PayerProfileID uuid.UUID
 	GroupExpenseID uuid.UUID
 	Filename       string `validate:"required,min=3"`
 }
