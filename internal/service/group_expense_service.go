@@ -453,7 +453,7 @@ func (ges *groupExpenseServiceImpl) getPendingForProcessingExpenseBill(ctx conte
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}
-	if expenseBill.Status == appconstant.PendingBill {
+	if expenseBill.Status != appconstant.PendingBill {
 		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already parsed", expenseBill.GroupExpenseID.UUID.String())
 	}
 
