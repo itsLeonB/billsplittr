@@ -29,6 +29,7 @@ func Setup() (*Worker, error) {
 				logger.Global.Errorf("error processing message: %s", eris.ToString(err, true))
 			}
 		}),
+		Logger: logger.Global,
 	}
 
 	srv := asynq.NewServer(config.Global.ToRedisOpts(), asynqCfg)
