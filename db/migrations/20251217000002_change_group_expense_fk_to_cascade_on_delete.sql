@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 DO $$
 DECLARE
     r RECORD;
@@ -34,3 +36,7 @@ BEGIN
         RAISE NOTICE 'Converted % on table % to CASCADE', r.constraint_name, r.table_name;
     END LOOP;
 END $$;
+-- +goose StatementEnd
+
+-- +goose Down
+-- This migration is difficult to reverse generically.

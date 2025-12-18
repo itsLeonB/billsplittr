@@ -31,10 +31,10 @@ func Setup() (*Worker, error) {
 		}),
 	}
 
-	srv := asynq.NewServer(config.Global.Valkey.ToRedisOpts(), asynqCfg)
+	srv := asynq.NewServer(config.Global.ToRedisOpts(), asynqCfg)
 	mux := asynq.NewServeMux()
 
-	mux.Handle(message.ExpenseBillUploaded{}.Type(), expenseBillUploadedHandler(providers.Services.ExpenseBill, providers.Queues.ExpenseBillTextExtracted))
+	mux.Handle(message.ExpenseBillUploaded{}.Type(), expenseBillUploadedHandler(providers.Services.ExpenseBill, providers.ExpenseBillTextExtracted))
 	mux.Handle(message.ExpenseBillTextExtracted{}.Type(), expenseBillTextExtractedHandler(providers.Services.GroupExpense))
 
 	if err := srv.Ping(); err != nil {

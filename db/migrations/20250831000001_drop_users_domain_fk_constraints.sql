@@ -1,3 +1,5 @@
+-- +goose Up
+-- +goose StatementBegin
 DO $$
 DECLARE
     constraint_record RECORD;
@@ -13,8 +15,8 @@ BEGIN
             ON ccu.constraint_name = tc.constraint_name
         WHERE tc.constraint_type = 'FOREIGN KEY'
         AND (
-          tc.table_name IN ('transfer_methods', 'debt_transactions')
-          OR ccu.table_name IN ('transfer_methods', 'debt_transactions')
+          tc.table_name IN ('users', 'user_profiles', 'friendships')
+          OR ccu.table_name IN ('users', 'user_profiles', 'friendships')
         )
     LOOP
         EXECUTE 'ALTER TABLE ' || constraint_record.table_name ||
@@ -24,3 +26,7 @@ BEGIN
                      constraint_record.table_name;
     END LOOP;
 END $$;
+-- +goose StatementEnd
+
+-- +goose Down
+-- This migration is destructive and cannot be easily reversed.

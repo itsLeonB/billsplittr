@@ -1,3 +1,4 @@
+-- +goose Up
 -- Enums
 CREATE TYPE debt_transaction_type AS ENUM ('LEND', 'REPAY');
 CREATE TYPE friendship_type AS ENUM ('REAL', 'ANON');
@@ -94,3 +95,31 @@ CREATE INDEX IF NOT EXISTS group_expenses_created_at_idx ON group_expenses(creat
 CREATE INDEX IF NOT EXISTS group_expense_participants_group_expense_id_idx ON group_expense_participants(group_expense_id);
 CREATE INDEX IF NOT EXISTS group_expense_participants_participant_profile_id_idx ON group_expense_participants(participant_profile_id);
 CREATE INDEX IF NOT EXISTS group_expense_participants_created_at_idx ON group_expense_participants(created_at);
+
+-- +goose Down
+DROP INDEX IF EXISTS group_expense_participants_created_at_idx;
+DROP INDEX IF EXISTS group_expense_participants_participant_profile_id_idx;
+DROP INDEX IF EXISTS group_expense_participants_group_expense_id_idx;
+DROP INDEX IF EXISTS group_expenses_created_at_idx;
+DROP INDEX IF EXISTS group_expenses_payer_profile_id_idx;
+DROP INDEX IF EXISTS debt_transactions_created_at_idx;
+DROP INDEX IF EXISTS debt_transactions_transfer_method_id_idx;
+DROP INDEX IF EXISTS debt_transactions_borrower_profile_id_idx;
+DROP INDEX IF EXISTS debt_transactions_lender_profile_id_idx;
+DROP INDEX IF EXISTS friendships_type_idx;
+DROP INDEX IF EXISTS friendships_profile_id2_idx;
+DROP INDEX IF EXISTS friendships_profile_id1_idx;
+DROP INDEX IF EXISTS user_profiles_name_idx;
+DROP INDEX IF EXISTS user_profiles_user_id_idx;
+
+DROP TABLE IF EXISTS group_expense_participants;
+DROP TABLE IF EXISTS group_expenses;
+DROP TABLE IF EXISTS debt_transactions;
+DROP TABLE IF EXISTS transfer_methods;
+DROP TABLE IF EXISTS friendships;
+DROP TABLE IF EXISTS user_profiles;
+DROP TABLE IF EXISTS users;
+
+DROP TYPE IF EXISTS debt_transaction_action;
+DROP TYPE IF EXISTS friendship_type;
+DROP TYPE IF EXISTS debt_transaction_type;

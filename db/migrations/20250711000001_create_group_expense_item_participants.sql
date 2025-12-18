@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS group_expense_item_participants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     expense_item_id UUID NOT NULL REFERENCES group_expense_items(id),
@@ -11,3 +12,6 @@ CREATE TABLE IF NOT EXISTS group_expense_item_participants (
 ALTER TABLE group_expense_item_participants
 ADD CONSTRAINT unique_expense_item_profile
 UNIQUE (expense_item_id, profile_id);
+
+-- +goose Down
+DROP TABLE IF EXISTS group_expense_item_participants;

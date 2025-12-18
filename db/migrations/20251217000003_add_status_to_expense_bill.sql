@@ -1,3 +1,4 @@
+-- +goose Up
 ALTER TABLE group_expense_bills
 ADD COLUMN status TEXT NOT NULL DEFAULT 'PENDING';
 
@@ -8,3 +9,7 @@ WHERE group_expense_id IS NULL;
 UPDATE group_expense_bills
 SET status = 'PARSED'
 WHERE group_expense_id IS NOT NULL;
+
+-- +goose Down
+ALTER TABLE group_expense_bills
+DROP COLUMN status;
