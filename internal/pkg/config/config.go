@@ -12,9 +12,12 @@ type Config struct {
 	Valkey
 	Storage
 	LLM
+	Google
 }
 
-func Load() (Config, error) {
+var Global Config
+
+func Load() error {
 	var err error
 
 	var app App
@@ -42,11 +45,23 @@ func Load() (Config, error) {
 		err = errors.Join(err, e)
 	}
 
-	return Config{
+	var google Google
+	if e := envconfig.Process("GOOGLE", &google); e != nil {
+		err = errors.Join(err, e)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	Global = Config{
 		App:     app,
 		DB:      db,
 		Valkey:  valkey,
 		Storage: storage,
 		LLM:     llm,
-	}, err
+		Google:  google,
+	}
+
+	return nil
 }

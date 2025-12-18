@@ -4,24 +4,22 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/itsLeonB/billsplittr/internal/config"
-	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/billsplittr/internal/pkg/config"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	"github.com/itsLeonB/meq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type DBs struct {
-	dbConfig config.DB
-	GormDB   *gorm.DB
-	MQ       meq.DB
+	GormDB *gorm.DB
+	MQ     meq.DB
 }
 
-func ProvideDBs(logger ezutil.Logger, cfg config.Config) *DBs {
+func ProvideDBs() *DBs {
 	dbs := &DBs{
-		cfg.DB,
 		nil,
-		meq.NewAsynqDB(logger, cfg.ToRedisOpts()),
+		meq.NewAsynqDB(logger.Global, config.Global.ToRedisOpts()),
 	}
 
 	dbs.openGormConnection()
@@ -73,44 +71,8 @@ func (d *DBs) Ping() error {
 	return errs
 }
 
-func (d *DBs) getDSN() string {
-	switch d.dbConfig.Driver {
-	case "mysql":
-		return fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-			d.dbConfig.User,
-			d.dbConfig.Password,
-			d.dbConfig.Host,
-			d.dbConfig.Port,
-			d.dbConfig.Name,
-		)
-	case "postgres":
-		return fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s",
-			d.dbConfig.Host,
-			d.dbConfig.User,
-			d.dbConfig.Password,
-			d.dbConfig.Name,
-			d.dbConfig.Port,
-		)
-	default:
-		panic(fmt.Sprintf("unsupported SQLDB driver: %s", d.dbConfig.Driver))
-	}
-}
-
-func (d *DBs) getGormDialector() gorm.Dialector {
-	switch d.dbConfig.Driver {
-	// case "mysql":
-	// 	return mysql.Open(sqldb.getDSN())
-	case "postgres":
-		return postgres.Open(d.getDSN())
-	default:
-		panic(fmt.Sprintf("unsupported SQLDB driver: %s", d.dbConfig.Driver))
-	}
-}
-
 func (d *DBs) openGormConnection() {
-	db, err := gorm.Open(d.getGormDialector(), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(config.Global.ToPostgresDSN()), &gorm.Config{})
 	if err != nil {
 		panic(fmt.Sprintf("error opening GORM connection: %s", err.Error()))
 	}

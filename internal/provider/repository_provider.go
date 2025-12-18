@@ -3,7 +3,6 @@ package provider
 import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/repository"
-	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
 )
 
@@ -16,7 +15,7 @@ type Repositories struct {
 	ExpenseBill        repository.ExpenseBillRepository
 }
 
-func ProvideRepositories(dbs *DBs, logger ezutil.Logger) *Repositories {
+func ProvideRepositories(dbs *DBs) *Repositories {
 	if dbs.GormDB == nil {
 		panic("gormDB cannot be nil")
 	}

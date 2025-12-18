@@ -14,11 +14,11 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/message"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/billsplittr/internal/service/fee"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
-	"github.com/itsLeonB/meq"
 	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
@@ -31,8 +31,6 @@ type groupExpenseServiceImpl struct {
 	otherFeeRepository     repository.OtherFeeRepository
 	expenseBillRepository  repository.ExpenseBillRepository
 	llmService             LLMService
-	queue                  meq.TaskQueue[message.ExpenseBillTextExtracted]
-	logger                 ezutil.Logger
 }
 
 func NewGroupExpenseService(
@@ -41,8 +39,6 @@ func NewGroupExpenseService(
 	otherFeeRepository repository.OtherFeeRepository,
 	expenseBillRepository repository.ExpenseBillRepository,
 	llmService LLMService,
-	queue meq.TaskQueue[message.ExpenseBillTextExtracted],
-	logger ezutil.Logger,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
 		transactor,
@@ -51,8 +47,6 @@ func NewGroupExpenseService(
 		otherFeeRepository,
 		expenseBillRepository,
 		llmService,
-		queue,
-		logger,
 	}
 }
 
@@ -303,43 +297,33 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 	return groupExpense, nil
 }
 
-func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context) error {
-	var isV2Flow bool
-	var billID uuid.UUID
-	e := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		return ges.processAndAck(ctx, func(ctx context.Context, taskMsg message.ExpenseBillTextExtracted) error {
-			expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, taskMsg.ID)
-			if err != nil {
-				return err
-			}
-			if expenseBill.IsDeleted() {
-				ges.logger.Infof("expense bill ID: %s is deleted, skipping", expenseBill.ID.String())
-				return nil
-			}
-
-			if expenseBill.GroupExpenseID.Valid {
-				isV2Flow = true
-				billID = expenseBill.ID
-				return ges.parseFlowV2(ctx, taskMsg.Text, expenseBill)
-			} else {
-				return ges.parseFlowV1(ctx, taskMsg.Text, expenseBill)
-			}
-		})
-	})
-
-	if e != nil && isV2Flow {
-		return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-			expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, billID)
-			if err != nil {
-				return err
-			}
-			expenseBill.Status = appconstant.FailedBill
-			_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
+func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, msg.ID)
+		if err != nil {
 			return err
-		})
+		}
+		if expenseBill.IsDeleted() {
+			logger.Global.Infof("expense bill ID: %s is deleted, skipping", expenseBill.ID.String())
+			return nil
+		}
+		return ges.executeParseFlow(ctx, msg.Text, expenseBill)
+	})
+}
+
+func (ges *groupExpenseServiceImpl) executeParseFlow(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	if !expenseBill.GroupExpenseID.Valid {
+		// No groupExpenseID yet, execute flow v1
+		return ges.parseFlowV1(ctx, text, expenseBill)
 	}
 
-	return e
+	if err := ges.parseFlowV2(ctx, text, expenseBill); err != nil {
+		// Log error but do not return error (commit the transaction)
+		logger.Global.Errorf("error processing bill parsing v2: %s", eris.ToString(err, true))
+		return nil
+	}
+
+	return nil
 }
 
 func (ges *groupExpenseServiceImpl) parseFlowV1(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
@@ -370,27 +354,34 @@ func (ges *groupExpenseServiceImpl) parseFlowV1(ctx context.Context, text string
 }
 
 func (ges *groupExpenseServiceImpl) parseFlowV2(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	status, err := ges.processAndGetStatus(ctx, text, expenseBill)
+	expenseBill.Status = status
+	_, statusErr := ges.expenseBillRepository.Update(ctx, expenseBill)
+	if statusErr != nil {
+		return errors.Join(statusErr, err)
+	}
+	return err
+}
+
+func (ges *groupExpenseServiceImpl) processAndGetStatus(ctx context.Context, text string, expenseBill entity.ExpenseBill) (appconstant.BillStatus, error) {
 	expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, expenseBill.CreatorProfileID, expenseBill.GroupExpenseID.UUID)
 	if err != nil {
-		return err
+		return appconstant.FailedParsingBill, err
 	}
 
 	request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, text)
 	if err != nil {
 		if errors.Is(err, appconstant.ErrExpenseNotDetected) {
-			return nil
+			return appconstant.NotDetectedBill, nil
 		}
-		return err
+		return appconstant.FailedParsingBill, err
 	}
 
 	if err = ges.UpdateDraft(ctx, expense, request); err != nil {
-		return err
+		return appconstant.FailedParsingBill, err
 	}
 
-	expenseBill.Status = appconstant.ParsedBill
-	_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
-
-	return err
+	return appconstant.ParsedBill, nil
 }
 
 func (ges *groupExpenseServiceImpl) buildSystemPrompt() string {
@@ -467,7 +458,7 @@ func (ges *groupExpenseServiceImpl) parseExpenseBillTextToExpenseRequest(ctx con
 		return dto.NewGroupExpenseRequest{}, err
 	}
 	if promptResponse == "NOT_DETECTED" {
-		ges.logger.Info("group expense not detected")
+		logger.Global.Info("group expense not detected")
 		return dto.NewGroupExpenseRequest{}, appconstant.ErrExpenseNotDetected
 	}
 
@@ -477,23 +468,6 @@ func (ges *groupExpenseServiceImpl) parseExpenseBillTextToExpenseRequest(ctx con
 	}
 
 	return request, nil
-}
-
-func (ges *groupExpenseServiceImpl) processAndAck(ctx context.Context, fn func(ctx context.Context, taskMsg message.ExpenseBillTextExtracted) error) error {
-	task, taskID, err := ges.queue.GetOldest(ctx)
-	if err != nil {
-		return err
-	}
-	if task.IsZero() || taskID == "" {
-		ges.logger.Info("no pending extracted expense bill text")
-		return nil
-	}
-
-	if err = fn(ctx, task.Message); err != nil {
-		return err
-	}
-
-	return ges.queue.Delete(ctx, taskID)
 }
 
 // region V2

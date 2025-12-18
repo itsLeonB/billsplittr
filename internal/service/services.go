@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/message"
 )
 
 type GroupExpenseService interface {
@@ -15,7 +16,7 @@ type GroupExpenseService interface {
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 	ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error)
 	GetUnconfirmedGroupExpenseForUpdate(ctx context.Context, profileID, id uuid.UUID) (entity.GroupExpense, error)
-	ParseFromBillText(ctx context.Context) error
+	ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
 
 	// V2
@@ -42,6 +43,7 @@ type ExpenseBillService interface {
 	Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error)
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
 	EnqueueCleanup(ctx context.Context) error
+	ExtractBillText(ctx context.Context, msg message.ExpenseBillUploaded) (string, error)
 }
 
 type LLMService interface {

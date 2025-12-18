@@ -13,6 +13,7 @@ type ExpenseBill struct {
 	CreatorProfileID uuid.UUID
 	ImageName        string
 	Status           appconstant.BillStatus
+	ExtractedText    string
 }
 
 func (eb ExpenseBill) TableName() string {

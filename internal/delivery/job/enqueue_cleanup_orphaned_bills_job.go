@@ -3,7 +3,7 @@ package job
 import (
 	"context"
 
-	"github.com/itsLeonB/billsplittr/internal/config"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/itsLeonB/billsplittr/internal/service"
 	"github.com/itsLeonB/ezutil/v2"
@@ -13,17 +13,15 @@ type enqueueCleanupOrphanedBillsJobImpl struct {
 	expenseBillSvc service.ExpenseBillService
 }
 
-func enqueueCleanupOrphanedBillsJob(configs config.Config) (*ezutil.Job, error) {
-	logger := provider.ProvideLogger("Enqueue Cleanup Orphaned Bills", configs.Env)
-
-	providers, err := provider.All(configs, logger)
+func EnqueueCleanupOrphanedBillsJob() (*ezutil.Job, error) {
+	providers, err := provider.All()
 	if err != nil {
 		return nil, err
 	}
 
 	jobImpl := enqueueCleanupOrphanedBillsJobImpl{providers.Services.ExpenseBill}
 
-	job := ezutil.NewJob(logger, jobImpl.Run).
+	job := ezutil.NewJob(logger.Global, jobImpl.Run).
 		WithSetupFunc(providers.Ping).
 		WithCleanupFunc(providers.Shutdown)
 

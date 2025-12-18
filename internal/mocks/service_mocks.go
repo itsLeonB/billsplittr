@@ -16,6 +16,7 @@ import (
 	uuid "github.com/google/uuid"
 	dto "github.com/itsLeonB/billsplittr/internal/dto"
 	entity "github.com/itsLeonB/billsplittr/internal/entity"
+	message "github.com/itsLeonB/billsplittr/internal/message"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -148,17 +149,17 @@ func (mr *MockGroupExpenseServiceMockRecorder) GetUnconfirmedGroupExpenseForUpda
 }
 
 // ParseFromBillText mocks base method.
-func (m *MockGroupExpenseService) ParseFromBillText(ctx context.Context) error {
+func (m *MockGroupExpenseService) ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseFromBillText", ctx)
+	ret := m.ctrl.Call(m, "ParseFromBillText", ctx, msg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ParseFromBillText indicates an expected call of ParseFromBillText.
-func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx any) *gomock.Call {
+func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx, msg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx, msg)
 }
 
 // MockExpenseItemService is a mock of ExpenseItemService interface.
@@ -376,6 +377,21 @@ func (m *MockExpenseBillService) EnqueueCleanup(ctx context.Context) error {
 func (mr *MockExpenseBillServiceMockRecorder) EnqueueCleanup(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueCleanup", reflect.TypeOf((*MockExpenseBillService)(nil).EnqueueCleanup), ctx)
+}
+
+// ExtractBillText mocks base method.
+func (m *MockExpenseBillService) ExtractBillText(ctx context.Context, msg message.ExpenseBillUploaded) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExtractBillText", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExtractBillText indicates an expected call of ExtractBillText.
+func (mr *MockExpenseBillServiceMockRecorder) ExtractBillText(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExtractBillText", reflect.TypeOf((*MockExpenseBillService)(nil).ExtractBillText), ctx, msg)
 }
 
 // Get mocks base method.

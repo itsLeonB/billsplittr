@@ -2,31 +2,21 @@ package provider
 
 import (
 	"errors"
-
-	"github.com/itsLeonB/billsplittr/internal/config"
-	"github.com/itsLeonB/ezutil/v2"
 )
 
 type Provider struct {
-	Logger ezutil.Logger
 	*DBs
 	*Queues
 	*Repositories
 	*Services
 }
 
-func All(configs config.Config, logger ezutil.Logger) (*Provider, error) {
-	dbs := ProvideDBs(logger, configs)
-	repos := ProvideRepositories(dbs, logger)
-	queues, err := ProvideQueues(logger, dbs.MQ)
-	if err != nil {
-		if e := dbs.Shutdown(); e != nil {
-			err = errors.Join(err, e)
-		}
-		return nil, err
-	}
+func All() (*Provider, error) {
+	dbs := ProvideDBs()
+	repos := ProvideRepositories(dbs)
+	queues := ProvideQueues(dbs.MQ)
 
-	services, err := ProvideServices(repos, logger, configs, queues)
+	services, err := ProvideServices(repos, queues)
 	if err != nil {
 		if e := dbs.Shutdown(); e != nil {
 			err = errors.Join(err, e)
@@ -35,7 +25,6 @@ func All(configs config.Config, logger ezutil.Logger) (*Provider, error) {
 	}
 
 	return &Provider{
-		Logger:       logger,
 		DBs:          dbs,
 		Queues:       queues,
 		Repositories: repos,

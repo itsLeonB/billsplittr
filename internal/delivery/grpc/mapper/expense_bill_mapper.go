@@ -41,10 +41,16 @@ func toBillStatusProto(status appconstant.BillStatus) (expensebill.ExpenseBill_S
 	switch status {
 	case appconstant.PendingBill:
 		return expensebill.ExpenseBill_STATUS_PENDING, nil
+	case appconstant.ExtractedBill:
+		return expensebill.ExpenseBill_STATUS_EXTRACTED, nil
+	case appconstant.FailedExtracting:
+		return expensebill.ExpenseBill_STATUS_FAILED_EXTRACTING, nil
 	case appconstant.ParsedBill:
 		return expensebill.ExpenseBill_STATUS_PARSED, nil
-	case appconstant.FailedBill:
-		return expensebill.ExpenseBill_STATUS_FAILED, nil
+	case appconstant.FailedParsingBill:
+		return expensebill.ExpenseBill_STATUS_FAILED_PARSING, nil
+	case appconstant.NotDetectedBill:
+		return expensebill.ExpenseBill_STATUS_NOT_DETECTED, nil
 	default:
 		return expensebill.ExpenseBill_STATUS_UNSPECIFIED, eris.Errorf("unspecified bill status constant: %s", status)
 	}

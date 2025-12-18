@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/itsLeonB/billsplittr/internal/delivery/grpc"
+	"github.com/itsLeonB/billsplittr/internal/delivery/worker"
 	"github.com/itsLeonB/billsplittr/internal/pkg/config"
 	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	_ "github.com/joho/godotenv/autoload"
@@ -15,10 +15,10 @@ func main() {
 		logger.Global.Fatal(eris.ToString(err, true))
 	}
 
-	srv, err := grpc.Setup()
+	wrk, err := worker.Setup()
 	if err != nil {
 		logger.Global.Fatal(eris.ToString(err, true))
 	}
 
-	srv.Run()
+	wrk.Run()
 }
