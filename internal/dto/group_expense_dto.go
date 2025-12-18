@@ -49,6 +49,7 @@ type GroupExpenseResponse struct {
 	Items        []ExpenseItemResponse
 	OtherFees    []OtherFeeResponse
 	Participants []ExpenseParticipantResponse
+	Bill         ExpenseBillResponse
 }
 
 type ExpenseParticipantResponse struct {

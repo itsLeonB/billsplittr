@@ -44,6 +44,7 @@ func GroupExpenseToResponse(groupExpense entity.GroupExpense) dto.GroupExpenseRe
 		Items:            ezutil.MapSlice(groupExpense.Items, ExpenseItemToResponse),
 		OtherFees:        ezutil.MapSlice(groupExpense.OtherFees, OtherFeeToResponse),
 		Participants:     ezutil.MapSlice(groupExpense.Participants, expenseParticipantToResponse),
+		Bill:             ExpenseBillToResponse(groupExpense.Bill),
 	}
 }
 

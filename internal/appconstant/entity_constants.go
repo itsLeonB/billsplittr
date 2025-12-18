@@ -10,10 +10,9 @@ const (
 type ExpenseStatus string
 
 const (
-	DraftExpense          ExpenseStatus = "DRAFT"
-	ProcessingBillExpense ExpenseStatus = "PROCESSING_BILL"
-	ReadyExpense          ExpenseStatus = "READY"
-	ConfirmedExpense      ExpenseStatus = "CONFIRMED"
+	DraftExpense     ExpenseStatus = "DRAFT"
+	ReadyExpense     ExpenseStatus = "READY"
+	ConfirmedExpense ExpenseStatus = "CONFIRMED"
 )
 
 type BillStatus string

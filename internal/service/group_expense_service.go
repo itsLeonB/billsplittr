@@ -113,6 +113,7 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		"OtherFees",
 		"Items.Participants",
 		"Participants",
+		"Bill",
 	}
 
 	groupExpense, err := ges.getGroupExpense(ctx, spec)

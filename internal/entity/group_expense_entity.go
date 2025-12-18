@@ -25,6 +25,7 @@ type GroupExpense struct {
 	Items        []ExpenseItem        `gorm:"foreignKey:GroupExpenseID"`
 	OtherFees    []OtherFee           `gorm:"foreignKey:GroupExpenseID"`
 	Participants []ExpenseParticipant `gorm:"foreignKey:GroupExpenseID"`
+	Bill         ExpenseBill          `gorm:"foreignKey:GroupExpenseID"`
 }
 
 type ExpenseParticipant struct {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 )
 
 type NewExpenseBillRequest struct {
@@ -20,6 +21,7 @@ type ExpenseBillResponse struct {
 	PayerProfileID   uuid.UUID
 	GroupExpenseID   uuid.UUID
 	Filename         string
+	Status           appconstant.BillStatus
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        time.Time

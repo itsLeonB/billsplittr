@@ -7,6 +7,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/gerpc"
+	"github.com/rotisserie/eris"
 	"golang.org/x/text/currency"
 )
 
@@ -23,6 +24,16 @@ func ToGroupExpenseResponseProto(groupExpense dto.GroupExpenseResponse) (*groupe
 		return nil, err
 	}
 
+	status, err := toExpenseStatusProto(groupExpense.Status)
+	if err != nil {
+		return nil, err
+	}
+
+	bill, err := ToExpenseBillResponseProto(groupExpense.Bill)
+	if err != nil {
+		return nil, err
+	}
+
 	return &groupexpense.GroupExpenseResponse{
 		CreatorProfileId:        groupExpense.CreatorProfileID.String(),
 		PayerProfileId:          groupExpense.PayerProfileID.String(),
@@ -33,10 +44,11 @@ func ToGroupExpenseResponseProto(groupExpense dto.GroupExpenseResponse) (*groupe
 		Description:             groupExpense.Description,
 		IsConfirmed:             groupExpense.Confirmed,
 		IsParticipantsConfirmed: groupExpense.ParticipantsConfirmed,
-		Status:                  toExpenseStatusProto(groupExpense.Status),
+		Status:                  status,
 		Items:                   ezutil.MapSlice(groupExpense.Items, ToExpenseItemResponseProto),
 		OtherFees:               feeResponses,
 		Participants:            ezutil.MapSlice(groupExpense.Participants, toExpenseParticipantResponseProto),
+		ExpenseBill:             bill,
 		AuditMetadata: &audit.Metadata{
 			Id:        groupExpense.ID.String(),
 			CreatedAt: gerpc.NullableTimeToProto(groupExpense.CreatedAt),
@@ -46,17 +58,15 @@ func ToGroupExpenseResponseProto(groupExpense dto.GroupExpenseResponse) (*groupe
 	}, nil
 }
 
-func toExpenseStatusProto(status appconstant.ExpenseStatus) groupexpense.GroupExpenseResponse_ExpenseStatus {
+func toExpenseStatusProto(status appconstant.ExpenseStatus) (groupexpense.GroupExpenseResponse_Status, error) {
 	switch status {
 	case appconstant.DraftExpense:
-		return groupexpense.GroupExpenseResponse_EXPENSE_STATUS_DRAFT
-	case appconstant.ProcessingBillExpense:
-		return groupexpense.GroupExpenseResponse_EXPENSE_STATUS_PROCESSING_BILL
+		return groupexpense.GroupExpenseResponse_STATUS_DRAFT, nil
 	case appconstant.ReadyExpense:
-		return groupexpense.GroupExpenseResponse_EXPENSE_STATUS_READY
+		return groupexpense.GroupExpenseResponse_STATUS_READY, nil
 	case appconstant.ConfirmedExpense:
-		return groupexpense.GroupExpenseResponse_EXPENSE_STATUS_CONFIRMED
+		return groupexpense.GroupExpenseResponse_STATUS_CONFIRMED, nil
 	default:
-		return groupexpense.GroupExpenseResponse_EXPENSE_STATUS_UNSPECIFIED
+		return groupexpense.GroupExpenseResponse_STATUS_UNSPECIFIED, eris.Errorf("unspecified expense status constant: %s", status)
 	}
 }

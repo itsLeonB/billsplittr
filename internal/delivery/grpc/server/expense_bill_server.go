@@ -77,9 +77,12 @@ func (ebs *expenseBillServer) Save(ctx context.Context, req *expensebill.SaveReq
 		return nil, err
 	}
 
-	return &expensebill.SaveResponse{
-		ExpenseBill: mapper.ToExpenseBillResponseProto(response),
-	}, nil
+	mappedResp, err := mapper.ToExpenseBillResponseProto(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &expensebill.SaveResponse{ExpenseBill: mappedResp}, nil
 }
 
 func (ebs *expenseBillServer) GetAllCreated(ctx context.Context, req *expensebill.GetAllCreatedRequest) (*expensebill.GetAllCreatedResponse, error) {
@@ -97,9 +100,12 @@ func (ebs *expenseBillServer) GetAllCreated(ctx context.Context, req *expensebil
 		return nil, err
 	}
 
-	return &expensebill.GetAllCreatedResponse{
-		ExpenseBills: ezutil.MapSlice(responses, mapper.ToExpenseBillResponseProto),
-	}, nil
+	mappedResps, err := ezutil.MapSliceWithError(responses, mapper.ToExpenseBillResponseProto)
+	if err != nil {
+		return nil, err
+	}
+
+	return &expensebill.GetAllCreatedResponse{ExpenseBills: mappedResps}, nil
 }
 
 func (ebs *expenseBillServer) Get(ctx context.Context, req *expensebill.GetRequest) (*expensebill.GetResponse, error) {
@@ -117,9 +123,12 @@ func (ebs *expenseBillServer) Get(ctx context.Context, req *expensebill.GetReque
 		return nil, err
 	}
 
-	return &expensebill.GetResponse{
-		ExpenseBill: mapper.ToExpenseBillResponseProto(response),
-	}, nil
+	mappedResp, err := mapper.ToExpenseBillResponseProto(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &expensebill.GetResponse{ExpenseBill: mappedResp}, nil
 }
 
 func (ebs *expenseBillServer) Delete(ctx context.Context, req *expensebill.DeleteRequest) (*emptypb.Empty, error) {
@@ -137,7 +146,5 @@ func (ebs *expenseBillServer) Delete(ctx context.Context, req *expensebill.Delet
 		return nil, err
 	}
 
-	err = ebs.expenseBillSvc.Delete(ctx, id, profileID)
-
-	return nil, err
+	return nil, ebs.expenseBillSvc.Delete(ctx, id, profileID)
 }
