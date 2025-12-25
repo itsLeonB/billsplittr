@@ -22,8 +22,15 @@ func Setup() (*Worker, error) {
 		return nil, err
 	}
 
+	expenseBillUploadedQueue := message.ExpenseBillUploaded{}.Type()
+	expenseBillTextExtractedQueue := message.ExpenseBillTextExtracted{}.Type()
+
 	asynqCfg := asynq.Config{
 		Concurrency: 3,
+		Queues: map[string]int{
+			expenseBillUploadedQueue:      3,
+			expenseBillTextExtractedQueue: 3,
+		},
 		ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
 			if err != nil {
 				logger.Global.Errorf("error processing message: %s", eris.ToString(err, true))
@@ -35,8 +42,8 @@ func Setup() (*Worker, error) {
 	srv := asynq.NewServer(config.Global.ToRedisOpts(), asynqCfg)
 	mux := asynq.NewServeMux()
 
-	mux.Handle(message.ExpenseBillUploaded{}.Type(), expenseBillUploadedHandler(providers.Services.ExpenseBill, providers.ExpenseBillTextExtracted))
-	mux.Handle(message.ExpenseBillTextExtracted{}.Type(), expenseBillTextExtractedHandler(providers.Services.GroupExpense))
+	mux.Handle(expenseBillUploadedQueue, expenseBillUploadedHandler(providers.Services.ExpenseBill, providers.ExpenseBillTextExtracted))
+	mux.Handle(expenseBillTextExtractedQueue, expenseBillTextExtractedHandler(providers.Services.GroupExpense))
 
 	if err := srv.Ping(); err != nil {
 		return nil, eris.Wrap(err, "error pinging valkey")
