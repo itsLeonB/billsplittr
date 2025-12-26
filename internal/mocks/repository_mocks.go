@@ -58,6 +58,20 @@ func (mr *MockGroupExpenseRepositoryMockRecorder) Delete(ctx, model any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockGroupExpenseRepository)(nil).Delete), ctx, model)
 }
 
+// DeleteItemParticipants mocks base method.
+func (m *MockGroupExpenseRepository) DeleteItemParticipants(ctx context.Context, expenseID uuid.UUID, newParticipantProfileIDs []uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteItemParticipants", ctx, expenseID, newParticipantProfileIDs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteItemParticipants indicates an expected call of DeleteItemParticipants.
+func (mr *MockGroupExpenseRepositoryMockRecorder) DeleteItemParticipants(ctx, expenseID, newParticipantProfileIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteItemParticipants", reflect.TypeOf((*MockGroupExpenseRepository)(nil).DeleteItemParticipants), ctx, expenseID, newParticipantProfileIDs)
+}
+
 // DeleteMany mocks base method.
 func (m *MockGroupExpenseRepository) DeleteMany(ctx context.Context, models []entity.GroupExpense) error {
 	m.ctrl.T.Helper()

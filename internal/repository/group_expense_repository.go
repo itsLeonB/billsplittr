@@ -62,3 +62,27 @@ func (ger *groupExpenseRepositoryGorm) SyncParticipants(ctx context.Context, gro
 
 	return nil
 }
+
+func (ger *groupExpenseRepositoryGorm) DeleteItemParticipants(ctx context.Context, expenseID uuid.UUID, newParticipantProfileIDs []uuid.UUID) error {
+	db, err := ger.GetGormInstance(ctx)
+	if err != nil {
+		return err
+	}
+
+	// GORM doesn't support DELETE with JOIN directly, so we use a subquery
+	subQuery := db.Table("expense_items").
+		Select("id").
+		Where("group_expense_id = ?", expenseID)
+
+	query := db.Where("expense_item_id IN (?)", subQuery)
+
+	if len(newParticipantProfileIDs) > 0 {
+		query = query.Where("profile_id NOT IN ?", newParticipantProfileIDs)
+	}
+
+	if err := query.Delete(&entity.ItemParticipant{}).Error; err != nil {
+		return eris.Wrap(err, "error deleting item participants")
+	}
+
+	return nil
+}

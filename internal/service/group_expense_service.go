@@ -520,6 +520,10 @@ func (ges *groupExpenseServiceImpl) SyncParticipants(ctx context.Context, req dt
 			return entity.ExpenseParticipant{ParticipantProfileID: id}
 		}
 
-		return ges.groupExpenseRepository.SyncParticipants(ctx, expense.ID, ezutil.MapSlice(req.ParticipantProfileIDs, entityMapper))
+		if err := ges.groupExpenseRepository.SyncParticipants(ctx, expense.ID, ezutil.MapSlice(req.ParticipantProfileIDs, entityMapper)); err != nil {
+			return err
+		}
+
+		return ges.groupExpenseRepository.DeleteItemParticipants(ctx, expense.ID, req.ParticipantProfileIDs)
 	})
 }

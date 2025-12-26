@@ -11,6 +11,7 @@ import (
 type GroupExpenseRepository interface {
 	crud.Repository[entity.GroupExpense]
 	SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error
+	DeleteItemParticipants(ctx context.Context, expenseID uuid.UUID, newParticipantProfileIDs []uuid.UUID) error
 }
 
 type ExpenseItemRepository interface {
