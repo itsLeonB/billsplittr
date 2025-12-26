@@ -189,10 +189,6 @@ func (ges *expenseItemServiceImpl) Remove(ctx context.Context, profileID, id, gr
 			return err
 		}
 
-		if err = ges.expenseItemRepository.Delete(ctx, expenseItem); err != nil {
-			return err
-		}
-
 		itemAmount := expenseItem.TotalAmount()
 		groupExpense.TotalAmount = groupExpense.TotalAmount.Sub(itemAmount)
 		groupExpense.Subtotal = groupExpense.Subtotal.Sub(itemAmount)
@@ -204,6 +200,10 @@ func (ges *expenseItemServiceImpl) Remove(ctx context.Context, profileID, id, gr
 		}
 
 		if _, err = ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
+			return err
+		}
+
+		if err = ges.expenseItemRepository.Delete(ctx, expenseItem); err != nil {
 			return err
 		}
 
