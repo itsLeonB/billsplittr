@@ -16,6 +16,7 @@ import (
 	uuid "github.com/google/uuid"
 	dto "github.com/itsLeonB/billsplittr/internal/dto"
 	entity "github.com/itsLeonB/billsplittr/internal/entity"
+	message "github.com/itsLeonB/billsplittr/internal/message"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -73,6 +74,35 @@ func (mr *MockGroupExpenseServiceMockRecorder) CreateDraft(ctx, request any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDraft", reflect.TypeOf((*MockGroupExpenseService)(nil).CreateDraft), ctx, request)
 }
 
+// CreateDraftV2 mocks base method.
+func (m *MockGroupExpenseService) CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDraftV2", ctx, req)
+	ret0, _ := ret[0].(dto.GroupExpenseResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDraftV2 indicates an expected call of CreateDraftV2.
+func (mr *MockGroupExpenseServiceMockRecorder) CreateDraftV2(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDraftV2", reflect.TypeOf((*MockGroupExpenseService)(nil).CreateDraftV2), ctx, req)
+}
+
+// Delete mocks base method.
+func (m *MockGroupExpenseService) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, id, profileID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockGroupExpenseServiceMockRecorder) Delete(ctx, id, profileID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockGroupExpenseService)(nil).Delete), ctx, id, profileID)
+}
+
 // GetAllCreated mocks base method.
 func (m *MockGroupExpenseService) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
 	m.ctrl.T.Helper()
@@ -119,17 +149,31 @@ func (mr *MockGroupExpenseServiceMockRecorder) GetUnconfirmedGroupExpenseForUpda
 }
 
 // ParseFromBillText mocks base method.
-func (m *MockGroupExpenseService) ParseFromBillText(ctx context.Context) error {
+func (m *MockGroupExpenseService) ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseFromBillText", ctx)
+	ret := m.ctrl.Call(m, "ParseFromBillText", ctx, msg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ParseFromBillText indicates an expected call of ParseFromBillText.
-func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx any) *gomock.Call {
+func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx, msg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx, msg)
+}
+
+// SyncParticipants mocks base method.
+func (m *MockGroupExpenseService) SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncParticipants", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncParticipants indicates an expected call of SyncParticipants.
+func (mr *MockGroupExpenseServiceMockRecorder) SyncParticipants(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncParticipants", reflect.TypeOf((*MockGroupExpenseService)(nil).SyncParticipants), ctx, req)
 }
 
 // MockExpenseItemService is a mock of ExpenseItemService interface.
@@ -347,6 +391,21 @@ func (m *MockExpenseBillService) EnqueueCleanup(ctx context.Context) error {
 func (mr *MockExpenseBillServiceMockRecorder) EnqueueCleanup(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueCleanup", reflect.TypeOf((*MockExpenseBillService)(nil).EnqueueCleanup), ctx)
+}
+
+// ExtractBillText mocks base method.
+func (m *MockExpenseBillService) ExtractBillText(ctx context.Context, msg message.ExpenseBillUploaded) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExtractBillText", ctx, msg)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExtractBillText indicates an expected call of ExtractBillText.
+func (mr *MockExpenseBillServiceMockRecorder) ExtractBillText(ctx, msg any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExtractBillText", reflect.TypeOf((*MockExpenseBillService)(nil).ExtractBillText), ctx, msg)
 }
 
 // Get mocks base method.

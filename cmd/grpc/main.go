@@ -1,26 +1,24 @@
 package main
 
 import (
-	"log"
-
-	"github.com/itsLeonB/billsplittr/internal/appconstant"
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc"
+	"github.com/itsLeonB/billsplittr/internal/pkg/config"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rotisserie/eris"
 )
 
 func main() {
-	cfg, err := config.Load()
+	logger.Init()
+
+	if err := config.Load(); err != nil {
+		logger.Global.Fatal(eris.ToString(err, true))
+	}
+
+	srv, err := grpc.Setup()
 	if err != nil {
-		log.Fatal(eris.ToString(err, true))
+		logger.Global.Fatal(eris.ToString(err, true))
 	}
-	if cfg.ServiceType != appconstant.GRPCServer {
-		log.Fatalf("wrong service type for grpc server entrypoint: %s", cfg.ServiceType)
-	}
-	srv, err := grpc.Setup(cfg)
-	if err != nil {
-		log.Fatal(eris.ToString(err, true))
-	}
+
 	srv.Run()
 }

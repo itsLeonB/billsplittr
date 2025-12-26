@@ -28,5 +28,9 @@ if ! make build-job; then
     echo "\n❌ Build failed! Please fix the build issues before pushing.\n"
     exit 1
 fi
+if ! make build-worker; then
+    echo "\n❌ Build failed! Please fix the build issues before pushing.\n"
+    exit 1
+fi
 
 echo "\n✅ All checks passed! Pushing can continue...\n"

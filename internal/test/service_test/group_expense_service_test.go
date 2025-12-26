@@ -31,8 +31,6 @@ func TestGroupExpenseService_CreateDraftSuccess(t *testing.T) {
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	creatorID := uuid.New()
@@ -95,8 +93,6 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorZeroAmount(t *testing.T)
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	request := dto.NewGroupExpenseRequest{
@@ -126,8 +122,6 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorAmountMismatch(t *testin
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	request := dto.NewGroupExpenseRequest{
@@ -169,8 +163,6 @@ func TestGroupExpenseServiceGetAllCreated(t *testing.T) {
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	profileID := uuid.New()
@@ -208,8 +200,6 @@ func TestGroupExpenseServiceGetDetails(t *testing.T) {
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	expenseID := uuid.New()

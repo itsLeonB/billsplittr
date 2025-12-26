@@ -11,15 +11,12 @@ import (
 type GroupExpenseRepository interface {
 	crud.Repository[entity.GroupExpense]
 	SyncParticipants(ctx context.Context, groupExpenseID uuid.UUID, participants []entity.ExpenseParticipant) error
+	DeleteItemParticipants(ctx context.Context, expenseID uuid.UUID, newParticipantProfileIDs []uuid.UUID) error
 }
 
 type ExpenseItemRepository interface {
 	crud.Repository[entity.ExpenseItem]
 	SyncParticipants(ctx context.Context, expenseItemID uuid.UUID, participants []entity.ItemParticipant) error
-}
-
-type ExpenseParticipantRepository interface {
-	crud.Repository[entity.ExpenseParticipant]
 }
 
 type OtherFeeRepository interface {
