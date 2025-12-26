@@ -18,6 +18,7 @@ type GroupExpenseService interface {
 	GetUnconfirmedGroupExpenseForUpdate(ctx context.Context, profileID, id uuid.UUID) (entity.GroupExpense, error)
 	ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
+	SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error
 
 	// V2
 	CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error)

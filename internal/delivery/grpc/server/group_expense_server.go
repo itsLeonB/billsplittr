@@ -9,6 +9,7 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/mapper"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
+	"github.com/itsLeonB/billsplittr/internal/util/uuidutil"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/rotisserie/eris"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -162,4 +163,39 @@ func (ges *groupExpenseServer) Delete(ctx context.Context, req *groupexpense.Del
 	}
 
 	return nil, ges.groupExpenseSvc.Delete(ctx, id, profileID)
+}
+
+func (ges *groupExpenseServer) SyncParticipants(ctx context.Context, req *groupexpense.SyncParticipantsRequest) (*emptypb.Empty, error) {
+	if req == nil {
+		return nil, eris.New("request is nil")
+	}
+
+	participantProfileIDs, err := ezutil.MapSliceWithError(req.GetParticipantProfileIds(), uuidutil.Parse)
+	if err != nil {
+		return nil, err
+	}
+
+	payerProfileID, err := uuidutil.Parse(req.GetPayerProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	userProfileID, err := uuidutil.Parse(req.GetUserProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	expenseID, err := uuidutil.Parse(req.GetGroupExpenseId())
+	if err != nil {
+		return nil, err
+	}
+
+	request := dto.ExpenseParticipantsRequest{
+		ParticipantProfileIDs: participantProfileIDs,
+		PayerProfileID:        payerProfileID,
+		UserProfileID:         userProfileID,
+		GroupExpenseID:        expenseID,
+	}
+
+	return nil, ges.groupExpenseSvc.SyncParticipants(ctx, request)
 }

@@ -18,10 +18,6 @@ type ExpenseItemRepository interface {
 	SyncParticipants(ctx context.Context, expenseItemID uuid.UUID, participants []entity.ItemParticipant) error
 }
 
-type ExpenseParticipantRepository interface {
-	crud.Repository[entity.ExpenseParticipant]
-}
-
 type OtherFeeRepository interface {
 	crud.Repository[entity.OtherFee]
 	SyncParticipants(ctx context.Context, feeID uuid.UUID, participants []entity.FeeParticipant) error

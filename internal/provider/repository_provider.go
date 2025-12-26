@@ -7,12 +7,11 @@ import (
 )
 
 type Repositories struct {
-	Transactor         crud.Transactor
-	GroupExpense       repository.GroupExpenseRepository
-	ExpenseItem        repository.ExpenseItemRepository
-	ExpenseParticipant repository.ExpenseParticipantRepository
-	OtherFee           repository.OtherFeeRepository
-	ExpenseBill        repository.ExpenseBillRepository
+	Transactor   crud.Transactor
+	GroupExpense repository.GroupExpenseRepository
+	ExpenseItem  repository.ExpenseItemRepository
+	OtherFee     repository.OtherFeeRepository
+	ExpenseBill  repository.ExpenseBillRepository
 }
 
 func ProvideRepositories(dbs *DBs) *Repositories {
@@ -21,11 +20,10 @@ func ProvideRepositories(dbs *DBs) *Repositories {
 	}
 
 	return &Repositories{
-		Transactor:         crud.NewTransactor(dbs.GormDB),
-		GroupExpense:       repository.NewGroupExpenseRepository(dbs.GormDB),
-		ExpenseItem:        repository.NewExpenseItemRepository(dbs.GormDB),
-		ExpenseParticipant: crud.NewRepository[entity.ExpenseParticipant](dbs.GormDB),
-		OtherFee:           repository.NewOtherFeeRepository(dbs.GormDB),
-		ExpenseBill:        crud.NewRepository[entity.ExpenseBill](dbs.GormDB),
+		Transactor:   crud.NewTransactor(dbs.GormDB),
+		GroupExpense: repository.NewGroupExpenseRepository(dbs.GormDB),
+		ExpenseItem:  repository.NewExpenseItemRepository(dbs.GormDB),
+		OtherFee:     repository.NewOtherFeeRepository(dbs.GormDB),
+		ExpenseBill:  crud.NewRepository[entity.ExpenseBill](dbs.GormDB),
 	}
 }

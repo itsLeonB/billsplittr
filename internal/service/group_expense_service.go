@@ -502,3 +502,24 @@ func (ges *groupExpenseServiceImpl) Delete(ctx context.Context, id, profileID uu
 		return ges.groupExpenseRepository.Delete(ctx, expense)
 	})
 }
+
+func (ges *groupExpenseServiceImpl) SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, req.UserProfileID, req.GroupExpenseID)
+		if err != nil {
+			return err
+		}
+
+		expense.PayerProfileID = req.PayerProfileID
+
+		if _, err = ges.groupExpenseRepository.Update(ctx, expense); err != nil {
+			return err
+		}
+
+		entityMapper := func(id uuid.UUID) entity.ExpenseParticipant {
+			return entity.ExpenseParticipant{ParticipantProfileID: id}
+		}
+
+		return ges.groupExpenseRepository.SyncParticipants(ctx, expense.ID, ezutil.MapSlice(req.ParticipantProfileIDs, entityMapper))
+	})
+}

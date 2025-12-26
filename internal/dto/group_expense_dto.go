@@ -56,3 +56,10 @@ type ExpenseParticipantResponse struct {
 	ProfileID   uuid.UUID
 	ShareAmount decimal.Decimal
 }
+
+type ExpenseParticipantsRequest struct {
+	ParticipantProfileIDs []uuid.UUID
+	PayerProfileID        uuid.UUID
+	UserProfileID         uuid.UUID
+	GroupExpenseID        uuid.UUID
+}

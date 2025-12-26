@@ -162,6 +162,20 @@ func (mr *MockGroupExpenseServiceMockRecorder) ParseFromBillText(ctx, msg any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseFromBillText", reflect.TypeOf((*MockGroupExpenseService)(nil).ParseFromBillText), ctx, msg)
 }
 
+// SyncParticipants mocks base method.
+func (m *MockGroupExpenseService) SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncParticipants", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncParticipants indicates an expected call of SyncParticipants.
+func (mr *MockGroupExpenseServiceMockRecorder) SyncParticipants(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncParticipants", reflect.TypeOf((*MockGroupExpenseService)(nil).SyncParticipants), ctx, req)
+}
+
 // MockExpenseItemService is a mock of ExpenseItemService interface.
 type MockExpenseItemService struct {
 	ctrl     *gomock.Controller

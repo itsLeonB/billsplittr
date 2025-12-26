@@ -37,7 +37,7 @@ func (ger *groupExpenseRepositoryGorm) SyncParticipants(ctx context.Context, gro
 	}
 
 	if len(participants) > 0 {
-		// For PostgreSQL
+		// Upsert: insert new or update existing
 		if err := db.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "group_expense_id"}, {Name: "participant_profile_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"share_amount"}),
@@ -46,12 +46,18 @@ func (ger *groupExpenseRepositoryGorm) SyncParticipants(ctx context.Context, gro
 		}
 	}
 
-	query := db.Where("group_expense_id = ?", groupExpenseID)
+	// Delete participants not in the new list
 	if len(profileIDs) > 0 {
-		query = query.Where("participant_profile_id NOT IN ?", profileIDs)
-	}
-	if err := query.Delete(&entity.ExpenseParticipant{}).Error; err != nil {
-		return err
+		if err := db.Where("group_expense_id = ? AND participant_profile_id NOT IN ?", groupExpenseID, profileIDs).
+			Delete(&entity.ExpenseParticipant{}).Error; err != nil {
+			return eris.Wrap(err, "error deleting removed participants")
+		}
+	} else {
+		// If no participants provided, delete all
+		if err := db.Where("group_expense_id = ?", groupExpenseID).
+			Delete(&entity.ExpenseParticipant{}).Error; err != nil {
+			return eris.Wrap(err, "error deleting all participants")
+		}
 	}
 
 	return nil
