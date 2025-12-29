@@ -70,7 +70,7 @@ func (ger *groupExpenseRepositoryGorm) DeleteItemParticipants(ctx context.Contex
 	}
 
 	// GORM doesn't support DELETE with JOIN directly, so we use a subquery
-	subQuery := db.Table("expense_items").
+	subQuery := db.Table("group_expense_items").
 		Select("id").
 		Where("group_expense_id = ?", expenseID)
 
