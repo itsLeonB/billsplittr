@@ -211,6 +211,44 @@ func (ges *expenseItemServiceImpl) Remove(ctx context.Context, profileID, id, gr
 	})
 }
 
+func (ges *expenseItemServiceImpl) SyncParticipants(ctx context.Context, req dto.SyncItemParticipantsRequest) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expenseItem, err := ges.getExpenseItemByIDForUpdate(ctx, req.ID, req.GroupExpenseID)
+		if err != nil {
+			return err
+		}
+
+		groupExpense, err := ges.groupExpenseSvc.GetUnconfirmedGroupExpenseForUpdate(ctx, req.ProfileID, expenseItem.GroupExpenseID)
+		if err != nil {
+			return err
+		}
+
+		updatedParticipants := ezutil.MapSlice(req.Participants, mapper.ItemParticipantRequestToEntity)
+		expenseItem.Participants = updatedParticipants
+
+		newItemSet := []entity.ExpenseItem{}
+		for _, item := range groupExpense.Items {
+			if item.ID == expenseItem.ID {
+				newItemSet = append(newItemSet, expenseItem)
+			} else {
+				newItemSet = append(newItemSet, item)
+			}
+		}
+
+		if isReadyExpense(newItemSet) {
+			groupExpense.Status = appconstant.ReadyExpense
+		} else {
+			groupExpense.Status = appconstant.DraftExpense
+		}
+
+		if _, err := ges.groupExpenseRepository.Update(ctx, groupExpense); err != nil {
+			return err
+		}
+
+		return ges.expenseItemRepository.SyncParticipants(ctx, expenseItem.ID, updatedParticipants)
+	})
+}
+
 func (ges *expenseItemServiceImpl) getExpenseItemByIDForUpdate(ctx context.Context, expenseItemID, groupExpenseID uuid.UUID) (entity.ExpenseItem, error) {
 	spec := crud.Specification[entity.ExpenseItem]{}
 	spec.Model.ID = expenseItemID

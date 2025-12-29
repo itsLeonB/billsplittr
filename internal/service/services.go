@@ -29,6 +29,7 @@ type ExpenseItemService interface {
 	GetDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error)
 	Update(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error)
 	Remove(ctx context.Context, profileID, id, groupExpenseID uuid.UUID) error
+	SyncParticipants(ctx context.Context, req dto.SyncItemParticipantsRequest) error
 }
 
 type OtherFeeService interface {

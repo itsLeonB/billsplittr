@@ -9,13 +9,15 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/mapper"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
+	"github.com/itsLeonB/billsplittr/internal/util/uuidutil"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/ungerr"
+	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type ExpenseItemServer struct {
+type expenseItemServer struct {
 	expenseitem.UnimplementedExpenseItemServiceServer
 	validate       *validator.Validate
 	expenseItemSvc service.ExpenseItemService
@@ -25,13 +27,13 @@ func newExpenseItemServer(
 	validate *validator.Validate,
 	expenseItemSvc service.ExpenseItemService,
 ) expenseitem.ExpenseItemServiceServer {
-	return &ExpenseItemServer{
+	return &expenseItemServer{
 		validate:       validate,
 		expenseItemSvc: expenseItemSvc,
 	}
 }
 
-func (eis *ExpenseItemServer) Add(ctx context.Context, req *expenseitem.AddRequest) (*expenseitem.AddResponse, error) {
+func (eis *expenseItemServer) Add(ctx context.Context, req *expenseitem.AddRequest) (*expenseitem.AddResponse, error) {
 	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
 	if err != nil {
 		return nil, err
@@ -66,7 +68,7 @@ func (eis *ExpenseItemServer) Add(ctx context.Context, req *expenseitem.AddReque
 	}, nil
 }
 
-func (eis *ExpenseItemServer) GetDetails(ctx context.Context, req *expenseitem.GetDetailsRequest) (*expenseitem.GetDetailsResponse, error) {
+func (eis *expenseItemServer) GetDetails(ctx context.Context, req *expenseitem.GetDetailsRequest) (*expenseitem.GetDetailsResponse, error) {
 	id, err := ezutil.Parse[uuid.UUID](req.GetId())
 	if err != nil {
 		return nil, err
@@ -87,7 +89,7 @@ func (eis *ExpenseItemServer) GetDetails(ctx context.Context, req *expenseitem.G
 	}, nil
 }
 
-func (eis *ExpenseItemServer) Update(ctx context.Context, req *expenseitem.UpdateRequest) (*expenseitem.UpdateResponse, error) {
+func (eis *expenseItemServer) Update(ctx context.Context, req *expenseitem.UpdateRequest) (*expenseitem.UpdateResponse, error) {
 	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
 	if err != nil {
 		return nil, err
@@ -146,7 +148,7 @@ func (eis *ExpenseItemServer) Update(ctx context.Context, req *expenseitem.Updat
 	}, nil
 }
 
-func (eis *ExpenseItemServer) Remove(ctx context.Context, req *expenseitem.RemoveRequest) (*emptypb.Empty, error) {
+func (eis *expenseItemServer) Remove(ctx context.Context, req *expenseitem.RemoveRequest) (*emptypb.Empty, error) {
 	profileID, err := ezutil.Parse[uuid.UUID](req.GetProfileId())
 	if err != nil {
 		return nil, err
@@ -165,4 +167,39 @@ func (eis *ExpenseItemServer) Remove(ctx context.Context, req *expenseitem.Remov
 	err = eis.expenseItemSvc.Remove(ctx, profileID, id, groupExpenseID)
 
 	return nil, err
+}
+
+func (eis *expenseItemServer) SyncParticipants(ctx context.Context, req *expenseitem.SyncParticipantsRequest) (*emptypb.Empty, error) {
+	if req == nil {
+		return nil, eris.New("request is nil")
+	}
+
+	profileID, err := uuidutil.Parse(req.GetProfileId())
+	if err != nil {
+		return nil, err
+	}
+
+	itemID, err := uuidutil.Parse(req.GetItemId())
+	if err != nil {
+		return nil, err
+	}
+
+	expenseID, err := uuidutil.Parse(req.GetExpenseId())
+	if err != nil {
+		return nil, err
+	}
+
+	participants, err := ezutil.MapSliceWithError(req.GetParticipants(), mapper.FromItemParticipantProto)
+	if err != nil {
+		return nil, err
+	}
+
+	request := dto.SyncItemParticipantsRequest{
+		ProfileID:      profileID,
+		ID:             itemID,
+		GroupExpenseID: expenseID,
+		Participants:   participants,
+	}
+
+	return nil, eis.expenseItemSvc.SyncParticipants(ctx, request)
 }
