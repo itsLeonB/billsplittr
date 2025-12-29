@@ -89,7 +89,7 @@ func (ges *groupExpenseServiceImpl) UpdateDraft(ctx context.Context, expense ent
 func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
 	spec := crud.Specification[entity.GroupExpense]{}
 	spec.Model.CreatorProfileID = profileID
-	spec.PreloadRelations = []string{"Items", "OtherFees"}
+	spec.PreloadRelations = []string{"Items", "OtherFees", "Participants"}
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
 	if err != nil {
