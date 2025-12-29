@@ -120,7 +120,6 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 
 func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error) {
 	var response dto.GroupExpenseResponse
-
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := crud.Specification[entity.GroupExpense]{}
 		spec.Model.ID = id
@@ -131,89 +130,89 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 		if err != nil {
 			return err
 		}
-
 		if groupExpense.Confirmed || groupExpense.Status == appconstant.ConfirmedExpense {
 			return ungerr.UnprocessableEntityError("already confirmed")
 		}
-
 		if len(groupExpense.Items) < 1 {
 			return ungerr.UnprocessableEntityError("cannot confirm empty items")
 		}
-
-		participantsByProfileID := make(map[uuid.UUID]*entity.ExpenseParticipant)
-		for _, item := range groupExpense.Items {
-			if len(item.Participants) < 1 {
-				return ungerr.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
-			}
-			for _, participant := range item.Participants {
-				amountToAdd := item.TotalAmount().Mul(participant.Share)
-				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
-					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
-				} else {
-					expenseParticipant := entity.ExpenseParticipant{
-						ParticipantProfileID: participant.ProfileID,
-						ShareAmount:          amountToAdd,
-					}
-					participantsByProfileID[participant.ProfileID] = &expenseParticipant
-				}
-			}
+		if groupExpense.Status != appconstant.ReadyExpense {
+			return ungerr.UnprocessableEntityError("expense is not ready to confirm")
 		}
 
-		groupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
-		for _, expenseParticipant := range participantsByProfileID {
-			groupExpenseParticipants = append(groupExpenseParticipants, *expenseParticipant)
-		}
-
-		groupExpense.Participants = groupExpenseParticipants
-		updatedOtherFees, err := ges.calculateOtherFeeSplits(ctx, groupExpense)
+		updatedParticipants, err := ges.calculateUpdatedExpenseParticipants(ctx, groupExpense)
 		if err != nil {
 			return err
 		}
 
-		for _, fee := range updatedOtherFees {
-			for _, participant := range fee.Participants {
-				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; !ok {
-					return eris.New("missing participant profile from other fee")
-				} else {
-					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(participant.ShareAmount)
-				}
-			}
-		}
-
-		updatedGroupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
-		for _, expenseParticipant := range participantsByProfileID {
-			updatedGroupExpenseParticipants = append(updatedGroupExpenseParticipants, *expenseParticipant)
-		}
-
-		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, updatedGroupExpenseParticipants); err != nil {
-			return err
-		}
+		groupExpense.Participants = updatedParticipants
 
 		if !dryRun {
 			groupExpense.Confirmed = true
 			groupExpense.Status = appconstant.ConfirmedExpense
 		}
 
-		// TODO: explore cleaner way
-		groupExpense.Participants = nil // Prevent GORM updating child, already synced above
-
 		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
 		if err != nil {
 			return err
 		}
 
-		updatedGroupExpense.Participants = updatedGroupExpenseParticipants
-
 		response = mapper.GroupExpenseToResponse(updatedGroupExpense)
 
 		return nil
 	})
+	return response, err
+}
 
-	if err != nil {
-		return dto.GroupExpenseResponse{}, err
+func (ges *groupExpenseServiceImpl) calculateUpdatedExpenseParticipants(ctx context.Context, groupExpense entity.GroupExpense) ([]entity.ExpenseParticipant, error) {
+	participantsMap := make(map[uuid.UUID]*entity.ExpenseParticipant, len(groupExpense.Participants))
+	for _, participant := range groupExpense.Participants {
+		participant.ShareAmount = decimal.Zero
+		participantsMap[participant.ParticipantProfileID] = &participant
 	}
 
-	return response, nil
+	for _, item := range groupExpense.Items {
+		if len(item.Participants) < 1 {
+			return nil, ungerr.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
+		}
+		for _, participant := range item.Participants {
+			amountToAdd := item.TotalAmount().Mul(participant.Share)
+			expenseParticipant, ok := participantsMap[participant.ProfileID]
+			if !ok {
+				return nil, eris.Errorf("profile ID: %s is not found in expense participants", participant.ProfileID.String())
+			}
+			expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
+		}
+	}
+
+	updatedParticipants := make([]entity.ExpenseParticipant, 0, len(participantsMap))
+	for _, participant := range participantsMap {
+		updatedParticipants = append(updatedParticipants, *participant)
+	}
+
+	groupExpense.Participants = updatedParticipants
+
+	updatedOtherFees, err := ges.calculateOtherFeeSplits(ctx, groupExpense)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fee := range updatedOtherFees {
+		for _, participant := range fee.Participants {
+			expenseParticipant, ok := participantsMap[participant.ProfileID]
+			if !ok {
+				return nil, eris.New("missing participant profile from other fee")
+			}
+			expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(participant.ShareAmount)
+		}
+	}
+
+	finalParticipants := make([]entity.ExpenseParticipant, 0, len(participantsMap))
+	for _, participant := range participantsMap {
+		finalParticipants = append(finalParticipants, *participant)
+	}
+
+	return finalParticipants, nil
 }
 
 func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec crud.Specification[entity.GroupExpense]) (entity.GroupExpense, error) {
