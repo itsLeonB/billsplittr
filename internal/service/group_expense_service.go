@@ -123,7 +123,7 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := crud.Specification[entity.GroupExpense]{}
 		spec.Model.ID = id
-		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants"}
+		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants", "Participants"}
 		spec.ForUpdate = true
 
 		groupExpense, err := ges.getGroupExpense(ctx, spec)
