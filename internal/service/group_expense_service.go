@@ -145,19 +145,22 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 			return err
 		}
 
-		groupExpense.Participants = updatedParticipants
-
 		if !dryRun {
 			groupExpense.Confirmed = true
 			groupExpense.Status = appconstant.ConfirmedExpense
+			groupExpense, err = ges.groupExpenseRepository.Update(ctx, groupExpense)
+			if err != nil {
+				return err
+			}
 		}
 
-		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
-		if err != nil {
+		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, updatedParticipants); err != nil {
 			return err
 		}
 
-		response = mapper.GroupExpenseToResponse(updatedGroupExpense)
+		groupExpense.Participants = updatedParticipants
+
+		response = mapper.GroupExpenseToResponse(groupExpense)
 
 		return nil
 	})
