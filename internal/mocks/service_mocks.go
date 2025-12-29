@@ -45,18 +45,18 @@ func (m *MockGroupExpenseService) EXPECT() *MockGroupExpenseServiceMockRecorder 
 }
 
 // ConfirmDraft mocks base method.
-func (m *MockGroupExpenseService) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error) {
+func (m *MockGroupExpenseService) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ConfirmDraft", ctx, id, profileID)
+	ret := m.ctrl.Call(m, "ConfirmDraft", ctx, id, profileID, dryRun)
 	ret0, _ := ret[0].(dto.GroupExpenseResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ConfirmDraft indicates an expected call of ConfirmDraft.
-func (mr *MockGroupExpenseServiceMockRecorder) ConfirmDraft(ctx, id, profileID any) *gomock.Call {
+func (mr *MockGroupExpenseServiceMockRecorder) ConfirmDraft(ctx, id, profileID, dryRun any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmDraft", reflect.TypeOf((*MockGroupExpenseService)(nil).ConfirmDraft), ctx, id, profileID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmDraft", reflect.TypeOf((*MockGroupExpenseService)(nil).ConfirmDraft), ctx, id, profileID, dryRun)
 }
 
 // CreateDraft mocks base method.
@@ -242,6 +242,20 @@ func (m *MockExpenseItemService) Remove(ctx context.Context, profileID, id, grou
 func (mr *MockExpenseItemServiceMockRecorder) Remove(ctx, profileID, id, groupExpenseID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockExpenseItemService)(nil).Remove), ctx, profileID, id, groupExpenseID)
+}
+
+// SyncParticipants mocks base method.
+func (m *MockExpenseItemService) SyncParticipants(ctx context.Context, req dto.SyncItemParticipantsRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SyncParticipants", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SyncParticipants indicates an expected call of SyncParticipants.
+func (mr *MockExpenseItemServiceMockRecorder) SyncParticipants(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncParticipants", reflect.TypeOf((*MockExpenseItemService)(nil).SyncParticipants), ctx, req)
 }
 
 // Update mocks base method.

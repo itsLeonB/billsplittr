@@ -214,8 +214,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/itsLeonB/audit v0.1.0 h1:v3iXgljSNzYPcv3dBoltzykJUiYXTBTxtl07IeYcp0k=
 github.com/itsLeonB/audit v0.1.0/go.mod h1:B1nkrv2W3/fQg9fBCSxfGYCE6CKp4UzRcdX0Wugo4vM=
-github.com/itsLeonB/billsplittr-protos v0.5.1-pre9 h1:sPaKwaXEeImStgDFUEczdxGnHXTuu9cZndWPPSNCikA=
-github.com/itsLeonB/billsplittr-protos v0.5.1-pre9/go.mod h1:7xiP3VfSASgvzjW7iE+vpmYXFAYXE8v/AkuDIpVD1ic=
+github.com/itsLeonB/billsplittr-protos v0.5.1-pre10 h1:kKnPtdCDrdG4P90P8F2fjURczrMfaYtXMO0n4b4BfaU=
+github.com/itsLeonB/billsplittr-protos v0.5.1-pre10/go.mod h1:7xiP3VfSASgvzjW7iE+vpmYXFAYXE8v/AkuDIpVD1ic=
 github.com/itsLeonB/ezutil/v2 v2.2.0 h1:bV8KqXvWM2WmMuHhScJifxRdzS3+ZQ3XcIksQ2YYdAg=
 github.com/itsLeonB/ezutil/v2 v2.2.0/go.mod h1:xEfkSPgylgeJV0jNGxDkQp7gtaHCH6ILTamWVCDY9Tw=
 github.com/itsLeonB/gerpc v0.4.0-pre1 h1:nhWz9D5aki/+W/NKy+GlI5SwdO/5sLdoxqa/AlUSVz8=

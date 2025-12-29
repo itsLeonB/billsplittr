@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/groupexpense/v1"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/delivery/grpc/mapper"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/service"
@@ -122,6 +123,10 @@ func (ges *groupExpenseServer) GetDetails(ctx context.Context, req *groupexpense
 }
 
 func (ges *groupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpense.ConfirmDraftRequest) (*groupexpense.ConfirmDraftResponse, error) {
+	if req == nil {
+		return nil, eris.New(appconstant.ErrNilRequest)
+	}
+
 	id, err := ezutil.Parse[uuid.UUID](req.GetId())
 	if err != nil {
 		return nil, err
@@ -132,7 +137,7 @@ func (ges *groupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpen
 		return nil, err
 	}
 
-	groupExpense, err := ges.groupExpenseSvc.ConfirmDraft(ctx, id, profileID)
+	groupExpense, err := ges.groupExpenseSvc.ConfirmDraft(ctx, id, profileID, req.GetDryRun())
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +154,7 @@ func (ges *groupExpenseServer) ConfirmDraft(ctx context.Context, req *groupexpen
 
 func (ges *groupExpenseServer) Delete(ctx context.Context, req *groupexpense.DeleteRequest) (*emptypb.Empty, error) {
 	if req == nil {
-		return nil, eris.New("request is nil")
+		return nil, eris.New(appconstant.ErrNilRequest)
 	}
 
 	id, err := ezutil.Parse[uuid.UUID](req.GetId())
@@ -167,7 +172,7 @@ func (ges *groupExpenseServer) Delete(ctx context.Context, req *groupexpense.Del
 
 func (ges *groupExpenseServer) SyncParticipants(ctx context.Context, req *groupexpense.SyncParticipantsRequest) (*emptypb.Empty, error) {
 	if req == nil {
-		return nil, eris.New("request is nil")
+		return nil, eris.New(appconstant.ErrNilRequest)
 	}
 
 	participantProfileIDs, err := ezutil.MapSliceWithError(req.GetParticipantProfileIds(), uuidutil.Parse)

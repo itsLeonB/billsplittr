@@ -118,7 +118,7 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 	return mapper.GroupExpenseToResponse(groupExpense), nil
 }
 
-func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error) {
+func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error) {
 	var response dto.GroupExpenseResponse
 
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
@@ -189,7 +189,11 @@ func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profil
 			return err
 		}
 
-		groupExpense.Confirmed = true
+		if !dryRun {
+			groupExpense.Confirmed = true
+			groupExpense.Status = appconstant.ConfirmedExpense
+		}
+
 		// TODO: explore cleaner way
 		groupExpense.Participants = nil // Prevent GORM updating child, already synced above
 
