@@ -86,7 +86,12 @@ func (ges *groupExpenseServer) GetAllCreated(ctx context.Context, req *groupexpe
 		return nil, err
 	}
 
-	groupExpenses, err := ges.groupExpenseSvc.GetAllCreated(ctx, profileID)
+	status, err := mapper.FromExpenseStatusProto(req.GetStatus())
+	if err != nil {
+		return nil, err
+	}
+
+	groupExpenses, err := ges.groupExpenseSvc.GetAllCreated(ctx, profileID, status)
 	if err != nil {
 		return nil, err
 	}

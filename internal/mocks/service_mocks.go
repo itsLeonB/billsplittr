@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	uuid "github.com/google/uuid"
+	appconstant "github.com/itsLeonB/billsplittr/internal/appconstant"
 	dto "github.com/itsLeonB/billsplittr/internal/dto"
 	entity "github.com/itsLeonB/billsplittr/internal/entity"
 	message "github.com/itsLeonB/billsplittr/internal/message"
@@ -104,18 +105,18 @@ func (mr *MockGroupExpenseServiceMockRecorder) Delete(ctx, id, profileID any) *g
 }
 
 // GetAllCreated mocks base method.
-func (m *MockGroupExpenseService) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
+func (m *MockGroupExpenseService) GetAllCreated(ctx context.Context, profileID uuid.UUID, status appconstant.ExpenseStatus) ([]dto.GroupExpenseResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllCreated", ctx, profileID)
+	ret := m.ctrl.Call(m, "GetAllCreated", ctx, profileID, status)
 	ret0, _ := ret[0].([]dto.GroupExpenseResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllCreated indicates an expected call of GetAllCreated.
-func (mr *MockGroupExpenseServiceMockRecorder) GetAllCreated(ctx, profileID any) *gomock.Call {
+func (mr *MockGroupExpenseServiceMockRecorder) GetAllCreated(ctx, profileID, status any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCreated", reflect.TypeOf((*MockGroupExpenseService)(nil).GetAllCreated), ctx, profileID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllCreated", reflect.TypeOf((*MockGroupExpenseService)(nil).GetAllCreated), ctx, profileID, status)
 }
 
 // GetDetails mocks base method.

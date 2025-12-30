@@ -58,15 +58,30 @@ func ToGroupExpenseResponseProto(groupExpense dto.GroupExpenseResponse) (*groupe
 	}, nil
 }
 
-func toExpenseStatusProto(status appconstant.ExpenseStatus) (groupexpense.GroupExpenseResponse_Status, error) {
+func toExpenseStatusProto(status appconstant.ExpenseStatus) (groupexpense.ExpenseStatus, error) {
 	switch status {
 	case appconstant.DraftExpense:
-		return groupexpense.GroupExpenseResponse_STATUS_DRAFT, nil
+		return groupexpense.ExpenseStatus_EXPENSE_STATUS_DRAFT, nil
 	case appconstant.ReadyExpense:
-		return groupexpense.GroupExpenseResponse_STATUS_READY, nil
+		return groupexpense.ExpenseStatus_EXPENSE_STATUS_READY, nil
 	case appconstant.ConfirmedExpense:
-		return groupexpense.GroupExpenseResponse_STATUS_CONFIRMED, nil
+		return groupexpense.ExpenseStatus_EXPENSE_STATUS_CONFIRMED, nil
 	default:
-		return groupexpense.GroupExpenseResponse_STATUS_UNSPECIFIED, eris.Errorf("unspecified expense status constant: %s", status)
+		return groupexpense.ExpenseStatus_EXPENSE_STATUS_UNSPECIFIED, eris.Errorf("unspecified expense status constant: %s", status)
+	}
+}
+
+func FromExpenseStatusProto(status groupexpense.ExpenseStatus) (appconstant.ExpenseStatus, error) {
+	switch status {
+	case groupexpense.ExpenseStatus_EXPENSE_STATUS_UNSPECIFIED:
+		return "", eris.New("unspecified expense status enum")
+	case groupexpense.ExpenseStatus_EXPENSE_STATUS_DRAFT:
+		return appconstant.DraftExpense, nil
+	case groupexpense.ExpenseStatus_EXPENSE_STATUS_READY:
+		return appconstant.ReadyExpense, nil
+	case groupexpense.ExpenseStatus_EXPENSE_STATUS_CONFIRMED:
+		return appconstant.ConfirmedExpense, nil
+	default:
+		return "", eris.Errorf("unknown expense status enum: %s", status)
 	}
 }

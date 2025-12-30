@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/message"
@@ -12,7 +13,7 @@ import (
 type GroupExpenseService interface {
 	// V1
 	CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error)
-	GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error)
+	GetAllCreated(ctx context.Context, profileID uuid.UUID, status appconstant.ExpenseStatus) ([]dto.GroupExpenseResponse, error)
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
 	ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error)
 	GetUnconfirmedGroupExpenseForUpdate(ctx context.Context, profileID, id uuid.UUID) (entity.GroupExpense, error)
