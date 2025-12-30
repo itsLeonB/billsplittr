@@ -43,3 +43,10 @@ type ExpenseItemData struct {
 	Amount   decimal.Decimal `validate:"required"`
 	Quantity int             `validate:"required,min=1"`
 }
+
+type SyncItemParticipantsRequest struct {
+	ProfileID      uuid.UUID
+	ID             uuid.UUID
+	GroupExpenseID uuid.UUID
+	Participants   []ItemParticipantData
+}

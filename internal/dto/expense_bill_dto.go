@@ -4,12 +4,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 )
 
 type NewExpenseBillRequest struct {
 	CreatorProfileID uuid.UUID `validate:"required"`
-	PayerProfileID   uuid.UUID `validate:"required"`
-	Filename         string    `validate:"required,min=3"`
+	// Deprecated: this will be deferred to different API
+	PayerProfileID uuid.UUID
+	GroupExpenseID uuid.UUID
+	Filename       string `validate:"required,min=3"`
 }
 
 type ExpenseBillResponse struct {
@@ -18,6 +21,7 @@ type ExpenseBillResponse struct {
 	PayerProfileID   uuid.UUID
 	GroupExpenseID   uuid.UUID
 	Filename         string
+	Status           appconstant.BillStatus
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        time.Time

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/itsLeonB/billsplittr/internal/appconstant"
@@ -12,11 +14,11 @@ import (
 	"github.com/itsLeonB/billsplittr/internal/entity"
 	"github.com/itsLeonB/billsplittr/internal/mapper"
 	"github.com/itsLeonB/billsplittr/internal/message"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	"github.com/itsLeonB/billsplittr/internal/repository"
 	"github.com/itsLeonB/billsplittr/internal/service/fee"
 	"github.com/itsLeonB/ezutil/v2"
 	"github.com/itsLeonB/go-crud"
-	"github.com/itsLeonB/meq"
 	"github.com/itsLeonB/ungerr"
 	"github.com/rotisserie/eris"
 	"github.com/shopspring/decimal"
@@ -29,8 +31,6 @@ type groupExpenseServiceImpl struct {
 	otherFeeRepository     repository.OtherFeeRepository
 	expenseBillRepository  repository.ExpenseBillRepository
 	llmService             LLMService
-	queue                  meq.TaskQueue[message.ExpenseBillTextExtracted]
-	logger                 ezutil.Logger
 }
 
 func NewGroupExpenseService(
@@ -39,8 +39,6 @@ func NewGroupExpenseService(
 	otherFeeRepository repository.OtherFeeRepository,
 	expenseBillRepository repository.ExpenseBillRepository,
 	llmService LLMService,
-	queue meq.TaskQueue[message.ExpenseBillTextExtracted],
-	logger ezutil.Logger,
 ) GroupExpenseService {
 	return &groupExpenseServiceImpl{
 		transactor,
@@ -49,13 +47,11 @@ func NewGroupExpenseService(
 		otherFeeRepository,
 		expenseBillRepository,
 		llmService,
-		queue,
-		logger,
 	}
 }
 
 func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error) {
-	if err := ges.validate(ctx, request); err != nil {
+	if err := ges.validate(request); err != nil {
 		return dto.GroupExpenseResponse{}, err
 	}
 
@@ -69,10 +65,32 @@ func (ges *groupExpenseServiceImpl) CreateDraft(ctx context.Context, request dto
 	return mapper.GroupExpenseToResponse(insertedGroupExpense), nil
 }
 
-func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error) {
+func (ges *groupExpenseServiceImpl) UpdateDraft(ctx context.Context, expense entity.GroupExpense, request dto.NewGroupExpenseRequest) error {
+	if err := ges.validate(request); err != nil {
+		return err
+	}
+
+	mappedExpense := mapper.GroupExpenseRequestToEntity(request)
+	expense.TotalAmount = mappedExpense.TotalAmount
+	expense.ItemsTotal = mappedExpense.ItemsTotal
+	expense.FeesTotal = mappedExpense.FeesTotal
+	expense.Items = mappedExpense.Items
+	expense.OtherFees = mappedExpense.OtherFees
+	expense.Status = mappedExpense.Status
+
+	if strings.HasPrefix(expense.Description, "Untitled Expense at") {
+		expense.Description = request.Description
+	}
+
+	_, err := ges.groupExpenseRepository.Update(ctx, expense)
+	return err
+}
+
+func (ges *groupExpenseServiceImpl) GetAllCreated(ctx context.Context, profileID uuid.UUID, status appconstant.ExpenseStatus) ([]dto.GroupExpenseResponse, error) {
 	spec := crud.Specification[entity.GroupExpense]{}
 	spec.Model.CreatorProfileID = profileID
-	spec.PreloadRelations = []string{"Items", "OtherFees"}
+	spec.PreloadRelations = []string{"Items", "OtherFees", "Participants"}
+	spec.Model.Status = status
 
 	groupExpenses, err := ges.groupExpenseRepository.FindAll(ctx, spec)
 	if err != nil {
@@ -90,6 +108,7 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 		"OtherFees",
 		"Items.Participants",
 		"Participants",
+		"Bill",
 	}
 
 	groupExpense, err := ges.getGroupExpense(ctx, spec)
@@ -100,94 +119,104 @@ func (ges *groupExpenseServiceImpl) GetDetails(ctx context.Context, id uuid.UUID
 	return mapper.GroupExpenseToResponse(groupExpense), nil
 }
 
-func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error) {
+func (ges *groupExpenseServiceImpl) ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error) {
 	var response dto.GroupExpenseResponse
-
 	err := ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		spec := crud.Specification[entity.GroupExpense]{}
 		spec.Model.ID = id
-		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants"}
+		spec.PreloadRelations = []string{"Items", "OtherFees", "Items.Participants", "Participants"}
 		spec.ForUpdate = true
 
 		groupExpense, err := ges.getGroupExpense(ctx, spec)
 		if err != nil {
 			return err
 		}
-
-		if groupExpense.Confirmed {
+		if groupExpense.Confirmed || groupExpense.Status == appconstant.ConfirmedExpense {
 			return ungerr.UnprocessableEntityError("already confirmed")
 		}
-
-		participantsByProfileID := make(map[uuid.UUID]*entity.ExpenseParticipant)
-		for _, item := range groupExpense.Items {
-			if len(item.Participants) < 1 {
-				return ungerr.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
-			}
-			for _, participant := range item.Participants {
-				amountToAdd := item.TotalAmount().Mul(participant.Share)
-				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; ok {
-					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
-				} else {
-					expenseParticipant := entity.ExpenseParticipant{
-						ParticipantProfileID: participant.ProfileID,
-						ShareAmount:          amountToAdd,
-					}
-					participantsByProfileID[participant.ProfileID] = &expenseParticipant
-				}
-			}
+		if len(groupExpense.Items) < 1 {
+			return ungerr.UnprocessableEntityError("cannot confirm empty items")
+		}
+		if groupExpense.Status != appconstant.ReadyExpense {
+			return ungerr.UnprocessableEntityError("expense is not ready to confirm")
 		}
 
-		groupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
-		for _, expenseParticipant := range participantsByProfileID {
-			groupExpenseParticipants = append(groupExpenseParticipants, *expenseParticipant)
-		}
-
-		groupExpense.Participants = groupExpenseParticipants
-		updatedOtherFees, err := ges.calculateOtherFeeSplits(ctx, groupExpense)
+		updatedParticipants, err := ges.calculateUpdatedExpenseParticipants(ctx, groupExpense)
 		if err != nil {
 			return err
 		}
 
-		for _, fee := range updatedOtherFees {
-			for _, participant := range fee.Participants {
-				if expenseParticipant, ok := participantsByProfileID[participant.ProfileID]; !ok {
-					return eris.New("missing participant profile from other fee")
-				} else {
-					expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(participant.ShareAmount)
-				}
+		if !dryRun {
+			groupExpense.Confirmed = true
+			groupExpense.Status = appconstant.ConfirmedExpense
+			groupExpense, err = ges.groupExpenseRepository.Update(ctx, groupExpense)
+			if err != nil {
+				return err
 			}
 		}
 
-		updatedGroupExpenseParticipants := make([]entity.ExpenseParticipant, 0, len(participantsByProfileID))
-		for _, expenseParticipant := range participantsByProfileID {
-			updatedGroupExpenseParticipants = append(updatedGroupExpenseParticipants, *expenseParticipant)
-		}
-
-		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, updatedGroupExpenseParticipants); err != nil {
+		if err = ges.groupExpenseRepository.SyncParticipants(ctx, groupExpense.ID, updatedParticipants); err != nil {
 			return err
 		}
 
-		groupExpense.Confirmed = true
-		// TODO: explore cleaner way
-		groupExpense.Participants = nil // Prevent GORM updating child, already synced above
+		groupExpense.Participants = updatedParticipants
 
-		updatedGroupExpense, err := ges.groupExpenseRepository.Update(ctx, groupExpense)
-		if err != nil {
-			return err
-		}
-
-		updatedGroupExpense.Participants = updatedGroupExpenseParticipants
-
-		response = mapper.GroupExpenseToResponse(updatedGroupExpense)
+		response = mapper.GroupExpenseToResponse(groupExpense)
 
 		return nil
 	})
+	return response, err
+}
 
-	if err != nil {
-		return dto.GroupExpenseResponse{}, err
+func (ges *groupExpenseServiceImpl) calculateUpdatedExpenseParticipants(ctx context.Context, groupExpense entity.GroupExpense) ([]entity.ExpenseParticipant, error) {
+	participantsMap := make(map[uuid.UUID]*entity.ExpenseParticipant, len(groupExpense.Participants))
+	for _, participant := range groupExpense.Participants {
+		participant.ShareAmount = decimal.Zero
+		participantsMap[participant.ParticipantProfileID] = &participant
 	}
 
-	return response, nil
+	for _, item := range groupExpense.Items {
+		if len(item.Participants) < 1 {
+			return nil, ungerr.UnprocessableEntityError(fmt.Sprintf("item %s does not have participants", item.Name))
+		}
+		for _, participant := range item.Participants {
+			amountToAdd := item.TotalAmount().Mul(participant.Share)
+			expenseParticipant, ok := participantsMap[participant.ProfileID]
+			if !ok {
+				return nil, eris.Errorf("profile ID: %s is not found in expense participants", participant.ProfileID.String())
+			}
+			expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(amountToAdd)
+		}
+	}
+
+	updatedParticipants := make([]entity.ExpenseParticipant, 0, len(participantsMap))
+	for _, participant := range participantsMap {
+		updatedParticipants = append(updatedParticipants, *participant)
+	}
+
+	groupExpense.Participants = updatedParticipants
+
+	updatedOtherFees, err := ges.calculateOtherFeeSplits(ctx, groupExpense)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, fee := range updatedOtherFees {
+		for _, participant := range fee.Participants {
+			expenseParticipant, ok := participantsMap[participant.ProfileID]
+			if !ok {
+				return nil, eris.New("missing participant profile from other fee")
+			}
+			expenseParticipant.ShareAmount = expenseParticipant.ShareAmount.Add(participant.ShareAmount)
+		}
+	}
+
+	finalParticipants := make([]entity.ExpenseParticipant, 0, len(participantsMap))
+	for _, participant := range participantsMap {
+		finalParticipants = append(finalParticipants, *participant)
+	}
+
+	return finalParticipants, nil
 }
 
 func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec crud.Specification[entity.GroupExpense]) (entity.GroupExpense, error) {
@@ -205,7 +234,7 @@ func (ges *groupExpenseServiceImpl) getGroupExpense(ctx context.Context, spec cr
 	return groupExpense, nil
 }
 
-func (ges *groupExpenseServiceImpl) validate(ctx context.Context, request dto.NewGroupExpenseRequest) error {
+func (ges *groupExpenseServiceImpl) validate(request dto.NewGroupExpenseRequest) error {
 	if request.TotalAmount.IsZero() {
 		return ungerr.UnprocessableEntityError(appconstant.ErrAmountZero)
 	}
@@ -263,55 +292,103 @@ func (ges *groupExpenseServiceImpl) GetUnconfirmedGroupExpenseForUpdate(ctx cont
 	spec.Model.ID = id
 	spec.Model.CreatorProfileID = profileID
 	spec.ForUpdate = true
+	spec.PreloadRelations = []string{"Items", "Items.Participants"}
 	groupExpense, err := ges.getGroupExpense(ctx, spec)
 	if err != nil {
 		return entity.GroupExpense{}, err
 	}
-	if groupExpense.Confirmed {
+	if groupExpense.Confirmed || groupExpense.Status == appconstant.ConfirmedExpense {
 		return entity.GroupExpense{}, ungerr.UnprocessableEntityError("expense already confirmed")
 	}
 
 	return groupExpense, nil
 }
 
-func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context) error {
+func (ges *groupExpenseServiceImpl) ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error {
 	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		return ges.processAndAck(ctx, func(ctx context.Context, taskMsg message.ExpenseBillTextExtracted) error {
-			expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, taskMsg.ID)
-			if err != nil {
-				return err
-			}
-			if expenseBill.IsDeleted() {
-				ges.logger.Infof("expense bill ID: %s is deleted, skipping", expenseBill.ID.String())
-				return nil
-			}
-
-			request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, taskMsg.Text)
-			if err != nil {
-				if errors.Is(err, appconstant.ErrExpenseNotDetected) {
-					return nil
-				}
-				return err
-			}
-
-			request.CreatorProfileID = expenseBill.CreatorProfileID
-			request.PayerProfileID = expenseBill.PayerProfileID
-
-			groupExpense, err := ges.CreateDraft(ctx, request)
-			if err != nil {
-				return err
-			}
-
-			expenseBill.GroupExpenseID = uuid.NullUUID{
-				UUID:  groupExpense.ID,
-				Valid: true,
-			}
-
-			_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
-
+		expenseBill, err := ges.getPendingForProcessingExpenseBill(ctx, msg.ID)
+		if err != nil {
 			return err
-		})
+		}
+		if expenseBill.IsDeleted() {
+			logger.Global.Infof("expense bill ID: %s is deleted, skipping", expenseBill.ID.String())
+			return nil
+		}
+		return ges.executeParseFlow(ctx, msg.Text, expenseBill)
 	})
+}
+
+func (ges *groupExpenseServiceImpl) executeParseFlow(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	if !expenseBill.GroupExpenseID.Valid {
+		// No groupExpenseID yet, execute flow v1
+		return ges.parseFlowV1(ctx, text, expenseBill)
+	}
+
+	if err := ges.parseFlowV2(ctx, text, expenseBill); err != nil {
+		// Log error but do not return error (commit the transaction)
+		logger.Global.Errorf("error processing bill parsing v2: %s", eris.ToString(err, true))
+		return nil
+	}
+
+	return nil
+}
+
+func (ges *groupExpenseServiceImpl) parseFlowV1(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, text)
+	if err != nil {
+		if errors.Is(err, appconstant.ErrExpenseNotDetected) {
+			return nil
+		}
+		return err
+	}
+
+	request.CreatorProfileID = expenseBill.CreatorProfileID
+	request.PayerProfileID = expenseBill.PayerProfileID
+
+	groupExpense, err := ges.CreateDraft(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	expenseBill.GroupExpenseID = uuid.NullUUID{
+		UUID:  groupExpense.ID,
+		Valid: true,
+	}
+
+	_, err = ges.expenseBillRepository.Update(ctx, expenseBill)
+
+	return err
+}
+
+func (ges *groupExpenseServiceImpl) parseFlowV2(ctx context.Context, text string, expenseBill entity.ExpenseBill) error {
+	status, err := ges.processAndGetStatus(ctx, text, expenseBill)
+	expenseBill.Status = status
+	_, statusErr := ges.expenseBillRepository.Update(ctx, expenseBill)
+	if statusErr != nil {
+		return errors.Join(statusErr, err)
+	}
+	return err
+}
+
+func (ges *groupExpenseServiceImpl) processAndGetStatus(ctx context.Context, text string, expenseBill entity.ExpenseBill) (appconstant.BillStatus, error) {
+	expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, expenseBill.CreatorProfileID, expenseBill.GroupExpenseID.UUID)
+	if err != nil {
+		return appconstant.FailedParsingBill, err
+	}
+
+	request, err := ges.parseExpenseBillTextToExpenseRequest(ctx, text)
+	if err != nil {
+		if errors.Is(err, appconstant.ErrExpenseNotDetected) {
+			return appconstant.NotDetectedBill, nil
+		}
+		return appconstant.FailedParsingBill, err
+	}
+
+	if err = ges.UpdateDraft(ctx, expense, request); err != nil {
+		return appconstant.FailedParsingBill, err
+	}
+
+	return appconstant.ParsedBill, nil
 }
 
 func (ges *groupExpenseServiceImpl) buildSystemPrompt() string {
@@ -320,7 +397,7 @@ Extract the expense information and return ONLY a valid JSON object in the follo
 
 {
   "totalAmount": number,
-  "subtotal": number, 
+  "subtotal": number,
   "description": string,
   "items": [
     {
@@ -375,8 +452,8 @@ func (ges *groupExpenseServiceImpl) getPendingForProcessingExpenseBill(ctx conte
 	if err != nil {
 		return entity.ExpenseBill{}, err
 	}
-	if expenseBill.GroupExpenseID.UUID != uuid.Nil {
-		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already has group expense attributed", expenseBill.GroupExpenseID.UUID.String())
+	if expenseBill.Status == appconstant.ParsedBill {
+		return entity.ExpenseBill{}, eris.Errorf("expense bill ID: %s already parsed", expenseBill.GroupExpenseID.UUID.String())
 	}
 
 	return expenseBill, nil
@@ -388,7 +465,7 @@ func (ges *groupExpenseServiceImpl) parseExpenseBillTextToExpenseRequest(ctx con
 		return dto.NewGroupExpenseRequest{}, err
 	}
 	if promptResponse == "NOT_DETECTED" {
-		ges.logger.Info("group expense not detected")
+		logger.Global.Info("group expense not detected")
 		return dto.NewGroupExpenseRequest{}, appconstant.ErrExpenseNotDetected
 	}
 
@@ -400,19 +477,60 @@ func (ges *groupExpenseServiceImpl) parseExpenseBillTextToExpenseRequest(ctx con
 	return request, nil
 }
 
-func (ges *groupExpenseServiceImpl) processAndAck(ctx context.Context, fn func(ctx context.Context, taskMsg message.ExpenseBillTextExtracted) error) error {
-	task, taskID, err := ges.queue.GetOldest(ctx)
+// region V2
+
+func (ges *groupExpenseServiceImpl) CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error) {
+	description := req.Description
+	if req.Description == "" {
+		description = "Untitled Expense at " + time.Now().Format(time.DateOnly)
+	}
+
+	newDraftExpense := entity.GroupExpense{
+		CreatorProfileID: req.CreatorProfileID,
+		Description:      description,
+		Status:           appconstant.DraftExpense,
+	}
+
+	insertedDraftExpense, err := ges.groupExpenseRepository.Insert(ctx, newDraftExpense)
 	if err != nil {
-		return err
-	}
-	if task.IsZero() || taskID == "" {
-		ges.logger.Info("no pending extracted expense bill text")
-		return nil
+		return dto.GroupExpenseResponse{}, err
 	}
 
-	if err = fn(ctx, task.Message); err != nil {
-		return err
-	}
+	return mapper.GroupExpenseToResponse(insertedDraftExpense), nil
+}
 
-	return ges.queue.Delete(ctx, taskID)
+func (ges *groupExpenseServiceImpl) Delete(ctx context.Context, id, profileID uuid.UUID) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, profileID, id)
+		if err != nil {
+			return err
+		}
+
+		return ges.groupExpenseRepository.Delete(ctx, expense)
+	})
+}
+
+func (ges *groupExpenseServiceImpl) SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error {
+	return ges.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		expense, err := ges.GetUnconfirmedGroupExpenseForUpdate(ctx, req.UserProfileID, req.GroupExpenseID)
+		if err != nil {
+			return err
+		}
+
+		expense.PayerProfileID = req.PayerProfileID
+
+		if _, err = ges.groupExpenseRepository.Update(ctx, expense); err != nil {
+			return err
+		}
+
+		entityMapper := func(id uuid.UUID) entity.ExpenseParticipant {
+			return entity.ExpenseParticipant{ParticipantProfileID: id}
+		}
+
+		if err := ges.groupExpenseRepository.SyncParticipants(ctx, expense.ID, ezutil.MapSlice(req.ParticipantProfileIDs, entityMapper)); err != nil {
+			return err
+		}
+
+		return ges.groupExpenseRepository.DeleteItemParticipants(ctx, expense.ID, req.ParticipantProfileIDs)
+	})
 }

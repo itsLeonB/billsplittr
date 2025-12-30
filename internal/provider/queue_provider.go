@@ -2,9 +2,8 @@ package provider
 
 import (
 	"github.com/itsLeonB/billsplittr/internal/message"
-	"github.com/itsLeonB/ezutil/v2"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	"github.com/itsLeonB/meq"
-	"github.com/rotisserie/eris"
 )
 
 type Queues struct {
@@ -12,12 +11,9 @@ type Queues struct {
 	ExpenseBillTextExtracted meq.TaskQueue[message.ExpenseBillTextExtracted]
 }
 
-func ProvideQueues(logger ezutil.Logger, db meq.DB) (*Queues, error) {
-	if db == nil {
-		return nil, eris.New("db cannot be nil")
-	}
+func ProvideQueues(db meq.DB) *Queues {
 	return &Queues{
-		OrphanedBillCleanup:      meq.NewTaskQueue[message.OrphanedBillCleanup](logger, db),
-		ExpenseBillTextExtracted: meq.NewTaskQueue[message.ExpenseBillTextExtracted](logger, db),
-	}, nil
+		OrphanedBillCleanup:      meq.NewTaskQueue[message.OrphanedBillCleanup](logger.Global, db),
+		ExpenseBillTextExtracted: meq.NewTaskQueue[message.ExpenseBillTextExtracted](logger.Global, db),
+	}
 }

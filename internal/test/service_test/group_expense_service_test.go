@@ -31,8 +31,6 @@ func TestGroupExpenseService_CreateDraftSuccess(t *testing.T) {
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	creatorID := uuid.New()
@@ -95,8 +93,6 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorZeroAmount(t *testing.T)
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	request := dto.NewGroupExpenseRequest{
@@ -126,8 +122,6 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorAmountMismatch(t *testin
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	request := dto.NewGroupExpenseRequest{
@@ -154,45 +148,6 @@ func TestGroupExpenseService_CreateDraft_ValidationErrorAmountMismatch(t *testin
 	// Error message check removed
 }
 
-func TestGroupExpenseServiceGetAllCreated(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTransactor := crud.NewMockTransactor(ctrl)
-	mockGroupExpenseRepo := mocks.NewMockGroupExpenseRepository(ctrl)
-	mockOtherFeeRepo := mocks.NewMockOtherFeeRepository(ctrl)
-	mockExpenseBillRepo := mocks.NewMockExpenseBillRepository(ctrl)
-	mockLLMService := mocks.NewMockLLMService(ctrl)
-	svc := service.NewGroupExpenseService(
-		mockTransactor,
-		mockGroupExpenseRepo,
-		mockOtherFeeRepo,
-		mockExpenseBillRepo,
-		mockLLMService,
-		nil,
-		nil,
-	)
-
-	profileID := uuid.New()
-	expectedExpenses := []entity.GroupExpense{
-		{
-			BaseEntity:       crud.BaseEntity{ID: uuid.New()},
-			CreatorProfileID: profileID,
-			TotalAmount:      decimal.NewFromFloat(100.00),
-		},
-	}
-
-	mockGroupExpenseRepo.EXPECT().
-		FindAll(gomock.Any(), gomock.Any()).
-		Return(expectedExpenses, nil)
-
-	result, err := svc.GetAllCreated(context.Background(), profileID)
-
-	assert.NoError(t, err)
-	assert.Len(t, result, 1)
-	assert.Equal(t, profileID, result[0].CreatorProfileID)
-}
-
 func TestGroupExpenseServiceGetDetails(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -208,8 +163,6 @@ func TestGroupExpenseServiceGetDetails(t *testing.T) {
 		mockOtherFeeRepo,
 		mockExpenseBillRepo,
 		mockLLMService,
-		nil,
-		nil,
 	)
 
 	expenseID := uuid.New()

@@ -12,6 +12,7 @@ func ExpenseBillToResponse(eb entity.ExpenseBill) dto.ExpenseBillResponse {
 		PayerProfileID:   eb.PayerProfileID,
 		GroupExpenseID:   eb.GroupExpenseID.UUID,
 		Filename:         eb.ImageName,
+		Status:           eb.Status,
 		CreatedAt:        eb.CreatedAt,
 		UpdatedAt:        eb.UpdatedAt,
 		DeletedAt:        eb.DeletedAt.Time,

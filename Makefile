@@ -5,6 +5,8 @@ COVER_PKG := ./internal/...
 grpc \
 grpc-hot \
 job \
+worker \
+worker-hot \
 lint \
 test \
 test-verbose \
@@ -21,6 +23,8 @@ help:
 	@echo "  make grpc                    - Start the gRPC server"
 	@echo "  make grpc-hot                - Start the gRPC server with hot reload (requires air)"
 	@echo "  make job                     - Start the job processor"
+	@echo "  make worker                  - Start the worker processor"
+	@echo "  make worker-hot              - Start the worker processor with hot reload (requires air)"
 	@echo "  make lint                    - Run golangci-lint on the codebase"
 	@echo "  make test                    - Run all tests"
 	@echo "  make test-verbose            - Run all tests with verbose output"
@@ -41,6 +45,13 @@ grpc-hot:
 
 job:
 	go run ./cmd/job
+
+worker:
+	go run ./cmd/worker
+
+worker-hot:
+	@echo "🚀 Starting worker with hot reload..."
+	air --build.cmd "go build -o bin/worker cmd/worker/main.go" --build.bin "./bin/worker"
 
 lint:
 	golangci-lint run ./...
@@ -96,6 +107,11 @@ build-job:
 	@echo "Building the job..."
 	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/job ./cmd/job
 	@echo "Build success! Binary is located at bin/job"
+
+build-worker:
+	@echo "Building the worker..."
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false -ldflags='-w -s' -o bin/worker ./cmd/worker
+	@echo "Build success! Binary is located at bin/worker"
 
 install-pre-push-hook:
 	@echo "Installing pre-push git hook..."

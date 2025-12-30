@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/itsLeonB/billsplittr/internal/config"
+	"github.com/itsLeonB/billsplittr/internal/pkg/config"
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"
 	"github.com/rotisserie/eris"
@@ -14,9 +14,9 @@ type openAILLMService struct {
 	model  string
 }
 
-func NewLLMService(cfg config.LLM) LLMService {
-	client := openai.NewClient(option.WithAPIKey(cfg.ApiKey), option.WithBaseURL(cfg.BaseUrl))
-	return &openAILLMService{client, cfg.Model}
+func NewLLMService() LLMService {
+	client := openai.NewClient(option.WithAPIKey(config.Global.ApiKey), option.WithBaseURL(config.Global.BaseUrl))
+	return &openAILLMService{client, config.Global.Model}
 }
 
 func (llm *openAILLMService) Prompt(ctx context.Context, systemMsg, userMsg string) (string, error) {

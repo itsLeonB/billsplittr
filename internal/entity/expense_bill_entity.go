@@ -2,15 +2,18 @@ package entity
 
 import (
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/go-crud"
 )
 
 type ExpenseBill struct {
 	crud.BaseEntity
-	PayerProfileID   uuid.UUID
-	ImageName        string
 	GroupExpenseID   uuid.NullUUID
+	PayerProfileID   uuid.UUID
 	CreatorProfileID uuid.UUID
+	ImageName        string
+	Status           appconstant.BillStatus
+	ExtractedText    string
 }
 
 func (eb ExpenseBill) TableName() string {

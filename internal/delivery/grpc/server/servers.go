@@ -5,6 +5,7 @@ import (
 	"github.com/itsLeonB/billsplittr-protos/gen/go/expensebill/v1"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/expenseitem/v1"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/groupexpense/v1"
+	groupexpensev2 "github.com/itsLeonB/billsplittr-protos/gen/go/groupexpense/v2"
 	"github.com/itsLeonB/billsplittr-protos/gen/go/otherfee/v1"
 	"github.com/itsLeonB/billsplittr/internal/provider"
 	"github.com/rotisserie/eris"
@@ -12,10 +13,11 @@ import (
 )
 
 type Servers struct {
-	GroupExpense groupexpense.GroupExpenseServiceServer
-	ExpenseItem  expenseitem.ExpenseItemServiceServer
-	OtherFee     otherfee.OtherFeeServiceServer
-	ExpenseBill  expensebill.ExpenseBillServiceServer
+	groupExpense   groupexpense.GroupExpenseServiceServer
+	expenseItem    expenseitem.ExpenseItemServiceServer
+	otherFee       otherfee.OtherFeeServiceServer
+	expenseBill    expensebill.ExpenseBillServiceServer
+	groupExpenseV2 groupexpensev2.GroupExpenseServiceServer
 }
 
 func ProvideServers(services *provider.Services) *Servers {
@@ -26,31 +28,33 @@ func ProvideServers(services *provider.Services) *Servers {
 	validate := validator.New()
 
 	return &Servers{
-		GroupExpense: newGroupExpenseServer(validate, services.GroupExpense),
-		ExpenseItem:  newExpenseItemServer(validate, services.ExpenseItem),
-		OtherFee:     newOtherFeeServer(validate, services.OtherFee),
-		ExpenseBill:  newExpenseBillServer(validate, services.ExpenseBill),
+		groupExpense:   newGroupExpenseServer(validate, services.GroupExpense),
+		expenseItem:    newExpenseItemServer(validate, services.ExpenseItem),
+		otherFee:       newOtherFeeServer(validate, services.OtherFee),
+		expenseBill:    newExpenseBillServer(validate, services.ExpenseBill),
+		groupExpenseV2: newGroupExpenseServerV2(validate, services.GroupExpense),
 	}
 }
 
 func (s *Servers) Register(grpcServer *grpc.Server) error {
-	if s.GroupExpense == nil {
+	if s.groupExpense == nil {
 		return eris.New("group expense server is nil")
 	}
-	if s.ExpenseItem == nil {
+	if s.expenseItem == nil {
 		return eris.New("expense item server is nil")
 	}
-	if s.OtherFee == nil {
+	if s.otherFee == nil {
 		return eris.New("other fee server is nil")
 	}
-	if s.ExpenseBill == nil {
+	if s.expenseBill == nil {
 		return eris.New("expense bill server is nil")
 	}
 
-	groupexpense.RegisterGroupExpenseServiceServer(grpcServer, s.GroupExpense)
-	expenseitem.RegisterExpenseItemServiceServer(grpcServer, s.ExpenseItem)
-	otherfee.RegisterOtherFeeServiceServer(grpcServer, s.OtherFee)
-	expensebill.RegisterExpenseBillServiceServer(grpcServer, s.ExpenseBill)
+	groupexpense.RegisterGroupExpenseServiceServer(grpcServer, s.groupExpense)
+	expenseitem.RegisterExpenseItemServiceServer(grpcServer, s.expenseItem)
+	otherfee.RegisterOtherFeeServiceServer(grpcServer, s.otherFee)
+	expensebill.RegisterExpenseBillServiceServer(grpcServer, s.expenseBill)
+	groupexpensev2.RegisterGroupExpenseServiceServer(grpcServer, s.groupExpenseV2)
 
 	return nil
 }

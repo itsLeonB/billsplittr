@@ -4,17 +4,25 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/itsLeonB/billsplittr/internal/appconstant"
 	"github.com/itsLeonB/billsplittr/internal/dto"
 	"github.com/itsLeonB/billsplittr/internal/entity"
+	"github.com/itsLeonB/billsplittr/internal/message"
 )
 
 type GroupExpenseService interface {
+	// V1
 	CreateDraft(ctx context.Context, request dto.NewGroupExpenseRequest) (dto.GroupExpenseResponse, error)
-	GetAllCreated(ctx context.Context, profileID uuid.UUID) ([]dto.GroupExpenseResponse, error)
+	GetAllCreated(ctx context.Context, profileID uuid.UUID, status appconstant.ExpenseStatus) ([]dto.GroupExpenseResponse, error)
 	GetDetails(ctx context.Context, id uuid.UUID) (dto.GroupExpenseResponse, error)
-	ConfirmDraft(ctx context.Context, id, profileID uuid.UUID) (dto.GroupExpenseResponse, error)
+	ConfirmDraft(ctx context.Context, id, profileID uuid.UUID, dryRun bool) (dto.GroupExpenseResponse, error)
 	GetUnconfirmedGroupExpenseForUpdate(ctx context.Context, profileID, id uuid.UUID) (entity.GroupExpense, error)
-	ParseFromBillText(ctx context.Context) error
+	ParseFromBillText(ctx context.Context, msg message.ExpenseBillTextExtracted) error
+	Delete(ctx context.Context, id, profileID uuid.UUID) error
+	SyncParticipants(ctx context.Context, req dto.ExpenseParticipantsRequest) error
+
+	// V2
+	CreateDraftV2(ctx context.Context, req dto.NewDraftExpense) (dto.GroupExpenseResponse, error)
 }
 
 type ExpenseItemService interface {
@@ -22,6 +30,7 @@ type ExpenseItemService interface {
 	GetDetails(ctx context.Context, groupExpenseID, expenseItemID uuid.UUID) (dto.ExpenseItemResponse, error)
 	Update(ctx context.Context, request dto.UpdateExpenseItemRequest) (dto.ExpenseItemResponse, error)
 	Remove(ctx context.Context, profileID, id, groupExpenseID uuid.UUID) error
+	SyncParticipants(ctx context.Context, req dto.SyncItemParticipantsRequest) error
 }
 
 type OtherFeeService interface {
@@ -37,6 +46,7 @@ type ExpenseBillService interface {
 	Get(ctx context.Context, id uuid.UUID) (dto.ExpenseBillResponse, error)
 	Delete(ctx context.Context, id, profileID uuid.UUID) error
 	EnqueueCleanup(ctx context.Context) error
+	ExtractBillText(ctx context.Context, msg message.ExpenseBillUploaded) (string, error)
 }
 
 type LLMService interface {

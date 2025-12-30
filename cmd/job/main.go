@@ -1,22 +1,24 @@
 package main
 
 import (
-	"log"
-
-	"github.com/itsLeonB/billsplittr/internal/config"
 	"github.com/itsLeonB/billsplittr/internal/delivery/job"
+	"github.com/itsLeonB/billsplittr/internal/pkg/config"
+	"github.com/itsLeonB/billsplittr/internal/pkg/logger"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rotisserie/eris"
 )
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatal(eris.ToString(err, true))
+	logger.Init()
+
+	if err := config.Load(); err != nil {
+		logger.Global.Fatal(eris.ToString(err, true))
 	}
-	j, err := job.SelectJob(cfg)
+
+	j, err := job.EnqueueCleanupOrphanedBillsJob()
 	if err != nil {
-		log.Fatal(eris.ToString(err, true))
+		logger.Global.Fatal(eris.ToString(err, true))
 	}
+
 	j.Run()
 }
